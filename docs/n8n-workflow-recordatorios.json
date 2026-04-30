@@ -1,0 +1,224 @@
+{
+  "name": "Gomper · Cron recordatorios",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "trg-cron",
+      "name": "Cada 5 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "apiBaseUrl",
+              "value": "https://gestori.es",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-cfg",
+      "name": "Set Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.apiBaseUrl }}/api/v1/cron/recordatorios",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": false,
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "http-cron",
+      "name": "POST /cron/recordatorios",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1000,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_HEADERAUTH_CRED_ID",
+          "name": "Header Auth Gomper API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "recordatorios",
+        "options": {}
+      },
+      "id": "split",
+      "name": "Split recordatorios",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f1",
+              "leftValue": "={{ $json.cliente && $json.cliente.telegramId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-tg",
+      "name": "Solo con telegramId",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.cliente.telegramId }}",
+        "text": "=Hola <b>{{ $json.cliente.nombre }}</b> 👋\n\nTe recuerdo tu cita de hoy a las <b>{{ new Date($json.inicio).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: $json.salon.timezone || 'Europe/Madrid' }) }}</b>:\n\n<b>{{ $json.servicio.nombre }}</b> con <b>{{ $json.profesional.nombre }}</b>\nen {{ $json.salon.nombre }}\n\n¿Confirmas que vienes?",
+        "additionalFields": {
+          "parse_mode": "HTML",
+          "reply_markup": "={{ JSON.stringify({ inline_keyboard: [\n  [\n    { text: '✅ Confirmar', callback_data: 'confirmar:' + $json.citaId },\n    { text: '❌ Cancelar', callback_data: 'cancelar:' + $json.citaId }\n  ]\n] }) }}"
+        }
+      },
+      "id": "tg-recordatorio",
+      "name": "Send recordatorio",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "REPLACE_TELEGRAM_CRED_ID",
+          "name": "Telegram Bot Salón Demo"
+        }
+      },
+      "notes": "Si gestionas varios salones con tokens distintos, sustituye este nodo Telegram por un HTTP Request a https://api.telegram.org/bot{{ $json.salon.telegramBotToken }}/sendMessage. Así cada cita usa el bot del salón al que pertenece, sin tener que crear N credenciales."
+    }
+  ],
+  "connections": {
+    "Cada 5 min": {
+      "main": [
+        [
+          {
+            "node": "Set Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Config": {
+      "main": [
+        [
+          {
+            "node": "POST /cron/recordatorios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "POST /cron/recordatorios": {
+      "main": [
+        [
+          {
+            "node": "Split recordatorios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split recordatorios": {
+      "main": [
+        [
+          {
+            "node": "Solo con telegramId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Solo con telegramId": {
+      "main": [
+        [
+          {
+            "node": "Send recordatorio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "tags": [
+    {
+      "id": "gomper",
+      "name": "gomper"
+    }
+  ],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "versionId": "00000000-0000-0000-0000-000000000002",
+  "id": "gomper-cron-recordatorios",
+  "pinData": {}
+}

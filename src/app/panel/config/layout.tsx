@@ -8,6 +8,7 @@ const tabs = [
   { href: '/panel/config/equipo', label: 'Equipo', emoji: '👥' },
   { href: '/panel/config/horario', label: 'Horario', emoji: '🕒' },
   { href: '/panel/config/cierres', label: 'Cierres', emoji: '🌴' },
+  { href: '/panel/config/suscripcion', label: 'Suscripción', emoji: '💳' },
 ];
 
 export default function ConfigLayout({ children }: { children: React.ReactNode }) {
