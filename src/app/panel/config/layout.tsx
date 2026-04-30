@@ -4,6 +4,7 @@ import { Separator } from '@/components/ui/separator';
 const tabs = [
   { href: '/panel/config', label: 'Datos del salón', emoji: '🏪', exact: true },
   { href: '/panel/config/agente', label: 'Agente', emoji: '🤖' },
+  { href: '/panel/config/bot', label: 'Bot', emoji: '📱' },
   { href: '/panel/config/equipo', label: 'Equipo', emoji: '👥' },
   { href: '/panel/config/horario', label: 'Horario', emoji: '🕒' },
   { href: '/panel/config/cierres', label: 'Cierres', emoji: '🌴' },

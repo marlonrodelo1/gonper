@@ -52,24 +52,29 @@ npx drizzle-kit migrate    # aplica al DATABASE_URL configurado
 ```
 src/
   app/
-    page.tsx              landing pública
+    page.tsx              landing pública (hero + cómo funciona + planes)
+    (auth)/               login + signup
+    auth/                 callbacks/handlers de Supabase Auth
+    s/[slug]/             web pública del salón (perfil reservable)
     panel/                dashboard del dueño
-      layout.tsx          sidebar + auth
-      hoy/page.tsx        agenda del día (datos mock por ahora)
-      agenda/             en construcción
-      clientes/
-      servicios/
-      stats/
-      config/
-  components/ui/          shadcn/ui
+      layout.tsx          sidebar + auth + link a web pública
+      hoy/                agenda del día con datos reales
+      agenda/             agenda semanal
+      citas/              gestión de citas
+      clientes/           listado + detalle [id]
+      servicios/          listado + nuevo + detalle [id]
+      stats/              métricas
+      config/             ajustes (perfil, equipo, agente, layout compartido)
+    api/v1/               API REST interna (consumida por n8n y bots)
+  components/ui/          shadcn/ui (button, card, dialog, table, tabs, ...)
   lib/
     db/                   Drizzle schema + cliente
-    supabase/             clientes server/browser + middleware auth
+    supabase/             clientes server/browser + helpers (getCurrentSalon)
     utils.ts              cn() helper de shadcn
-  proxy.ts                Next.js 16 proxy (antes middleware) — refresh sesión + protección /panel/*
+  proxy.ts                Next.js 16 proxy — refresh sesión + protección /panel/*
 docs/                     documentación de producto
 ```
 
 ## Roadmap
 
-Ver [`docs/06-roadmap.md`](./docs/06-roadmap.md). Estado actual: **Fase 0 completada** (scaffold + integración base). Siguiente: Fase 1 (auth + signup + datos reales en panel "Hoy").
+Ver [`docs/06-roadmap.md`](./docs/06-roadmap.md). Estado actual: **Fase 0, 1, 2, 3 completadas y base de Fase 4 en marcha** (landing + auth + signup + panel con datos reales, agenda, clientes, servicios, config, web pública por slug y API v1). Siguiente: cerrar Fase 4 (Stripe + Telegram en producción + n8n).

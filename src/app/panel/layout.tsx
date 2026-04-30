@@ -29,6 +29,10 @@ export default async function PanelLayout({
     salon && typeof salon.nombre === "string" ? salon.nombre : null;
   const salonPlan =
     salon && typeof salon.plan === "string" ? salon.plan : null;
+  const salonSlug =
+    salon && typeof salon.slug === "string" && salon.slug.length > 0
+      ? salon.slug
+      : null;
 
   return (
     <div className="flex min-h-screen w-full">
@@ -68,6 +72,17 @@ export default async function PanelLayout({
               <span>{item.label}</span>
             </Link>
           ))}
+          {salonSlug && (
+            <Link
+              href={`/s/${salonSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-200/60 hover:text-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white"
+            >
+              <span className="text-base">🌐</span>
+              <span>Mi web pública</span>
+            </Link>
+          )}
         </nav>
         <div className="flex-1" />
         {user && (
