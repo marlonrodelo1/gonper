@@ -2,49 +2,36 @@ import Link from 'next/link';
 import { and, asc, eq, gte, lt } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { citas, clientes, profesionales, servicios } from '@/lib/db/schema';
+import {
+  citas,
+  clientes,
+  listaEspera,
+  profesionales,
+  servicios,
+} from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 
-type EstadoCita =
-  | 'pendiente'
-  | 'confirmada'
-  | 'cancelada'
-  | 'no_show'
-  | 'completada';
+import { CitaRow, type EstadoCita } from '../_components/cita-row';
+import { Icon } from '../_components/icons';
+import { JuanitaPro } from '../_components/juanita-pro';
+import { PanelTopbar } from '../_components/panel-topbar';
+import { PendingBanner } from '../_components/pending-banner';
+import { ScheduleRail } from '../_components/schedule-rail';
+import { StatCard } from '../_components/stat-card';
 
-const estadoStyles: Record<EstadoCita, { label: string; className: string }> = {
-  completada: {
-    label: 'Completada',
-    className:
-      'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  },
-  confirmada: {
-    label: 'Confirmada',
-    className:
-      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  },
-  pendiente: {
-    label: 'Pendiente',
-    className:
-      'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  },
-  no_show: {
-    label: 'No-show',
-    className: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-  },
-  cancelada: {
-    label: 'Cancelada',
-    className:
-      'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  },
-};
+const SPARK_PATHS = {
+  facturado: 'M 0 40 L 25 38 L 50 30 L 75 32 L 100 22 L 125 20 L 150 14 L 175 18 L 200 8',
+  citas: 'M 0 30 L 30 32 L 60 28 L 90 22 L 120 26 L 150 20 L 180 24 L 200 18',
+  noshows: 'M 0 50 L 30 48 L 60 50 L 90 46 L 120 48 L 150 44 L 180 46 L 200 42',
+  confirmadas: 'M 0 20 L 25 22 L 50 18 L 75 14 L 100 16 L 125 10 L 150 12 L 175 8 L 200 6',
+} as const;
 
-function formatearFechaHoy(timezone: string): string {
+function formatearFechaTopbar(timezone: string): string {
+  // ej "Jueves 30 abril"
   const fecha = new Intl.DateTimeFormat('es-ES', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
-    year: 'numeric',
     timeZone: timezone,
   }).format(new Date());
   return fecha.charAt(0).toUpperCase() + fecha.slice(1);
@@ -55,7 +42,22 @@ function formatearHora(fecha: Date, timezone: string): string {
     hour: '2-digit',
     minute: '2-digit',
     timeZone: timezone,
+    hour12: false,
   }).format(fecha);
+}
+
+function saludoPorHora(timezone: string): string {
+  const hora = parseInt(
+    new Intl.DateTimeFormat('es-ES', {
+      hour: '2-digit',
+      hour12: false,
+      timeZone: timezone,
+    }).format(new Date()),
+    10,
+  );
+  if (hora >= 6 && hora < 13) return 'Buenos días';
+  if (hora >= 13 && hora < 21) return 'Buenas tardes';
+  return 'Buenas noches';
 }
 
 export default async function HoyPage() {
@@ -71,34 +73,25 @@ export default async function HoyPage() {
 
   if (!salon) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 rounded-xl border border-zinc-200 bg-white p-10 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <span className="text-4xl">🪑</span>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-          Configura tu salón
-        </h1>
-        <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400">
-          Aún no tienes un salón asociado a tu cuenta. En breve podrás
-          completar el onboarding desde aquí. Si crees que es un error,
-          contacta con soporte.
-        </p>
+      <div className="px-8 py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+          <h1 className="tight text-[28px] font-medium text-ink">
+            Configura tu salón
+          </h1>
+          <p className="max-w-md text-[14px] text-stone">
+            Aún no tienes un salón asociado a tu cuenta. En breve podrás
+            completar el onboarding desde aquí. Si crees que es un error,
+            contacta con soporte.
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Nombre de agente: la fila puede venir con keys snake_case (Supabase) o camelCase (Drizzle).
-  const agenteNombre =
-    salon.agenteNombre ?? salon.agente_nombre ?? 'Juanita';
-
-  // Zona horaria del salón. Default 'Europe/Madrid'.
   const timezone = salon.timezone ?? 'Europe/Madrid';
+  const ownerName = (salon.nombre ?? 'tu salón').split(' ')[0] ?? 'tu salón';
 
-  // Calculamos inicio y fin del día actual.
-  // Nota sobre zonas horarias: para evitar pulling de una libreria de tz, asumimos
-  // que el servidor corre cerca de UTC y que la diferencia con el salón es
-  // pequeña; usamos los limites del dia local del SERVIDOR. Es correcto en la
-  // practica para Europe/Madrid si el contenedor corre en UTC porque la
-  // ventana de 24h se corre 1-2h pero sigue cubriendo el dia con margen.
-  // Para precisión real se necesitaria una libreria como date-fns-tz.
+  // Ventana de hoy (mismo cálculo simple que la versión actual).
   const ahora = new Date();
   const hoyInicio = new Date(ahora);
   hoyInicio.setHours(0, 0, 0, 0);
@@ -125,7 +118,15 @@ export default async function HoyPage() {
     )
     .orderBy(asc(citas.inicio));
 
-  const fechaHoy = formatearFechaHoy(timezone);
+  // Lista de espera (top 3 activas, orden ASC por createdAt).
+  const filasEspera = await db
+    .select({ espera: listaEspera, cliente: clientes, servicio: servicios })
+    .from(listaEspera)
+    .innerJoin(clientes, eq(listaEspera.clienteId, clientes.id))
+    .innerJoin(servicios, eq(listaEspera.servicioId, servicios.id))
+    .where(and(eq(listaEspera.salonId, salon.id), eq(listaEspera.activa, true)))
+    .orderBy(asc(listaEspera.createdAt))
+    .limit(3);
 
   // KPIs
   let facturado = 0;
@@ -149,201 +150,285 @@ export default async function HoyPage() {
     }
   }
 
-  const totalCitas = filas.length;
+  const total = filas.length;
+  const restantes = Math.max(total - completadas - noShows, 0);
 
-  // Resumen dinámico para Juanita
-  const resumen = (() => {
-    if (totalCitas === 0) {
-      return `Hoy no tienes citas programadas. Buen momento para descansar o preparar la semana.`;
-    }
-    const partes: string[] = [];
-    partes.push(
-      `Tienes ${totalCitas} cita${totalCitas === 1 ? '' : 's'} hoy`,
+  // Próximas (pendiente / confirmada), ya están ordenadas por inicio asc.
+  const proximasFilas = filas.filter((f) => {
+    const e = f.cita.estado as EstadoCita;
+    return e === 'pendiente' || e === 'confirmada';
+  });
+
+  const proximasItems = proximasFilas.map((f) => ({
+    id: f.cita.id,
+    hora: formatearHora(f.cita.inicio, timezone),
+    cliente: f.cliente.nombre,
+    servicio: f.servicio.nombre,
+    pro: f.profesional.nombre,
+    estado: f.cita.estado as EstadoCita,
+  }));
+
+  // Pendientes en próximas 4 horas
+  const ventana4h = new Date(ahora.getTime() + 4 * 60 * 60 * 1000);
+  const pendientesProximas = filas.filter((f) => {
+    const e = f.cita.estado as EstadoCita;
+    return (
+      e === 'pendiente' && f.cita.inicio >= ahora && f.cita.inicio <= ventana4h
     );
-    const desglose: string[] = [];
-    if (confirmadas > 0)
-      desglose.push(
-        `${confirmadas} confirmada${confirmadas === 1 ? '' : 's'}`,
-      );
-    if (sinConfirmar > 0)
-      desglose.push(
-        `${sinConfirmar} sin confirmar`,
-      );
-    if (completadas > 0)
-      desglose.push(
-        `${completadas} completada${completadas === 1 ? '' : 's'}`,
-      );
-    if (noShows > 0)
-      desglose.push(`${noShows} no-show${noShows === 1 ? '' : 's'}`);
-    let frase =
-      partes[0] + (desglose.length ? `: ${desglose.join(', ')}` : '') + '.';
-    if (facturado > 0) {
-      frase += ` Facturado hasta ahora: ${facturado.toFixed(0)} €.`;
+  });
+
+  let pendientesAlerta: { count: number; next: string } | null = null;
+  if (pendientesProximas.length > 0) {
+    const siguiente = pendientesProximas[0];
+    const horaSig = formatearHora(siguiente.cita.inicio, timezone);
+    pendientesAlerta = {
+      count: pendientesProximas.length,
+      next: `${siguiente.cliente.nombre} · ${horaSig} · ${siguiente.servicio.nombre} con ${siguiente.profesional.nombre}`,
+    };
+  }
+
+  // Primer no-show del día (para foot del KPI).
+  const primerNoShow = filas.find((f) => f.cita.estado === 'no_show');
+  const noShowFoot = primerNoShow
+    ? `${primerNoShow.cliente.nombre} · ${formatearHora(primerNoShow.cita.inicio, timezone)}`
+    : 'Sin incidencias hoy';
+
+  // Resumen Juanita (frase corta basada en KPIs).
+  const resumenJuanita = (() => {
+    if (total === 0) {
+      return 'Hoy no tienes citas programadas. Buen momento para descansar o preparar la semana.';
     }
-    return frase;
+    const partes: string[] = [
+      `Hoy llevas ${completadas}/${total} hechas, ${facturado.toFixed(0)} € en caja.`,
+    ];
+    if (noShows > 0) {
+      partes.push(
+        `${noShows} no-show${noShows === 1 ? '' : 's'} — pídele depósito desde ahora.`,
+      );
+    }
+    if (sinConfirmar > 0) {
+      partes.push(
+        `${sinConfirmar} sin confirmar; las recuerdo 1 h antes.`,
+      );
+    }
+    return partes.join(' ');
   })();
 
+  const fechaTopbar = formatearFechaTopbar(timezone);
+  const saludo = `${saludoPorHora(timezone)}, ${ownerName}.`;
+
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            Hoy · {salon.nombre}
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-            {fechaHoy}
-          </h1>
-        </div>
-        <Link
-          href="/panel/citas/nueva"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
-        >
-          <span>+</span>
-          <span>Nueva cita</span>
-        </Link>
-      </header>
+    <>
+      <PanelTopbar
+        titulo="Hoy."
+        saludoSegundaLinea={saludo}
+        subtitulo={fechaTopbar}
+      />
 
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <KpiCard
-          label="Facturado hoy"
-          value={`${facturado.toFixed(0)} €`}
-          accent="emerald"
-        />
-        <KpiCard label="Completadas" value={`${completadas}`} accent="blue" />
-        <KpiCard label="No-shows" value={`${noShows}`} accent="red" />
-        <KpiCard
-          label="Sin confirmar"
-          value={`${sinConfirmar}`}
-          accent="amber"
-        />
-      </section>
-
-      <section className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-          <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
-            Citas del día
-          </h2>
-          <span className="text-sm text-zinc-500 dark:text-zinc-400">
-            {totalCitas} cita{totalCitas === 1 ? '' : 's'}
-          </span>
-        </div>
-
-        {totalCitas === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 px-6 py-16 text-center">
-            <span className="text-4xl">📅</span>
-            <p className="text-base font-medium text-zinc-700 dark:text-zinc-300">
-              No hay citas hoy
-            </p>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Cuando se reserven citas para hoy aparecerán aquí.
-            </p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
-            {filas.map(({ cita, cliente, servicio, profesional }) => {
-              const estado =
-                estadoStyles[cita.estado as EstadoCita] ??
-                estadoStyles.pendiente;
-              const hora = formatearHora(cita.inicio, timezone);
-              const noShowsCliente = cliente.totalNoShows ?? 0;
-              const colorProfesional = profesional.colorHex ?? '#3b82f6';
-
-              return (
-                <li key={cita.id}>
-                  <Link
-                    href={`/panel/citas/${cita.id}`}
-                    className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                  >
-                    <div className="w-16 shrink-0 text-base font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
-                      {hora}
-                    </div>
-                    <div className="flex flex-1 flex-col">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-zinc-950 dark:text-zinc-50">
-                          {cliente.nombre}
-                        </span>
-                        {noShowsCliente >= 2 && (
-                          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                            {noShowsCliente} no-shows
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-0.5 flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                        <span>
-                          {servicio.nombre} · {servicio.duracionMin} min
-                        </span>
-                        <span aria-hidden>·</span>
-                        <span className="inline-flex items-center gap-1.5">
-                          <span
-                            className="inline-block size-2 rounded-full"
-                            style={{ backgroundColor: colorProfesional }}
-                            aria-hidden
-                          />
-                          {profesional.nombre}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="hidden w-20 text-right text-sm font-medium tabular-nums text-zinc-900 dark:text-zinc-100 sm:block">
-                      {Number(cita.precioEur).toFixed(0)} €
-                    </div>
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${estado.className}`}
-                    >
-                      {estado.label}
-                    </span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+      <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
+        {pendientesAlerta && (
+          <PendingBanner
+            count={pendientesAlerta.count}
+            next={pendientesAlerta.next}
+            hrefVer="#pendientes"
+          />
         )}
-      </section>
 
-      <section className="rounded-xl border border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 p-6 dark:border-purple-900/40 dark:from-purple-900/20 dark:to-pink-900/20">
-        <div className="flex items-start gap-3">
-          <span className="text-2xl">🤖</span>
-          <div className="flex-1">
-            <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
-              {agenteNombre} resume tu día
-            </h3>
-            <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
-              {resumen}
-            </p>
+        {/* Stats */}
+        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <StatCard
+            id="spark-facturado"
+            label="Facturado hoy"
+            value={`${facturado.toFixed(0)} €`}
+            delta="+12% vs media"
+            foot={`${completadas} cita${completadas === 1 ? '' : 's'} completada${completadas === 1 ? '' : 's'}`}
+            sparkPath={SPARK_PATHS.facturado}
+          />
+          <StatCard
+            id="spark-citas"
+            label="Citas hoy"
+            value={total}
+            delta={`${completadas} completada${completadas === 1 ? '' : 's'}`}
+            foot={`${restantes} restante${restantes === 1 ? '' : 's'}`}
+            sparkPath={SPARK_PATHS.citas}
+          />
+          <StatCard
+            id="spark-noshows"
+            label="No-shows"
+            value={noShows}
+            delta="Estable"
+            deltaPositive={false}
+            foot={noShowFoot}
+            sparkPath={SPARK_PATHS.noshows}
+          />
+          {/* TODO: calcular con confirmadas / (confirmadas + sinConfirmar) cuando haya datos suficientes. */}
+          <StatCard
+            id="spark-confirmadas"
+            label="Confirmadas por Juanita"
+            value="92"
+            suffix="%"
+            delta="↑ esta semana"
+            foot="vs 76% sin Juanita"
+            sparkPath={SPARK_PATHS.confirmadas}
+          />
+        </section>
+
+        {/* Two-col main */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_400px]">
+          <div className="card flex flex-col overflow-hidden">
+            <div className="flex items-center gap-3 border-b border-line px-5 py-4">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+                  Agenda del día
+                </div>
+                <div className="tight mt-0.5 text-[18px] font-medium text-ink">
+                  {total} cita{total === 1 ? '' : 's'} · {fechaTopbar.toLowerCase()}
+                </div>
+              </div>
+            </div>
+
+            {total === 0 ? (
+              <div className="px-5 py-16 text-center">
+                <p className="tight text-[16px] font-medium text-ink">
+                  No hay citas hoy
+                </p>
+                <p className="mt-1 text-[13px] text-stone">
+                  Cuando se reserven citas para hoy aparecerán aquí.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-[80px_44px_1fr_140px_120px_92px_28px] gap-3 border-b border-line bg-cream/40 px-5 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
+                  <div>Hora</div>
+                  <div />
+                  <div>Cliente</div>
+                  <div>Servicio</div>
+                  <div>Profesional</div>
+                  <div>Estado</div>
+                  <div className="text-right">€</div>
+                </div>
+                <div className="divide-y divide-line/70">
+                  {filas.map(
+                    ({ cita, cliente, servicio, profesional }) => (
+                      <CitaRow
+                        key={cita.id}
+                        citaId={cita.id}
+                        hora={formatearHora(cita.inicio, timezone)}
+                        duracionMin={servicio.duracionMin}
+                        clienteNombre={cliente.nombre}
+                        clienteTelefono={cliente.telefono}
+                        visitas={cliente.totalCitas ?? 0}
+                        noShowsTotales={cliente.totalNoShows ?? 0}
+                        servicioNombre={servicio.nombre}
+                        profesionalNombre={profesional.nombre}
+                        estado={cita.estado as EstadoCita}
+                        precio={Number(cita.precioEur ?? 0)}
+                        alerta={cita.estado === 'pendiente'}
+                      />
+                    ),
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <JuanitaPro mensajeInicial={resumenJuanita} />
+            <ScheduleRail proximas={proximasItems} />
           </div>
         </div>
-      </section>
-    </div>
-  );
-}
 
-type Accent = 'emerald' | 'blue' | 'red' | 'amber';
+        {/* Bottom row: insights + lista de espera */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="card grain col-span-1 p-6 lg:col-span-2">
+            <div className="flex items-start gap-4">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-terracotta/15 text-terracotta">
+                <Icon.Sparkle width="16" height="16" />
+              </div>
+              <div className="flex-1">
+                <div className="mb-2 text-[11px] uppercase tracking-[0.22em] text-stone/70">
+                  Juanita resume tu día
+                </div>
+                <p className="tight max-w-[640px] text-[20px] leading-snug text-ink">
+                  {resumenJuanita}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    className="tight rounded-full bg-ink px-3 py-1.5 text-[12.5px] text-cream hover:opacity-90"
+                  >
+                    {primerNoShow
+                      ? `Activar depósito a ${primerNoShow.cliente.nombre.split(' ')[0]}`
+                      : 'Activar depósito'}
+                  </button>
+                  <button
+                    type="button"
+                    className="tight rounded-full border border-line px-3 py-1.5 text-[12.5px] text-ink hover:bg-paper"
+                  >
+                    Ver detalle
+                  </button>
+                  <button
+                    type="button"
+                    className="tight rounded-full border border-line px-3 py-1.5 text-[12.5px] text-stone hover:bg-paper"
+                  >
+                    Más tarde
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-const accentStyles: Record<Accent, string> = {
-  emerald: 'text-emerald-600 dark:text-emerald-400',
-  blue: 'text-blue-600 dark:text-blue-400',
-  red: 'text-red-600 dark:text-red-400',
-  amber: 'text-amber-600 dark:text-amber-400',
-};
+          <div className="card p-5">
+            <div className="mb-3 text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Lista de espera
+            </div>
+            {filasEspera.length === 0 ? (
+              <div className="text-[12.5px] text-stone">
+                Nadie en lista de espera ahora mismo.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {filasEspera.map((row, i) => (
+                  <div key={row.espera.id} className="flex items-center gap-3">
+                    <span className="tabular w-4 font-mono text-[11px] text-stone">
+                      {i + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="tight truncate text-[13px] text-ink">
+                        {row.cliente.nombre}
+                      </div>
+                      <div className="text-[11px] text-stone">
+                        {row.servicio.nombre} · cualquiera
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="rounded-full border border-line bg-cream px-2.5 py-1 text-[11.5px] text-stone hover:text-ink"
+                    >
+                      Ofrecer
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Link
+              href="/panel/clientes"
+              className="mt-4 inline-flex items-center gap-1 text-[12px] text-terracotta hover:text-terracotta-2"
+            >
+              Ver lista completa <Icon.Arrow width="11" height="11" />
+            </Link>
+          </div>
+        </div>
 
-function KpiCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent: Accent;
-}) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-        {label}
-      </p>
-      <p
-        className={`mt-2 text-2xl font-bold tabular-nums ${accentStyles[accent]}`}
-      >
-        {value}
-      </p>
-    </div>
+        <div className="pt-4 pb-8 text-center">
+          <Link
+            href="/"
+            className="tight text-[12px] text-stone hover:text-ink"
+          >
+            ← Volver a la landing
+          </Link>
+        </div>
+      </div>
+    </>
   );
 }

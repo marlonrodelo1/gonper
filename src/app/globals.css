@@ -392,3 +392,52 @@
   background-image: radial-gradient(circle at 2px 2px, rgba(107, 99, 86, 0.18) 1px, transparent 0);
   background-size: 14px 14px;
 }
+
+/* =====================================================================
+   Panel utilities (Fase C)
+===================================================================== */
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+}
+.card-tight {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+
+@keyframes draw {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+.draw {
+  stroke-dasharray: 1000;
+  animation: draw 2s ease-out forwards;
+}
+
+.ruler-mark { border-left: 1px solid var(--line); }
+.ruler-mark.major { border-left-color: var(--line-2); }

@@ -24,14 +24,14 @@ export default async function PanelLayout({
       : null;
 
   return (
-    <div className="flex min-h-screen w-full">
+    <div className="flex min-h-screen w-full bg-cream text-ink">
       <PanelSidebar
         userEmail={user?.email ?? null}
         salonNombre={salonNombre}
         salonPlan={salonPlan}
         salonSlug={salonSlug}
       />
-      <main className="flex-1 overflow-auto p-8 pt-16 md:pt-8">{children}</main>
+      <main className="min-w-0 flex-1 pt-12 md:pt-0">{children}</main>
       <Toaster position="top-right" theme="system" />
     </div>
   );
