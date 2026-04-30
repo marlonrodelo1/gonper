@@ -1,62 +1,108 @@
 {
-  "name": "Gomper · Bot del salón",
+  "name": "Gomper - Bot del salon (multi-tenant)",
   "active": false,
-  "settings": {
-    "executionOrder": "v1"
-  },
   "nodes": [
     {
       "parameters": {
-        "updates": [
-          "message",
-          "callback_query"
-        ],
-        "additionalFields": {}
+        "httpMethod": "POST",
+        "path": "gomper-bot/:slug",
+        "responseMode": "lastNode",
+        "options": {}
       },
-      "id": "trg-001",
-      "name": "Telegram Trigger",
-      "type": "n8n-nodes-base.telegramTrigger",
-      "typeVersion": 1.1,
-      "position": [
-        -1640,
-        0
-      ],
-      "webhookId": "gomper-bot-trigger",
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      }
+      "id": "node-webhook",
+      "name": "Webhook Telegram",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [200, 400],
+      "webhookId": "gomper-bot-multi-tenant"
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
-            {
-              "id": "a1",
-              "name": "apiBaseUrl",
-              "value": "https://gestori.es",
-              "type": "string"
-            },
-            {
-              "id": "a2",
-              "name": "defaultSlug",
-              "value": "salon-demo",
-              "type": "string"
-            }
+            { "id": "a1", "name": "slug", "value": "={{ $json.params.slug }}", "type": "string" },
+            { "id": "a2", "name": "update", "value": "={{ $json.body }}", "type": "object" },
+            { "id": "a3", "name": "chatId", "value": "={{ $json.body.message?.chat?.id ?? $json.body.callback_query?.message?.chat?.id }}", "type": "string" },
+            { "id": "a4", "name": "userId", "value": "={{ $json.body.message?.from?.id ?? $json.body.callback_query?.from?.id }}", "type": "string" },
+            { "id": "a5", "name": "userName", "value": "={{ $json.body.message?.from?.first_name ?? $json.body.callback_query?.from?.first_name ?? 'cliente' }}", "type": "string" },
+            { "id": "a6", "name": "text", "value": "={{ $json.body.message?.text ?? '' }}", "type": "string" },
+            { "id": "a7", "name": "callbackData", "value": "={{ $json.body.callback_query?.data ?? '' }}", "type": "string" },
+            { "id": "a8", "name": "callbackQueryId", "value": "={{ $json.body.callback_query?.id ?? '' }}", "type": "string" },
+            { "id": "a9", "name": "startPayload", "value": "={{ ($json.body.message?.text ?? '').startsWith('/start ') ? ($json.body.message.text.substring(7)) : '' }}", "type": "string" }
           ]
         },
         "options": {}
       },
-      "id": "set-001",
-      "name": "Set Config",
+      "id": "node-set-params",
+      "name": "Set params",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [
-        -1440,
-        0
-      ]
+      "position": [400, 400]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://gestori.es/api/v1/lookup-bot?slug={{ $json.slug }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": false,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "node-lookup",
+      "name": "Lookup Salon",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [600, 400],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Header Auth Gomper API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "typeValidation": "strict" },
+          "conditions": [
+            {
+              "id": "c-not-found",
+              "leftValue": "={{ $json.salon?.id ?? null }}",
+              "rightValue": null,
+              "operator": { "type": "object", "operation": "empty", "singleValue": true }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if-notfound",
+      "name": "Salon existe?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [800, 400]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.telegram.org/bot{{ $('Lookup Salon').item.json.salon.telegram_bot_token }}/sendMessage",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"chat_id\": \"{{ $('Set params').item.json.chatId }}\",\n  \"text\": \"Este bot todavia no esta configurado. Contacta con el administrador.\"\n}",
+        "options": {}
+      },
+      "id": "node-bot-not-configured",
+      "name": "Bot no configurado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1000, 200]
     },
     {
       "parameters": {
@@ -64,42 +110,13 @@
           "values": [
             {
               "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.callback_query !== undefined }}",
-                    "rightValue": true,
-                    "operator": {
-                      "type": "boolean",
-                      "operation": "true",
-                      "singleValue": true
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "outputKey": "callback"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ ($json.message?.text || '').startsWith('/start') }}",
-                    "rightValue": true,
-                    "operator": {
-                      "type": "boolean",
-                      "operation": "true",
-                      "singleValue": true
-                    }
+                    "id": "r-start",
+                    "leftValue": "={{ $('Set params').item.json.text }}",
+                    "rightValue": "/start",
+                    "operator": { "type": "string", "operation": "startsWith" }
                   }
                 ],
                 "combinator": "and"
@@ -108,156 +125,13 @@
             },
             {
               "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.message?.reply_to_message?.text || '' }}",
-                    "rightValue": "Indícame tu nombre y teléfono",
-                    "operator": {
-                      "type": "string",
-                      "operation": "contains"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "outputKey": "datos_cliente"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ ($json.message?.text || '').length > 0 }}",
-                    "rightValue": true,
-                    "operator": {
-                      "type": "boolean",
-                      "operation": "true",
-                      "singleValue": true
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "outputKey": "free_text"
-            }
-          ]
-        },
-        "options": {
-          "fallbackOutput": "extra",
-          "renameFallbackOutput": "otros"
-        }
-      },
-      "id": "sw-001",
-      "name": "Switch principal",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.2,
-      "position": [
-        -1240,
-        0
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "p1",
-              "name": "data",
-              "value": "={{ $json.callback_query.data }}",
-              "type": "string"
-            },
-            {
-              "id": "p2",
-              "name": "chatId",
-              "value": "={{ $json.callback_query.message.chat.id }}",
-              "type": "string"
-            },
-            {
-              "id": "p3",
-              "name": "messageId",
-              "value": "={{ $json.callback_query.message.message_id }}",
-              "type": "string"
-            },
-            {
-              "id": "p4",
-              "name": "callbackId",
-              "value": "={{ $json.callback_query.id }}",
-              "type": "string"
-            },
-            {
-              "id": "p5",
-              "name": "from",
-              "value": "={{ $json.callback_query.from }}",
-              "type": "object"
-            },
-            {
-              "id": "p6",
-              "name": "parts",
-              "value": "={{ ($json.callback_query.data || '').split(':') }}",
-              "type": "array"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "set-cb",
-      "name": "Parse callback",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1040,
-        -360
-      ]
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.parts[0] }}",
-                    "rightValue": "menu",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "outputKey": "menu"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.parts[0] }}",
-                    "rightValue": "reservar",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
+                    "id": "r-reservar",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "menu:reservar",
+                    "operator": { "type": "string", "operation": "equals" }
                   }
                 ],
                 "combinator": "and"
@@ -266,40 +140,13 @@
             },
             {
               "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.parts[0] }}",
-                    "rightValue": "miscitas",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "outputKey": "miscitas"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.parts[0] }}",
-                    "rightValue": "srv",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
+                    "id": "r-srv",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "srv:",
+                    "operator": { "type": "string", "operation": "startsWith" }
                   }
                 ],
                 "combinator": "and"
@@ -308,82 +155,118 @@
             },
             {
               "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.parts[0] }}",
-                    "rightValue": "prof",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
+                    "id": "r-prf",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "prf:",
+                    "operator": { "type": "string", "operation": "startsWith" }
                   }
                 ],
                 "combinator": "and"
               },
-              "outputKey": "prof"
+              "outputKey": "prf"
             },
             {
               "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.parts[0] }}",
-                    "rightValue": "fecha",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
+                    "id": "r-fch",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "fch:",
+                    "operator": { "type": "string", "operation": "startsWith" }
                   }
                 ],
                 "combinator": "and"
               },
-              "outputKey": "fecha"
+              "outputKey": "fch"
             },
             {
               "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.parts[0] }}",
-                    "rightValue": "hora",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
+                    "id": "r-slot",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "slot:",
+                    "operator": { "type": "string", "operation": "startsWith" }
                   }
                 ],
                 "combinator": "and"
               },
-              "outputKey": "hora"
+              "outputKey": "slot"
             },
             {
               "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.parts[0] }}",
-                    "rightValue": "confirmar",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
+                    "id": "r-book",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "book:",
+                    "operator": { "type": "string", "operation": "startsWith" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "book"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "r-miscitas",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "menu:miscitas",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "miscitas"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "r-servicios",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "menu:servicios",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "servicios"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "r-horario",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "menu:horario",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "horario"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "id": "r-confirmar",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "confirmar:",
+                    "operator": { "type": "string", "operation": "startsWith" }
                   }
                 ],
                 "combinator": "and"
@@ -392,19 +275,13 @@
             },
             {
               "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "typeValidation": "loose",
-                  "version": 2
-                },
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
                 "conditions": [
                   {
-                    "leftValue": "={{ $json.parts[0] }}",
-                    "rightValue": "cancelar",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
+                    "id": "r-cancelar",
+                    "leftValue": "={{ $('Set params').item.json.callbackData }}",
+                    "rightValue": "cancelar:",
+                    "operator": { "type": "string", "operation": "startsWith" }
                   }
                 ],
                 "combinator": "and"
@@ -413,1143 +290,229 @@
             }
           ]
         },
+        "fallbackOutput": "extra",
         "options": {}
       },
-      "id": "sw-cb",
-      "name": "Switch callback",
+      "id": "node-switch",
+      "name": "Router intent",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
-      "position": [
-        -840,
-        -360
-      ]
+      "position": [1000, 600]
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "s1",
-              "name": "chatId",
-              "value": "={{ $json.message.chat.id }}",
-              "type": "string"
-            },
-            {
-              "id": "s2",
-              "name": "from",
-              "value": "={{ $json.message.from }}",
-              "type": "object"
-            },
-            {
-              "id": "s3",
-              "name": "slug",
-              "value": "={{ (($json.message.text || '').split(' ')[1] || '').trim() || $('Set Config').item.json.defaultSlug }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "const params = $('Set params').item.json;\nconst lookup = $('Lookup Salon').item.json;\nconst salon = lookup.salon;\nconst nombre = salon.nombre;\nconst agente = salon.agente_nombre || 'Asistente';\nconst bienvenida = salon.agente_bienvenida || `Hola ${params.userName}, soy ${agente} del salon ${nombre}. Que quieres hacer?`;\n\nreturn [{\n  json: {\n    chat_id: params.chatId,\n    text: bienvenida,\n    parse_mode: 'HTML',\n    reply_markup: {\n      inline_keyboard: [\n        [{ text: 'Reservar', callback_data: 'menu:reservar' }],\n        [{ text: 'Mis citas', callback_data: 'menu:miscitas' }],\n        [{ text: 'Servicios', callback_data: 'menu:servicios' }, { text: 'Horario', callback_data: 'menu:horario' }]\n      ]\n    }\n  }\n}];"
       },
-      "id": "set-start",
-      "name": "Parse /start",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1040,
-        -120
-      ]
+      "id": "node-build-start",
+      "name": "Build /start menu",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 200]
     },
     {
       "parameters": {
-        "chatId": "={{ $json.chatId }}",
-        "text": "=¡Hola, <b>{{ $json.from.first_name }}</b>! 👋\n\nSoy el asistente del salón. ¿Qué quieres hacer?",
-        "additionalFields": {
-          "parse_mode": "HTML",
-          "reply_markup": "={{ JSON.stringify({ inline_keyboard: [\n  [{ text: '📅 Reservar', callback_data: 'reservar:' + $json.slug }],\n  [{ text: '🗓 Mis citas', callback_data: 'miscitas:' + $json.slug }],\n  [{ text: '💶 Precios', callback_data: 'menu:precios:' + $json.slug }, { text: '🕒 Horario', callback_data: 'menu:horario:' + $json.slug }]\n] }) }}"
-        }
+        "jsCode": "const params = $('Set params').item.json;\nconst lookup = $('Lookup Salon').item.json;\nconst servicios = lookup.servicios || [];\n\nconst rows = servicios.map(s => ([{\n  text: `${s.nombre} (${s.duracion_min} min, ${s.precio_eur} EUR)`,\n  callback_data: `srv:${s.id}`\n}]));\n\nreturn [{\n  json: {\n    chat_id: params.chatId,\n    text: 'Elige un servicio:',\n    parse_mode: 'HTML',\n    reply_markup: { inline_keyboard: rows }\n  }\n}];"
       },
-      "id": "tg-menu",
-      "name": "Enviar menú",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -640,
-        -120
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      }
+      "id": "node-build-reservar",
+      "name": "Build servicios list",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 350]
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "r1",
-              "name": "slug",
-              "value": "={{ $json.parts[1] || $('Set Config').item.json.defaultSlug }}",
-              "type": "string"
-            }
-          ],
-          "include": "all"
-        },
-        "options": {}
+        "jsCode": "// TODO: Branch C (srv:<id>) - mostrar profesionales\nconst params = $('Set params').item.json;\nconst lookup = $('Lookup Salon').item.json;\nconst servId = params.callbackData.split(':')[1];\nconst profesionales = lookup.profesionales || [];\n\nconst rows = profesionales.map(p => ([{\n  text: p.nombre,\n  callback_data: `prf:${servId}:${p.id}`\n}]));\nrows.push([{ text: 'Cualquiera', callback_data: `prf:${servId}:any` }]);\n\nreturn [{\n  json: {\n    chat_id: params.chatId,\n    text: 'Con que profesional?',\n    parse_mode: 'HTML',\n    reply_markup: { inline_keyboard: rows }\n  }\n}];"
       },
-      "id": "set-reservar",
-      "name": "Set slug reservar",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -640,
-        -680
-      ]
+      "id": "node-build-srv",
+      "name": "Build profesionales list",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 500]
     },
     {
       "parameters": {
-        "chatId": "={{ $json.chatId }}",
-        "text": "Elige el servicio que quieres:",
-        "additionalFields": {
-          "parse_mode": "HTML",
-          "reply_markup": "={{ JSON.stringify({ inline_keyboard: [\n  [{ text: '✂️ Corte de pelo (20 min)', callback_data: 'srv:' + $json.slug + ':SERVICIO_UUID_1' }],\n  [{ text: '🪒 Corte + barba (35 min)', callback_data: 'srv:' + $json.slug + ':SERVICIO_UUID_2' }],\n  [{ text: '💆 Tratamiento (45 min)', callback_data: 'srv:' + $json.slug + ':SERVICIO_UUID_3' }]\n] }) }}"
-        }
+        "jsCode": "// Branch D (prf:<servId>:<profId>) -> selector de fecha (3 dias)\nconst params = $('Set params').item.json;\nconst parts = params.callbackData.split(':');\nconst servId = parts[1];\nconst profId = parts[2];\nconst hoy = new Date();\nconst d = (n) => {\n  const x = new Date(hoy.getTime() + n*86400000);\n  return x.toISOString().slice(0,10);\n};\nconst rows = [\n  [{ text: 'Hoy', callback_data: `fch:${servId}:${profId}:${d(0)}` }],\n  [{ text: 'Manana', callback_data: `fch:${servId}:${profId}:${d(1)}` }],\n  [{ text: 'Pasado', callback_data: `fch:${servId}:${profId}:${d(2)}` }]\n];\nreturn [{ json: { chat_id: params.chatId, text: 'Para que dia?', reply_markup: { inline_keyboard: rows } } }];"
       },
-      "id": "tg-srv-list",
-      "name": "Lista servicios",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -440,
-        -680
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      },
-      "notes": "TODO: cuando exista /api/v1/salones/<slug>/servicios, sustituir esta lista hardcoded por un HTTP Request previo y construir el inline_keyboard dinámicamente."
+      "id": "node-build-prf",
+      "name": "Build fecha selector",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 650]
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "p1",
-              "name": "slug",
-              "value": "={{ $json.parts[1] }}",
-              "type": "string"
-            },
-            {
-              "id": "p2",
-              "name": "servicioId",
-              "value": "={{ $json.parts[2] }}",
-              "type": "string"
-            }
-          ],
-          "include": "all"
-        },
-        "options": {}
+        "jsCode": "// Branch E (fch:<servId>:<profId>:<fecha>) -> llamar a /disponibilidad y mostrar slots\n// TODO: este nodo solo prepara la URL. Anadir un HTTP Request despues que la consuma y otro Code que formatee los slots como botones inline (callback `slot:<servId>:<profId>:<isoUtc>`).\nconst params = $('Set params').item.json;\nconst parts = params.callbackData.split(':');\nconst servId = parts[1];\nconst profId = parts[2];\nconst fecha = parts[3];\nconst slug = params.slug;\nconst profQuery = (profId && profId !== 'any') ? `&profesional_id=${profId}` : '';\nconst url = `https://gestori.es/api/v1/salones/${slug}/disponibilidad?servicio_id=${servId}&fecha=${fecha}${profQuery}`;\nreturn [{ json: { url, servId, profId, fecha, chatId: params.chatId } }];"
       },
-      "id": "set-srv",
-      "name": "Set servicio",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -640,
-        -480
-      ]
+      "id": "node-build-fch",
+      "name": "Build disponibilidad URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 800]
     },
     {
       "parameters": {
-        "chatId": "={{ $json.chatId }}",
-        "text": "¿Con qué profesional?",
-        "additionalFields": {
-          "parse_mode": "HTML",
-          "reply_markup": "={{ JSON.stringify({ inline_keyboard: [\n  [{ text: '👤 Marcos', callback_data: 'prof:' + $json.slug + ':' + $json.servicioId + ':PROFESIONAL_UUID_1' }],\n  [{ text: '👤 Lucía', callback_data: 'prof:' + $json.slug + ':' + $json.servicioId + ':PROFESIONAL_UUID_2' }]\n] }) }}"
-        }
+        "jsCode": "// Branch F (slot:<servId>:<profId>:<isoUtc>) -> resumen + boton confirmar\n// TODO: incluir paso de pedir telefono con force_reply si el cliente no tiene telefono guardado.\nconst params = $('Set params').item.json;\nconst parts = params.callbackData.split(':');\nconst servId = parts[1];\nconst profId = parts[2];\nconst iso = parts.slice(3).join(':');\nconst lookup = $('Lookup Salon').item.json;\nconst serv = (lookup.servicios || []).find(s => s.id === servId);\nconst prof = (lookup.profesionales || []).find(p => p.id === profId);\nconst rows = [[{ text: 'Confirmar reserva', callback_data: `book:${servId}:${profId}:${iso}` }], [{ text: 'Cancelar', callback_data: 'menu:reservar' }]];\nreturn [{ json: { chat_id: params.chatId, text: `Resumen:\\n- Servicio: ${serv?.nombre}\\n- Profesional: ${prof?.nombre || 'cualquiera'}\\n- Fecha (UTC): ${iso}\\n\\nConfirmas?`, reply_markup: { inline_keyboard: rows } } }];"
       },
-      "id": "tg-prof-list",
-      "name": "Lista profesionales",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -440,
-        -480
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      },
-      "notes": "TODO: idem servicios, listar dinámicamente desde la API cuando exista."
+      "id": "node-build-slot",
+      "name": "Build resumen reserva",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 950]
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "p1",
-              "name": "slug",
-              "value": "={{ $json.parts[1] }}",
-              "type": "string"
-            },
-            {
-              "id": "p2",
-              "name": "servicioId",
-              "value": "={{ $json.parts[2] }}",
-              "type": "string"
-            },
-            {
-              "id": "p3",
-              "name": "profesionalId",
-              "value": "={{ $json.parts[3] }}",
-              "type": "string"
-            },
-            {
-              "id": "p4",
-              "name": "fechas",
-              "value": "={{ Array.from({length: 7}, (_, i) => { const d = new Date(); d.setDate(d.getDate() + i); const iso = d.toISOString().slice(0,10); const label = d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }); return { iso, label }; }) }}",
-              "type": "array"
-            }
-          ],
-          "include": "all"
-        },
-        "options": {}
+        "jsCode": "// Branch G (book:<servId>:<profId>:<isoUtc>) -> POST /citas\n// TODO: anadir HTTP Request despues que haga el POST a `url` con header auth y body, luego un Code que formatee la confirmacion antes del sendMessage final.\nconst params = $('Set params').item.json;\nconst parts = params.callbackData.split(':');\nconst servId = parts[1];\nconst profId = parts[2];\nconst iso = parts.slice(3).join(':');\nconst slug = params.slug;\nconst body = {\n  servicio_id: servId,\n  profesional_id: (profId === 'any') ? null : profId,\n  inicio: iso,\n  cliente: { telegram_id: String(params.userId), nombre: params.userName },\n  origen: 'telegram'\n};\nreturn [{ json: { url: `https://gestori.es/api/v1/salones/${slug}/citas`, body, chatId: params.chatId } }];"
       },
-      "id": "set-prof",
-      "name": "Set profesional + fechas",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -640,
-        -280
-      ]
+      "id": "node-build-book",
+      "name": "Build POST cita",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 1100]
     },
     {
       "parameters": {
-        "chatId": "={{ $json.chatId }}",
-        "text": "¿Qué día prefieres?",
-        "additionalFields": {
-          "parse_mode": "HTML",
-          "reply_markup": "={{ JSON.stringify({ inline_keyboard: $json.fechas.map(f => [{ text: f.label, callback_data: 'fecha:' + $json.slug + ':' + $json.servicioId + ':' + $json.profesionalId + ':' + f.iso }]) }) }}"
-        }
+        "jsCode": "// Branch H (menu:miscitas) -> listar citas del cliente\n// TODO: anadir HTTP Request GET despues + Code que formatee la lista en HTML.\nconst params = $('Set params').item.json;\nconst slug = params.slug;\nconst url = `https://gestori.es/api/v1/salones/${slug}/citas?cliente_telegram_id=${params.userId}`;\nreturn [{ json: { url, chatId: params.chatId } }];"
       },
-      "id": "tg-fecha-list",
-      "name": "Lista fechas",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -440,
-        -280
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      }
+      "id": "node-build-miscitas",
+      "name": "Build mis citas URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 1250]
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "p1",
-              "name": "slug",
-              "value": "={{ $json.parts[1] }}",
-              "type": "string"
-            },
-            {
-              "id": "p2",
-              "name": "servicioId",
-              "value": "={{ $json.parts[2] }}",
-              "type": "string"
-            },
-            {
-              "id": "p3",
-              "name": "profesionalId",
-              "value": "={{ $json.parts[3] }}",
-              "type": "string"
-            },
-            {
-              "id": "p4",
-              "name": "fecha",
-              "value": "={{ $json.parts[4] }}",
-              "type": "string"
-            }
-          ],
-          "include": "all"
-        },
-        "options": {}
+        "jsCode": "// Branch I (menu:servicios)\nconst params = $('Set params').item.json;\nconst lookup = $('Lookup Salon').item.json;\nconst lista = lookup.servicios_lista || (lookup.servicios || []).map(s => `- ${s.nombre} (${s.duracion_min} min, ${s.precio_eur} EUR)`).join('\\n');\nreturn [{ json: { chat_id: params.chatId, text: `<b>Servicios</b>\\n${lista}`, parse_mode: 'HTML' } }];"
       },
-      "id": "set-fecha",
-      "name": "Set fecha",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -640,
-        -80
-      ]
+      "id": "node-build-servicios",
+      "name": "Build servicios info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 1400]
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "={{ $('Set Config').item.json.apiBaseUrl }}/api/v1/salones/{{ $json.slug }}/disponibilidad",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "servicio_id",
-              "value": "={{ $json.servicioId }}"
-            },
-            {
-              "name": "profesional_id",
-              "value": "={{ $json.profesionalId }}"
-            },
-            {
-              "name": "fecha",
-              "value": "={{ $json.fecha }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true,
-              "responseFormat": "json"
-            }
-          }
-        }
+        "jsCode": "// Branch J (menu:horario) - TODO: enriquecer con horarios reales del lookup si los expone\nconst params = $('Set params').item.json;\nconst lookup = $('Lookup Salon').item.json;\nconst tz = lookup.salon.timezone || 'Europe/Madrid';\nreturn [{ json: { chat_id: params.chatId, text: `<b>Horario</b>\\nZona horaria: ${tz}\\nConsulta el panel del salon para ver el detalle.`, parse_mode: 'HTML' } }];"
       },
-      "id": "http-disp",
-      "name": "GET disponibilidad",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -440,
-        -80
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_HEADERAUTH_CRED_ID",
-          "name": "Header Auth Gomper API"
-        }
-      }
+      "id": "node-build-horario",
+      "name": "Build horario",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 1550]
     },
     {
       "parameters": {
-        "chatId": "={{ $('Parse callback').item.json.chatId }}",
-        "text": "={{ ($json.slots && $json.slots.length > 0) ? '¿A qué hora?' : '😕 No hay huecos disponibles ese día. Prueba otra fecha.' }}",
-        "additionalFields": {
-          "parse_mode": "HTML",
-          "reply_markup": "={{ JSON.stringify({ inline_keyboard: ($json.slots || []).slice(0, 18).reduce((acc, slot, i) => { const h = new Date(slot).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: $json.timezone || 'Europe/Madrid' }); const cb = 'hora:' + $('Set fecha').item.json.slug + ':' + $('Set fecha').item.json.servicioId + ':' + $('Set fecha').item.json.profesionalId + ':' + slot; const row = Math.floor(i / 3); if (!acc[row]) acc[row] = []; acc[row].push({ text: h, callback_data: cb }); return acc; }, []) }) }}"
-        }
+        "jsCode": "// Branch K (confirmar:<citaId>)\n// TODO: anadir HTTP Request POST a /api/v1/citas/<id>/confirmar y formatear respuesta.\nconst params = $('Set params').item.json;\nconst citaId = params.callbackData.split(':')[1];\nreturn [{ json: { url: `https://gestori.es/api/v1/citas/${citaId}/confirmar`, body: {}, chatId: params.chatId, citaId } }];"
       },
-      "id": "tg-horas-list",
-      "name": "Lista horas",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -240,
-        -80
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      }
+      "id": "node-build-confirmar",
+      "name": "Build confirmar URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 1700]
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "p1",
-              "name": "slug",
-              "value": "={{ $json.parts[1] }}",
-              "type": "string"
-            },
-            {
-              "id": "p2",
-              "name": "servicioId",
-              "value": "={{ $json.parts[2] }}",
-              "type": "string"
-            },
-            {
-              "id": "p3",
-              "name": "profesionalId",
-              "value": "={{ $json.parts[3] }}",
-              "type": "string"
-            },
-            {
-              "id": "p4",
-              "name": "inicio",
-              "value": "={{ $json.parts.slice(4).join(':') }}",
-              "type": "string"
-            }
-          ],
-          "include": "all"
-        },
-        "options": {}
+        "jsCode": "// Branch L (cancelar:<citaId>)\n// TODO: anadir HTTP Request POST a /api/v1/citas/<id>/cancelar y formatear respuesta.\nconst params = $('Set params').item.json;\nconst citaId = params.callbackData.split(':')[1];\nreturn [{ json: { url: `https://gestori.es/api/v1/citas/${citaId}/cancelar`, body: { motivo: 'Cancelada por el cliente desde Telegram' }, chatId: params.chatId, citaId } }];"
       },
-      "id": "set-hora",
-      "name": "Set hora",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -640,
-        120
-      ]
+      "id": "node-build-cancelar",
+      "name": "Build cancelar URL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 1850]
     },
     {
       "parameters": {
-        "chatId": "={{ $json.chatId }}",
-        "text": "=📝 Indícame tu nombre y teléfono separados por coma.\n\nEjemplo: <code>Marlon, +34600111222</code>\n\n<i>Reserva: {{ new Date($json.inicio).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Madrid' }) }}</i>",
-        "additionalFields": {
-          "parse_mode": "HTML",
-          "reply_markup": "={{ JSON.stringify({ force_reply: true, selective: true }) }}"
-        }
+        "jsCode": "// Branch M fallback (texto libre)\n// TODO opcional: invocar a Gemini Flash con el system prompt del agente_nombre/tono y servicios_lista para responder en lenguaje natural y ofrecer el menu.\nconst params = $('Set params').item.json;\nreturn [{ json: { chat_id: params.chatId, text: 'No te he entendido. Usa /start para abrir el menu.' } }];"
       },
-      "id": "tg-pedir-datos",
-      "name": "Pedir nombre + tel",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -440,
-        120
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "p1",
-              "name": "raw",
-              "value": "={{ $json.message.text || '' }}",
-              "type": "string"
-            },
-            {
-              "id": "p2",
-              "name": "nombre",
-              "value": "={{ ($json.message.text || '').split(',')[0]?.trim() }}",
-              "type": "string"
-            },
-            {
-              "id": "p3",
-              "name": "telefono",
-              "value": "={{ ($json.message.text || '').split(',')[1]?.trim() || '' }}",
-              "type": "string"
-            },
-            {
-              "id": "p4",
-              "name": "chatId",
-              "value": "={{ $json.message.chat.id }}",
-              "type": "string"
-            },
-            {
-              "id": "p5",
-              "name": "telegramId",
-              "value": "={{ $json.message.from.id }}",
-              "type": "string"
-            },
-            {
-              "id": "p6",
-              "name": "replyText",
-              "value": "={{ $json.message.reply_to_message.text || '' }}",
-              "type": "string"
-            },
-            {
-              "id": "p7",
-              "name": "matchInicio",
-              "value": "={{ ($json.message.reply_to_message.text || '').match(/Reserva:\\s*(.+?)$/m) }}",
-              "type": "object"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "set-datos",
-      "name": "Parse datos cliente",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -1040,
-        160
-      ]
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $json.chatId }}",
-        "text": "=Para confirmar tu reserva con <b>{{ $json.nombre }}</b>:\n\n¿Todo correcto?",
-        "additionalFields": {
-          "parse_mode": "HTML",
-          "reply_markup": "={{ JSON.stringify({ inline_keyboard: [\n  [{ text: '✅ Confirmar reserva', callback_data: 'confirmar:NEW:' + encodeURIComponent($json.nombre) + ':' + encodeURIComponent($json.telefono || '') }],\n  [{ text: '❌ Cancelar', callback_data: 'menu:back:' + $('Set Config').item.json.defaultSlug }]\n] }) }}"
-        }
-      },
-      "id": "tg-confirmar-prev",
-      "name": "Pedir confirmación",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -640,
-        320
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      },
-      "notes": "Versión simplificada: cuando el cliente responde nombre+tel se crea la cita directamente con los últimos datos del Set hora previo (recuperado por chat_id si fuese necesario via store externo). Aquí asumimos que el flujo viene del Set hora más reciente."
+      "id": "node-build-fallback",
+      "name": "Build fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1300, 2000]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Set Config').item.json.apiBaseUrl }}/api/v1/salones/{{ $('Set hora').item.json.slug }}/citas",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
+        "url": "=https://api.telegram.org/bot{{ $('Lookup Salon').item.json.salon.telegram_bot_token }}/sendMessage",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"servicio_id\": \"{{ $('Set hora').item.json.servicioId }}\",\n  \"profesional_id\": \"{{ $('Set hora').item.json.profesionalId }}\",\n  \"inicio\": \"{{ $('Set hora').item.json.inicio }}\",\n  \"cliente\": {\n    \"telegram_id\": \"{{ $('Parse datos cliente').item.json.telegramId }}\",\n    \"nombre\": \"{{ $('Parse datos cliente').item.json.nombre }}\",\n    \"telefono\": \"{{ $('Parse datos cliente').item.json.telefono }}\"\n  },\n  \"origen\": \"telegram\"\n}",
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true,
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "http-crear-cita",
-      "name": "POST crear cita",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -440,
-        320
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_HEADERAUTH_CRED_ID",
-          "name": "Header Auth Gomper API"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Parse datos cliente').item.json.chatId }}",
-        "text": "={{ $json.cita ? '✅ ¡Reserva creada! Te esperamos.\\n\\n<b>' + $json.cita.servicio.nombre + '</b>\\nCon ' + $json.cita.profesional.nombre + '\\n' + new Date($json.cita.inicio).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Madrid' }) : '❌ No pudimos crear la reserva: ' + ($json.error || 'inténtalo de nuevo') }}",
-        "additionalFields": {
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "tg-cita-ok",
-      "name": "Confirmar al cliente",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -240,
-        320
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "p1",
-              "name": "slug",
-              "value": "={{ $json.parts[1] }}",
-              "type": "string"
-            },
-            {
-              "id": "p2",
-              "name": "telegramId",
-              "value": "={{ $json.from.id }}",
-              "type": "string"
-            }
-          ],
-          "include": "all"
-        },
+        "jsonBody": "={{ JSON.stringify($json) }}",
         "options": {}
       },
-      "id": "set-miscitas",
-      "name": "Set mis citas",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -640,
-        -880
-      ]
-    },
-    {
-      "parameters": {
-        "method": "GET",
-        "url": "={{ $('Set Config').item.json.apiBaseUrl }}/api/v1/salones/{{ $json.slug }}/citas",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendQuery": true,
-        "queryParameters": {
-          "parameters": [
-            {
-              "name": "cliente_telegram_id",
-              "value": "={{ $json.telegramId }}"
-            }
-          ]
-        },
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true,
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "http-miscitas",
-      "name": "GET mis citas",
+      "id": "node-send-message",
+      "name": "Telegram sendMessage",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        -440,
-        -880
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_HEADERAUTH_CRED_ID",
-          "name": "Header Auth Gomper API"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Parse callback').item.json.chatId }}",
-        "text": "={{ (!$json.citas || $json.citas.length === 0) ? '🗓 No tienes citas próximas.' : '🗓 <b>Tus próximas citas</b>\\n\\n' + $json.citas.map(c => '• ' + new Date(c.inicio).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short', timeZone: 'Europe/Madrid' }) + '\\n  ' + c.servicio.nombre + ' con ' + c.profesional.nombre + ' (' + c.estado + ')').join('\\n\\n') }}",
-        "additionalFields": {
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "tg-miscitas",
-      "name": "Mostrar mis citas",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -240,
-        -880
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c1",
-              "name": "citaId",
-              "value": "={{ $json.parts[1] }}",
-              "type": "string"
-            }
-          ],
-          "include": "all"
-        },
-        "options": {}
-      },
-      "id": "set-confirmar",
-      "name": "Set confirmar",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -640,
-        520
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Set Config').item.json.apiBaseUrl }}/api/v1/citas/{{ $json.citaId }}/confirmar",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": false,
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true,
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "http-confirmar",
-      "name": "POST confirmar cita",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -440,
-        520
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_HEADERAUTH_CRED_ID",
-          "name": "Header Auth Gomper API"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Parse callback').item.json.chatId }}",
-        "text": "={{ $json.ok ? '✅ ¡Genial, te esperamos!' : '❌ ' + ($json.error || 'No se pudo confirmar') }}",
-        "additionalFields": {
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "tg-confirmada",
-      "name": "Avisar confirmada",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -240,
-        520
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "c1",
-              "name": "citaId",
-              "value": "={{ $json.parts[1] }}",
-              "type": "string"
-            }
-          ],
-          "include": "all"
-        },
-        "options": {}
-      },
-      "id": "set-cancelar",
-      "name": "Set cancelar",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        -640,
-        720
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Set Config').item.json.apiBaseUrl }}/api/v1/citas/{{ $json.citaId }}/cancelar",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"cancelada_por\": \"cliente\"\n}",
-        "options": {
-          "response": {
-            "response": {
-              "neverError": true,
-              "responseFormat": "json"
-            }
-          }
-        }
-      },
-      "id": "http-cancelar",
-      "name": "POST cancelar cita",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        -440,
-        720
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "REPLACE_HEADERAUTH_CRED_ID",
-          "name": "Header Auth Gomper API"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $('Parse callback').item.json.chatId }}",
-        "text": "={{ $json.ok ? '👌 Cita cancelada. Si quieres reservar otra, dime cuándo.' : '❌ ' + ($json.error || 'No se pudo cancelar') }}",
-        "additionalFields": {
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "tg-cancelada",
-      "name": "Avisar cancelada",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -240,
-        720
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "chatId": "={{ $json.message.chat.id }}",
-        "text": "🤖 No te he entendido. Pulsa /start para abrir el menú.",
-        "additionalFields": {
-          "parse_mode": "HTML"
-        }
-      },
-      "id": "tg-fallback",
-      "name": "Fallback texto libre",
-      "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.2,
-      "position": [
-        -640,
-        920
-      ],
-      "credentials": {
-        "telegramApi": {
-          "id": "REPLACE_TELEGRAM_CRED_ID",
-          "name": "Telegram Bot Salón Demo"
-        }
-      },
-      "notes": "Aquí es donde puedes enchufar a Juanita (Gemini Flash) — ver docs/07-n8n-setup.md sección 7."
+      "position": [1700, 1000]
     }
   ],
   "connections": {
-    "Telegram Trigger": {
+    "Webhook Telegram": {
+      "main": [[{ "node": "Set params", "type": "main", "index": 0 }]]
+    },
+    "Set params": {
+      "main": [[{ "node": "Lookup Salon", "type": "main", "index": 0 }]]
+    },
+    "Lookup Salon": {
+      "main": [[{ "node": "Salon existe?", "type": "main", "index": 0 }]]
+    },
+    "Salon existe?": {
       "main": [
-        [
-          {
-            "node": "Set Config",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Bot no configurado", "type": "main", "index": 0 }],
+        [{ "node": "Router intent", "type": "main", "index": 0 }]
       ]
     },
-    "Set Config": {
+    "Router intent": {
       "main": [
-        [
-          {
-            "node": "Switch principal",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "Build /start menu", "type": "main", "index": 0 }],
+        [{ "node": "Build servicios list", "type": "main", "index": 0 }],
+        [{ "node": "Build profesionales list", "type": "main", "index": 0 }],
+        [{ "node": "Build fecha selector", "type": "main", "index": 0 }],
+        [{ "node": "Build disponibilidad URL", "type": "main", "index": 0 }],
+        [{ "node": "Build resumen reserva", "type": "main", "index": 0 }],
+        [{ "node": "Build POST cita", "type": "main", "index": 0 }],
+        [{ "node": "Build mis citas URL", "type": "main", "index": 0 }],
+        [{ "node": "Build servicios info", "type": "main", "index": 0 }],
+        [{ "node": "Build horario", "type": "main", "index": 0 }],
+        [{ "node": "Build confirmar URL", "type": "main", "index": 0 }],
+        [{ "node": "Build cancelar URL", "type": "main", "index": 0 }],
+        [{ "node": "Build fallback", "type": "main", "index": 0 }]
       ]
     },
-    "Switch principal": {
-      "main": [
-        [
-          {
-            "node": "Parse callback",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Parse /start",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Parse datos cliente",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Fallback texto libre",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Build /start menu": {
+      "main": [[{ "node": "Telegram sendMessage", "type": "main", "index": 0 }]]
     },
-    "Parse callback": {
-      "main": [
-        [
-          {
-            "node": "Switch callback",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Build servicios list": {
+      "main": [[{ "node": "Telegram sendMessage", "type": "main", "index": 0 }]]
     },
-    "Switch callback": {
-      "main": [
-        [],
-        [
-          {
-            "node": "Set slug reservar",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set mis citas",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set servicio",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set profesional + fechas",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set fecha",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set hora",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set confirmar",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set cancelar",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Build profesionales list": {
+      "main": [[{ "node": "Telegram sendMessage", "type": "main", "index": 0 }]]
     },
-    "Parse /start": {
-      "main": [
-        [
-          {
-            "node": "Enviar menú",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Build fecha selector": {
+      "main": [[{ "node": "Telegram sendMessage", "type": "main", "index": 0 }]]
     },
-    "Set slug reservar": {
-      "main": [
-        [
-          {
-            "node": "Lista servicios",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Build resumen reserva": {
+      "main": [[{ "node": "Telegram sendMessage", "type": "main", "index": 0 }]]
     },
-    "Set servicio": {
-      "main": [
-        [
-          {
-            "node": "Lista profesionales",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Build servicios info": {
+      "main": [[{ "node": "Telegram sendMessage", "type": "main", "index": 0 }]]
     },
-    "Set profesional + fechas": {
-      "main": [
-        [
-          {
-            "node": "Lista fechas",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Build horario": {
+      "main": [[{ "node": "Telegram sendMessage", "type": "main", "index": 0 }]]
     },
-    "Set fecha": {
-      "main": [
-        [
-          {
-            "node": "GET disponibilidad",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GET disponibilidad": {
-      "main": [
-        [
-          {
-            "node": "Lista horas",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set hora": {
-      "main": [
-        [
-          {
-            "node": "Pedir nombre + tel",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Parse datos cliente": {
-      "main": [
-        [
-          {
-            "node": "POST crear cita",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "POST crear cita": {
-      "main": [
-        [
-          {
-            "node": "Confirmar al cliente",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set mis citas": {
-      "main": [
-        [
-          {
-            "node": "GET mis citas",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "GET mis citas": {
-      "main": [
-        [
-          {
-            "node": "Mostrar mis citas",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set confirmar": {
-      "main": [
-        [
-          {
-            "node": "POST confirmar cita",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "POST confirmar cita": {
-      "main": [
-        [
-          {
-            "node": "Avisar confirmada",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set cancelar": {
-      "main": [
-        [
-          {
-            "node": "POST cancelar cita",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "POST cancelar cita": {
-      "main": [
-        [
-          {
-            "node": "Avisar cancelada",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+    "Build fallback": {
+      "main": [[{ "node": "Telegram sendMessage", "type": "main", "index": 0 }]]
     }
   },
-  "tags": [
-    {
-      "id": "gomper",
-      "name": "gomper"
-    }
-  ],
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "gomper-bot-multi-tenant",
+  "versionId": "1",
   "meta": {
     "templateCredsSetupCompleted": false
   },
-  "versionId": "00000000-0000-0000-0000-000000000001",
-  "id": "gomper-bot-cliente",
-  "pinData": {}
+  "tags": [
+    { "id": "gomper", "name": "gomper" },
+    { "id": "telegram", "name": "telegram" }
+  ]
 }
