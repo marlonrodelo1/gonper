@@ -195,7 +195,7 @@ export default async function HoyPage() {
           </h1>
         </div>
         <Link
-          href="/panel/agenda"
+          href="/panel/citas/nueva"
           className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
         >
           <span>+</span>
@@ -249,47 +249,49 @@ export default async function HoyPage() {
               const colorProfesional = profesional.colorHex ?? '#3b82f6';
 
               return (
-                <li
-                  key={cita.id}
-                  className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900"
-                >
-                  <div className="w-16 shrink-0 text-base font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
-                    {hora}
-                  </div>
-                  <div className="flex flex-1 flex-col">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium text-zinc-950 dark:text-zinc-50">
-                        {cliente.nombre}
-                      </span>
-                      {noShowsCliente >= 2 && (
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
-                          {noShowsCliente} no-shows
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-0.5 flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
-                      <span>
-                        {servicio.nombre} · {servicio.duracionMin} min
-                      </span>
-                      <span aria-hidden>·</span>
-                      <span className="inline-flex items-center gap-1.5">
-                        <span
-                          className="inline-block size-2 rounded-full"
-                          style={{ backgroundColor: colorProfesional }}
-                          aria-hidden
-                        />
-                        {profesional.nombre}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="hidden w-20 text-right text-sm font-medium tabular-nums text-zinc-900 dark:text-zinc-100 sm:block">
-                    {Number(cita.precioEur).toFixed(0)} €
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${estado.className}`}
+                <li key={cita.id}>
+                  <Link
+                    href={`/panel/citas/${cita.id}`}
+                    className="flex items-center gap-4 px-6 py-4 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900"
                   >
-                    {estado.label}
-                  </span>
+                    <div className="w-16 shrink-0 text-base font-semibold tabular-nums text-zinc-900 dark:text-zinc-100">
+                      {hora}
+                    </div>
+                    <div className="flex flex-1 flex-col">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium text-zinc-950 dark:text-zinc-50">
+                          {cliente.nombre}
+                        </span>
+                        {noShowsCliente >= 2 && (
+                          <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                            {noShowsCliente} no-shows
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-0.5 flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400">
+                        <span>
+                          {servicio.nombre} · {servicio.duracionMin} min
+                        </span>
+                        <span aria-hidden>·</span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <span
+                            className="inline-block size-2 rounded-full"
+                            style={{ backgroundColor: colorProfesional }}
+                            aria-hidden
+                          />
+                          {profesional.nombre}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="hidden w-20 text-right text-sm font-medium tabular-nums text-zinc-900 dark:text-zinc-100 sm:block">
+                      {Number(cita.precioEur).toFixed(0)} €
+                    </div>
+                    <span
+                      className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${estado.className}`}
+                    >
+                      {estado.label}
+                    </span>
+                  </Link>
                 </li>
               );
             })}
