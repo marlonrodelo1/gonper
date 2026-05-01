@@ -23,9 +23,16 @@ const navOperacion: NavItem[] = [
   { href: '/panel/hoy', label: 'Hoy', icon: Icon.Home },
   { href: '/panel/agenda', label: 'Agenda', icon: Icon.Cal },
   { href: '/panel/citas/nueva', label: 'Citas', icon: Icon.Cal },
+  { href: '/panel/conversaciones', label: 'Conversaciones', icon: Icon.Chat },
   { href: '/panel/clientes', label: 'Clientes', icon: Icon.Users },
   { href: '/panel/servicios', label: 'Servicios', icon: Icon.Scissors },
   { href: '/panel/stats', label: 'Métricas', icon: Icon.Chart },
+];
+
+const navWeb: NavItem[] = [
+  { href: '/panel/promociones', label: 'Promociones', icon: Icon.Sparkle },
+  { href: '/panel/galeria', label: 'Galería', icon: Icon.Sparkle },
+  { href: '/panel/resenas', label: 'Reseñas', icon: Icon.Sparkle },
 ];
 
 const navConfig: NavItem[] = [
@@ -135,6 +142,32 @@ export function PanelSidebar({
                   }`}
                 >
                   <span className={active ? 'text-cream' : ''}>
+                    <IconCmp width="18" height="18" />
+                  </span>
+                  <span className="tight">{it.label}</span>
+                </Link>
+              );
+            })}
+
+            {/* Web del salón */}
+            <div className="mt-4 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-stone/60">
+              Web del salón
+            </div>
+            {navWeb.map((it) => {
+              const active = isActive(it.href);
+              const IconCmp = it.icon;
+              return (
+                <Link
+                  key={it.href}
+                  href={it.href}
+                  onClick={cerrar}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition ${
+                    active
+                      ? 'bg-ink text-cream'
+                      : 'text-stone hover:bg-paper hover:text-ink'
+                  }`}
+                >
+                  <span className={active ? 'text-cream' : 'text-terracotta'}>
                     <IconCmp width="18" height="18" />
                   </span>
                   <span className="tight">{it.label}</span>

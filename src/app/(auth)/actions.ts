@@ -48,7 +48,7 @@ export async function signup(formData: FormData) {
       nombre: salonNombre,
       tipo_negocio: tipoNegocio,
       plan: 'trial',
-      trial_until: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+      trial_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     })
     .select()
     .single();

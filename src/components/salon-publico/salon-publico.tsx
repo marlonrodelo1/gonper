@@ -12,7 +12,13 @@ import { Resenas } from './resenas';
 import { Reserva } from './reserva';
 import { Ubicacion, type HorarioSemana } from './ubicacion';
 import { Footer } from './footer';
-import type { Salon } from '@/lib/db/schema';
+import { ChatWidget } from './chat-widget';
+import type {
+  GaleriaImagen,
+  Promocion,
+  Resena,
+  Salon,
+} from '@/lib/db/schema';
 
 type Props = {
   salon: Salon;
@@ -26,6 +32,10 @@ type Props = {
   urlTelegram: string | null;
   horarioHoyTexto: string;
   diaActual: number;
+  promociones: Promocion[];
+  galeria: GaleriaImagen[];
+  resenas: Resena[];
+  resumenResenas: { rating: number; total: number } | null;
 };
 
 export function SalonPublico({
@@ -40,6 +50,10 @@ export function SalonPublico({
   urlTelegram,
   horarioHoyTexto,
   diaActual,
+  promociones,
+  galeria,
+  resenas,
+  resumenResenas,
 }: Props) {
   useReveal();
   const [pickedServicio, setPickedServicio] = useState<string | null>(null);
@@ -57,15 +71,15 @@ export function SalonPublico({
         horarioHoyTexto={horarioHoyTexto}
         servicios={servicios}
       />
-      <Promos agenteNombre={salon.agenteNombre} />
+      <Promos agenteNombre={salon.agenteNombre} promociones={promociones} />
       <Servicios
         servicios={servicios}
         agenteNombre={salon.agenteNombre}
         onPick={setPickedServicio}
       />
-      <Galeria />
+      <Galeria galeria={galeria} />
       <Equipo profesionales={profesionales} />
-      <Resenas />
+      <Resenas resenas={resenas} resumen={resumenResenas} />
       <Reserva
         slug={salon.slug}
         servicios={servicios}
@@ -76,6 +90,7 @@ export function SalonPublico({
       />
       <Ubicacion salon={salon} horariosSemana={horariosSemana} diaActual={diaActual} />
       <Footer salon={salon} />
+      <ChatWidget slug={salon.slug} agenteNombre={salon.agenteNombre || 'Juanita'} />
     </>
   );
 }

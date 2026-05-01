@@ -34,11 +34,7 @@ export async function POST(req: Request) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const salonId = session.metadata?.salon_id;
-        const plan = session.metadata?.plan as
-          | 'solo'
-          | 'studio'
-          | 'pro'
-          | undefined;
+        const plan = session.metadata?.plan as 'basico' | undefined;
         if (salonId && plan) {
           await db
             .update(salones)
@@ -61,11 +57,7 @@ export async function POST(req: Request) {
       case 'customer.subscription.updated': {
         const sub = event.data.object as Stripe.Subscription;
         const salonId = sub.metadata?.salon_id;
-        const plan = sub.metadata?.plan as
-          | 'solo'
-          | 'studio'
-          | 'pro'
-          | undefined;
+        const plan = sub.metadata?.plan as 'basico' | undefined;
         if (salonId && plan && sub.status === 'active') {
           await db
             .update(salones)

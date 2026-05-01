@@ -12,48 +12,30 @@ export function getStripe(): Stripe {
 }
 
 export interface PlanConfig {
-  id: 'solo' | 'studio' | 'pro';
+  id: 'basico';
   nombre: string;
   precio: number;
   priceId: string | undefined;
   features: string[];
 }
 
-export const PLANES: Record<'solo' | 'studio' | 'pro', PlanConfig> = {
-  solo: {
-    id: 'solo',
-    nombre: 'Solo',
-    precio: 19.9,
-    priceId: process.env.STRIPE_PRICE_SOLO,
+export const PLANES: Record<'basico', PlanConfig> = {
+  basico: {
+    id: 'basico',
+    nombre: 'Básico',
+    precio: 30,
+    priceId: process.env.STRIPE_PRICE_BASIC,
     features: [
-      '1 profesional',
-      'Reservas Telegram',
-      'Recordatorios',
-      'Panel básico',
-    ],
-  },
-  studio: {
-    id: 'studio',
-    nombre: 'Studio',
-    precio: 29.9,
-    priceId: process.env.STRIPE_PRICE_STUDIO,
-    features: [
-      'Hasta 4 profesionales',
+      'Reservas por Telegram + chat web',
+      'Recordatorios automáticos 1h antes',
+      'Confirmación + liberación de huecos',
       'Lista de espera',
-      'Depósitos',
-      'Juanita Pro',
-    ],
-  },
-  pro: {
-    id: 'pro',
-    nombre: 'Pro',
-    precio: 79.9,
-    priceId: process.env.STRIPE_PRICE_PRO,
-    features: [
-      'Profesionales ilimitados',
-      'Multi-local',
-      'WhatsApp',
-      'API',
+      'Personalización del agente (nombre, género, tono)',
+      'Personalización de la web pública (promociones, galería, reseñas)',
+      'Profesionales y servicios ilimitados',
+      'Estadísticas y métricas',
     ],
   },
 };
+
+export type PlanId = keyof typeof PLANES;

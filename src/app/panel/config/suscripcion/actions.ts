@@ -25,7 +25,7 @@ async function buildBaseUrl() {
   return `${proto}://${host}`;
 }
 
-export async function crearCheckout(planId: 'solo' | 'studio' | 'pro') {
+export async function crearCheckout(planId: 'basico') {
   const salonRaw = (await getCurrentSalon()) as SalonRow | null;
   if (!salonRaw) {
     redirect(

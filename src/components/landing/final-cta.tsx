@@ -20,7 +20,7 @@ export function FinalCTA() {
               el <span className="font-serif-it text-terracotta">teléfono</span>.
             </h2>
             <p className="text-cream/70 text-[17px] mt-6 max-w-[480px] leading-relaxed">
-              14 días gratis. Sin tarjeta. Setup en 12 minutos. Si después de probarlo no quieres seguir, cierras y no pagas nada.
+              7 días gratis. Sin tarjeta. Setup en 12 minutos. Si después de probarlo no quieres seguir, cierras y no pagas nada.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
               <Link

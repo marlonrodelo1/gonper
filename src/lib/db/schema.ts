@@ -44,6 +44,7 @@ export const agenteTonoEnum = pgEnum('agente_tono_enum', [
 
 export const planEnum = pgEnum('plan_enum', [
   'trial',
+  'basico',
   'solo',
   'studio',
   'pro',
@@ -164,7 +165,7 @@ export const salones = pgTable(
     ),
     chkPlan: check(
       'salones_plan_check',
-      sql`${t.plan} in ('trial','solo','studio','pro','cancelado')`,
+      sql`${t.plan} in ('trial','basico','solo','studio','pro','cancelado')`,
     ),
   }),
 );
@@ -488,6 +489,12 @@ export const mensajes = pgTable(
     contenido: text('contenido').notNull(),
     payloadRaw: jsonb('payload_raw'),
 
+    // Chat web (sin telegram_id) — agrupa mensajes por sesión y guarda
+    // datos del visitante hasta que se convierte en cliente.
+    sessionId: text('session_id'),
+    webVisitorNombre: text('web_visitor_nombre'),
+    webVisitorTelefono: text('web_visitor_telefono'),
+
     llmModelo: text('llm_modelo'),
     llmTokensIn: integer('llm_tokens_in'),
     llmTokensOut: integer('llm_tokens_out'),
@@ -506,6 +513,7 @@ export const mensajes = pgTable(
       t.clienteId,
       t.createdAt.desc(),
     ),
+    idxSession: index('idx_mensajes_session').on(t.sessionId, t.createdAt),
     chkCanal: check(
       'mensajes_canal_check',
       sql`${t.canal} in ('telegram','whatsapp','sms','web')`,
@@ -513,6 +521,102 @@ export const mensajes = pgTable(
     chkDireccion: check(
       'mensajes_direccion_check',
       sql`${t.direccion} in ('in','out')`,
+    ),
+  }),
+);
+
+// ============================================
+// TABLA: promociones (web pública del salón)
+// ============================================
+export const promociones = pgTable(
+  'promociones',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salones.id, { onDelete: 'cascade' }),
+    tag: text('tag'),
+    titulo: text('titulo').notNull(),
+    descripcion: text('descripcion'),
+    descuentoLabel: text('descuento_label'),
+    precioEur: numeric('precio_eur', { precision: 10, scale: 2 }),
+    precioAnteriorEur: numeric('precio_anterior_eur', { precision: 10, scale: 2 }),
+    validaHasta: date('valida_hasta'),
+    activa: boolean('activa').notNull().default(true),
+    orden: integer('orden').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxSalonActiva: index('idx_promociones_salon_activa')
+      .on(t.salonId)
+      .where(sql`${t.activa} = true`),
+  }),
+);
+
+// ============================================
+// TABLA: galeria_imagenes
+// ============================================
+export const galeriaImagenes = pgTable(
+  'galeria_imagenes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salones.id, { onDelete: 'cascade' }),
+    url: text('url').notNull(),
+    alt: text('alt'),
+    tag: text('tag'),
+    titulo: text('titulo'),
+    orden: integer('orden').notNull().default(0),
+    activa: boolean('activa').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxSalonActiva: index('idx_galeria_salon_activa')
+      .on(t.salonId)
+      .where(sql`${t.activa} = true`),
+  }),
+);
+
+// ============================================
+// TABLA: resenas
+// ============================================
+export const resenas = pgTable(
+  'resenas',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salones.id, { onDelete: 'cascade' }),
+    clienteId: uuid('cliente_id').references(() => clientes.id, {
+      onDelete: 'set null',
+    }),
+    autorNombre: text('autor_nombre').notNull(),
+    rating: integer('rating').notNull(),
+    texto: text('texto'),
+    fecha: date('fecha').notNull().defaultNow(),
+    fuente: text('fuente').notNull().default('manual'),
+    aprobada: boolean('aprobada').notNull().default(true),
+    destacada: boolean('destacada').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxSalonAprobada: index('idx_resenas_salon_aprobada')
+      .on(t.salonId, t.fecha.desc())
+      .where(sql`${t.aprobada} = true`),
+    chkRating: check('resenas_rating_check', sql`${t.rating} between 1 and 5`),
+    chkFuente: check(
+      'resenas_fuente_check',
+      sql`${t.fuente} in ('manual','google','telegram','web')`,
     ),
   }),
 );
@@ -582,6 +686,15 @@ export const rateLimits = pgTable(
 // ============================================
 export type Salon = typeof salones.$inferSelect;
 export type NewSalon = typeof salones.$inferInsert;
+
+export type Promocion = typeof promociones.$inferSelect;
+export type NewPromocion = typeof promociones.$inferInsert;
+
+export type GaleriaImagen = typeof galeriaImagenes.$inferSelect;
+export type NewGaleriaImagen = typeof galeriaImagenes.$inferInsert;
+
+export type Resena = typeof resenas.$inferSelect;
+export type NewResena = typeof resenas.$inferInsert;
 
 export type UsuarioSalon = typeof usuariosSalon.$inferSelect;
 export type NewUsuarioSalon = typeof usuariosSalon.$inferInsert;

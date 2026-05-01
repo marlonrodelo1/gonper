@@ -1,9 +1,17 @@
 import { notFound } from 'next/navigation';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, avg, count, desc, eq, gte, isNull, or, sql } from 'drizzle-orm';
 import type { CSSProperties } from 'react';
 
 import { db } from '@/lib/db';
-import { horarios, profesionales, salones, servicios } from '@/lib/db/schema';
+import {
+  galeriaImagenes,
+  horarios,
+  profesionales,
+  promociones,
+  resenas,
+  salones,
+  servicios,
+} from '@/lib/db/schema';
 import { SalonPublico } from '@/components/salon-publico/salon-publico';
 import type { HorarioSemana } from '@/components/salon-publico/ubicacion';
 
@@ -103,7 +111,15 @@ export default async function SalonPublicPage({
     notFound();
   }
 
-  const [serviciosActivos, profesionalesActivos, tramosHorario] = await Promise.all([
+  const [
+    serviciosActivos,
+    profesionalesActivos,
+    tramosHorario,
+    promocionesActivas,
+    galeriaActiva,
+    resenasAprobadas,
+    resumenResenasRows,
+  ] = await Promise.all([
     db
       .select({
         id: servicios.id,
@@ -133,7 +149,56 @@ export default async function SalonPublicPage({
       .from(horarios)
       .where(eq(horarios.salonId, salon.id))
       .orderBy(asc(horarios.diaSemana), asc(horarios.inicio)),
+    db
+      .select()
+      .from(promociones)
+      .where(
+        and(
+          eq(promociones.salonId, salon.id),
+          eq(promociones.activa, true),
+          or(
+            isNull(promociones.validaHasta),
+            gte(promociones.validaHasta, sql`CURRENT_DATE`),
+          ),
+        ),
+      )
+      .orderBy(asc(promociones.orden), asc(promociones.createdAt))
+      .limit(6),
+    db
+      .select()
+      .from(galeriaImagenes)
+      .where(
+        and(
+          eq(galeriaImagenes.salonId, salon.id),
+          eq(galeriaImagenes.activa, true),
+        ),
+      )
+      .orderBy(asc(galeriaImagenes.orden), asc(galeriaImagenes.createdAt))
+      .limit(12),
+    db
+      .select()
+      .from(resenas)
+      .where(and(eq(resenas.salonId, salon.id), eq(resenas.aprobada, true)))
+      .orderBy(desc(resenas.destacada), desc(resenas.fecha))
+      .limit(12),
+    db
+      .select({
+        rating: avg(resenas.rating),
+        total: count(resenas.id),
+      })
+      .from(resenas)
+      .where(and(eq(resenas.salonId, salon.id), eq(resenas.aprobada, true))),
   ]);
+
+  const resumenRow = resumenResenasRows[0];
+  const totalResenas = Number(resumenRow?.total ?? 0);
+  const resumenResenas =
+    totalResenas > 0
+      ? {
+          rating: Number(resumenRow?.rating ?? 0),
+          total: totalResenas,
+        }
+      : null;
 
   const horarioPorDia: Record<number, { inicio: string; fin: string }[]> = {
     0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [],
@@ -233,6 +298,10 @@ export default async function SalonPublicPage({
         urlTelegram={urlTelegram}
         horarioHoyTexto={horarioHoyTexto}
         diaActual={diaActual}
+        promociones={promocionesActivas}
+        galeria={galeriaActiva}
+        resenas={resenasAprobadas}
+        resumenResenas={resumenResenas}
       />
     </div>
   );
