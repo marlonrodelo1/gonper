@@ -1,16 +1,11 @@
 import Link from 'next/link';
 
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { crearProfesional } from '../actions';
+
+const inputClass =
+  'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2';
+const labelClass =
+  'text-[11px] uppercase tracking-[0.2em] text-stone/80';
 
 export default async function NuevoProfesionalPage({
   searchParams,
@@ -20,83 +15,104 @@ export default async function NuevoProfesionalPage({
   const params = await searchParams;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
       {params.error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+        <div
+          className="rounded-xl border bg-[#F1D6D6] px-4 py-3 text-[13px] text-[#7C2E2E]"
+          style={{ borderColor: 'rgba(177,72,72,0.4)' }}
+        >
           {params.error}
         </div>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Nuevo profesional</CardTitle>
-          <CardDescription>
+      <section className="card flex flex-col gap-5 p-8">
+        <header className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Equipo
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            Nuevo profesional
+          </h2>
+          <p className="text-[13px] text-stone">
             Se mostrará en la agenda con el color elegido.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={crearProfesional} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="nombre">Nombre</Label>
-              <Input
-                id="nombre"
-                name="nombre"
-                required
-                maxLength={80}
-                placeholder="Ej. María"
-              />
-            </div>
+          </p>
+        </header>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="color_hex">Color en agenda</Label>
-                <div className="flex items-center gap-2">
-                  <Input
-                    id="color_hex"
-                    name="color_hex"
-                    type="color"
-                    defaultValue="#3b82f6"
-                    className="h-9 w-14 cursor-pointer p-1"
-                  />
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Formato #RRGGBB
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="orden">Orden</Label>
-                <Input
-                  id="orden"
-                  name="orden"
-                  type="number"
-                  min={0}
-                  defaultValue={0}
+        <form action={crearProfesional} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="nombre" className={labelClass}>
+              Nombre
+            </label>
+            <input
+              id="nombre"
+              name="nombre"
+              required
+              maxLength={80}
+              placeholder="Ej. María"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="color_hex" className={labelClass}>
+                Color en agenda
+              </label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="color_hex"
+                  name="color_hex"
+                  type="color"
+                  defaultValue="#3b82f6"
+                  className="h-11 w-14 cursor-pointer rounded-2xl border border-line bg-paper p-1"
                 />
+                <span className="text-[12px] text-stone">Formato #RRGGBB</span>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="foto_url">Foto (URL, opcional)</Label>
-              <Input
-                id="foto_url"
-                name="foto_url"
-                type="url"
-                placeholder="https://…"
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="orden" className={labelClass}>
+                Orden
+              </label>
+              <input
+                id="orden"
+                name="orden"
+                type="number"
+                min={0}
+                defaultValue={0}
+                className={inputClass}
               />
             </div>
+          </div>
 
-            <div className="flex items-center gap-2 pt-2">
-              <Button type="submit">Crear profesional</Button>
-              <Link
-                href="/panel/config/equipo"
-                className="inline-flex h-8 items-center justify-center rounded-lg px-2.5 text-sm font-medium text-zinc-700 hover:bg-muted hover:text-foreground dark:text-zinc-300"
-              >
-                Cancelar
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="foto_url" className={labelClass}>
+              Foto (URL, opcional)
+            </label>
+            <input
+              id="foto_url"
+              name="foto_url"
+              type="url"
+              placeholder="https://…"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2">
+            <Link
+              href="/panel/config/equipo"
+              className="card-tight tight px-4 py-2.5 text-[13px] text-ink hover:bg-cream"
+            >
+              Cancelar
+            </Link>
+            <button
+              type="submit"
+              className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
+            >
+              Crear profesional
+            </button>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }

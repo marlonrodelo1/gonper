@@ -1,16 +1,5 @@
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Icon } from '@/app/panel/_components/icons';
 import { actualizarBotSalon, actualizarBotDueno } from './actions';
 import { CopyLinkButton } from './copy-link-button';
 
@@ -24,6 +13,31 @@ type Salon = {
   telegramChatIdDueno: string | null;
 } | null;
 
+const inputClass =
+  'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2';
+const labelClass =
+  'text-[11px] uppercase tracking-[0.2em] text-stone/80';
+
+function ConfiguradoPill({ ok }: { ok: boolean }) {
+  return ok ? (
+    <span
+      className="pill"
+      style={{ background: 'rgba(139,157,122,0.15)', color: '#5A6B4D' }}
+    >
+      <span className="pill-dot" style={{ background: '#8B9D7A' }} />
+      Configurado
+    </span>
+  ) : (
+    <span
+      className="pill"
+      style={{ background: 'rgba(107,99,86,0.10)', color: '#6B6356' }}
+    >
+      <span className="pill-dot" style={{ background: '#8A8174' }} />
+      Sin configurar
+    </span>
+  );
+}
+
 export default async function ConfigBotPage({
   searchParams,
 }: {
@@ -35,15 +49,14 @@ export default async function ConfigBotPage({
 
   if (!salon) {
     return (
-      <Card className="mx-auto max-w-2xl">
-        <CardHeader>
-          <CardTitle>Configura tu salón primero</CardTitle>
-          <CardDescription>
-            Aún no tienes un salón asociado a tu cuenta. Crea o asocia un salón
-            antes de configurar los bots.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+        <h2 className="tight text-[22px] font-medium text-ink">
+          Configura tu salón primero
+        </h2>
+        <p className="text-[14px] text-stone">
+          Aún no tienes un salón asociado a tu cuenta.
+        </p>
+      </div>
     );
   }
 
@@ -55,185 +68,204 @@ export default async function ConfigBotPage({
   const tieneBotDueno = !!(salon.telegramBotDuenoToken || salon.telegramChatIdDueno);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       {params.ok ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+        <div className="flex items-center gap-2 rounded-xl border border-sage/40 bg-sage-soft px-4 py-3 text-[13px] text-sage-deep">
+          <Icon.Check width="14" height="14" />
           Cambios guardados correctamente.
         </div>
       ) : null}
       {params.error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+        <div
+          className="rounded-xl border bg-[#F1D6D6] px-4 py-3 text-[13px] text-[#7C2E2E]"
+          style={{ borderColor: 'rgba(177,72,72,0.4)' }}
+        >
           {params.error}
         </div>
       ) : null}
 
       {/* Bot del salón */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <CardTitle>Bot del salón (clientes)</CardTitle>
-              <CardDescription>
-                Este bot atiende a tus clientes 24/7 por Telegram. Crea uno
-                gratis con @BotFather y pega aquí el token.
-              </CardDescription>
-            </div>
-            {tieneBotSalon ? (
-              <Badge variant="secondary">Configurado</Badge>
-            ) : (
-              <Badge variant="outline">Sin configurar</Badge>
-            )}
+      <section className="card flex flex-col gap-5 p-8">
+        <header className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Bot del salón
+            </span>
+            <h2 className="tight text-[20px] font-medium text-ink">
+              Atención a clientes 24/7
+            </h2>
+            <p className="text-[13px] text-stone">
+              Crea uno gratis con @BotFather y pega aquí el token.
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <form action={actualizarBotSalon} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="telegram_bot_token">Token del bot</Label>
-              <Input
-                id="telegram_bot_token"
-                name="telegram_bot_token"
-                type="password"
-                autoComplete="off"
-                placeholder="123456789:AAH..."
-                defaultValue={salon.telegramBotToken ?? ''}
-              />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Lo obtienes al crear el bot con @BotFather. Se guarda cifrado.
-              </p>
-            </div>
+          <ConfiguradoPill ok={tieneBotSalon} />
+        </header>
 
-            <div className="space-y-2">
-              <Label htmlFor="telegram_bot_username">Username del bot</Label>
-              <Input
-                id="telegram_bot_username"
-                name="telegram_bot_username"
-                placeholder="salondemo_bot"
-                defaultValue={salon.telegramBotUsername ?? ''}
-              />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Sin el @. Solo letras, números y guiones bajos.
-              </p>
-            </div>
+        <form action={actualizarBotSalon} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="telegram_bot_token" className={labelClass}>
+              Token del bot
+            </label>
+            <input
+              id="telegram_bot_token"
+              name="telegram_bot_token"
+              type="password"
+              autoComplete="off"
+              placeholder="123456789:AAH..."
+              defaultValue={salon.telegramBotToken ?? ''}
+              className={inputClass}
+            />
+            <p className="text-[12px] text-stone/80">
+              Lo obtienes al crear el bot con @BotFather. Se guarda cifrado.
+            </p>
+          </div>
 
-            {username ? (
-              <div className="rounded-lg border border-zinc-200 bg-zinc-50 p-3 space-y-2 dark:border-zinc-800 dark:bg-zinc-900/40">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Enlace público de tu bot:
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <a
-                    href={`https://t.me/${username}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium text-blue-600 hover:underline dark:text-blue-400"
-                  >
-                    Abrir en Telegram → t.me/{username}
-                  </a>
-                </div>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Enlace de reserva (cliente entra directo a reservar):
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <code className="rounded bg-white px-2 py-1 text-xs text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
-                    t.me/{username}?start={salon.slug}
-                  </code>
-                  <CopyLinkButton link={reservaLink} />
-                </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="telegram_bot_username" className={labelClass}>
+              Username del bot
+            </label>
+            <input
+              id="telegram_bot_username"
+              name="telegram_bot_username"
+              placeholder="salondemo_bot"
+              defaultValue={salon.telegramBotUsername ?? ''}
+              className={inputClass}
+            />
+            <p className="text-[12px] text-stone/80">
+              Sin el @. Solo letras, números y guiones bajos.
+            </p>
+          </div>
+
+          {username ? (
+            <div className="card-tight flex flex-col gap-2.5 px-4 py-4">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-stone/80">
+                Enlace público de tu bot
+              </p>
+              <a
+                href={`https://t.me/${username}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="tight text-[13.5px] font-medium text-terracotta hover:text-terracotta-2"
+              >
+                Abrir en Telegram → t.me/{username}
+              </a>
+              <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-stone/80">
+                Enlace de reserva
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="rounded-lg bg-cream-2 px-2.5 py-1.5 font-mono text-[12px] text-ink">
+                  t.me/{username}?start={salon.slug}
+                </code>
+                <CopyLinkButton link={reservaLink} />
               </div>
-            ) : null}
-
-            <div className="flex justify-end pt-2">
-              <Button type="submit">Guardar</Button>
             </div>
-          </form>
-        </CardContent>
-      </Card>
+          ) : null}
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
+            >
+              Guardar
+            </button>
+          </div>
+        </form>
+      </section>
 
       {/* Bot del dueño */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <CardTitle>Bot del dueño (Juanita Pro)</CardTitle>
-              <CardDescription>
-                Bot privado para que tú (el dueño) hables con tu asistente. Con
-                esto recibirás avisos de citas pendientes, no-shows, etc.
-              </CardDescription>
-            </div>
-            {tieneBotDueno ? (
-              <Badge variant="secondary">Configurado</Badge>
-            ) : (
-              <Badge variant="outline">Sin configurar</Badge>
-            )}
+      <section className="card flex flex-col gap-5 p-8">
+        <header className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Bot del dueño
+            </span>
+            <h2 className="tight text-[20px] font-medium text-ink">
+              Juanita Pro
+            </h2>
+            <p className="text-[13px] text-stone">
+              Bot privado para que tú hables con tu asistente y recibas avisos.
+            </p>
           </div>
-        </CardHeader>
-        <CardContent>
-          <form action={actualizarBotDueno} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="telegram_bot_dueno_token">Token del bot del dueño</Label>
-              <Input
-                id="telegram_bot_dueno_token"
-                name="telegram_bot_dueno_token"
-                type="password"
-                autoComplete="off"
-                placeholder="987654321:BB..."
-                defaultValue={salon.telegramBotDuenoToken ?? ''}
-              />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Crea otro bot distinto al de clientes con @BotFather.
-              </p>
-            </div>
+          <ConfiguradoPill ok={tieneBotDueno} />
+        </header>
 
-            <div className="space-y-2">
-              <Label htmlFor="telegram_chat_id_dueno">Tu chat_id de Telegram</Label>
-              <Input
-                id="telegram_chat_id_dueno"
-                name="telegram_chat_id_dueno"
-                inputMode="numeric"
-                placeholder="123456789"
-                defaultValue={salon.telegramChatIdDueno ?? ''}
-              />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Escribe a tu bot personal y obtén tu chat_id desde n8n o con
-                el comando /getid de un bot tipo @userinfobot.
-              </p>
-            </div>
+        <form action={actualizarBotDueno} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="telegram_bot_dueno_token" className={labelClass}>
+              Token del bot del dueño
+            </label>
+            <input
+              id="telegram_bot_dueno_token"
+              name="telegram_bot_dueno_token"
+              type="password"
+              autoComplete="off"
+              placeholder="987654321:BB..."
+              defaultValue={salon.telegramBotDuenoToken ?? ''}
+              className={inputClass}
+            />
+            <p className="text-[12px] text-stone/80">
+              Crea otro bot distinto al de clientes con @BotFather.
+            </p>
+          </div>
 
-            <div className="flex justify-end pt-2">
-              <Button type="submit">Guardar</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="telegram_chat_id_dueno" className={labelClass}>
+              Tu chat_id de Telegram
+            </label>
+            <input
+              id="telegram_chat_id_dueno"
+              name="telegram_chat_id_dueno"
+              inputMode="numeric"
+              placeholder="123456789"
+              defaultValue={salon.telegramChatIdDueno ?? ''}
+              className={inputClass}
+            />
+            <p className="text-[12px] text-stone/80">
+              Escribe a tu bot personal y obtén tu chat_id con @userinfobot.
+            </p>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
+            >
+              Guardar
+            </button>
+          </div>
+        </form>
+      </section>
 
       {/* Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Cómo crear un bot en Telegram</CardTitle>
-          <CardDescription>
-            Pasos rápidos para tener tu bot listo en menos de 2 minutos.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ol className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300 list-decimal pl-5">
-            <li>
-              Abre Telegram y busca <strong>@BotFather</strong>.
-            </li>
-            <li>
-              Envía <code className="rounded bg-zinc-100 px-1.5 py-0.5 text-xs dark:bg-zinc-800">/newbot</code> y sigue las instrucciones.
-            </li>
-            <li>Copia el token que te da y pégalo aquí.</li>
-            <li>
-              Listo: tu bot ya puede recibir reservas.
-            </li>
-          </ol>
-          <Separator className="my-4" />
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Recomendación: usa dos bots distintos, uno público para clientes y
-            otro privado solo para ti.
-          </p>
-        </CardContent>
-      </Card>
+      <section className="card flex flex-col gap-4 p-8">
+        <header className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Cómo crear un bot
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            Listo en menos de 2 minutos
+          </h2>
+        </header>
+        <ol className="flex flex-col gap-2 pl-5 text-[13.5px] text-ink/85 list-decimal">
+          <li>
+            Abre Telegram y busca <strong>@BotFather</strong>.
+          </li>
+          <li>
+            Envía{' '}
+            <code className="rounded bg-cream-2 px-1.5 py-0.5 font-mono text-[12px]">
+              /newbot
+            </code>{' '}
+            y sigue las instrucciones.
+          </li>
+          <li>Copia el token que te da y pégalo aquí.</li>
+          <li>Listo: tu bot ya puede recibir reservas.</li>
+        </ol>
+        <div className="rule mt-1" />
+        <p className="text-[12.5px] text-stone">
+          Recomendación: usa dos bots distintos, uno público para clientes y
+          otro privado solo para ti.
+        </p>
+      </section>
     </div>
   );
 }

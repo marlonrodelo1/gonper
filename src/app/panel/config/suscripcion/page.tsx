@@ -1,14 +1,5 @@
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Icon } from '@/app/panel/_components/icons';
 import { PLANES } from '@/lib/stripe/client';
 import { crearCheckout, abrirPortalCliente } from './actions';
 
@@ -42,14 +33,12 @@ export default async function SuscripcionPage({
 
   if (!salonRaw) {
     return (
-      <Card className="mx-auto max-w-2xl">
-        <CardHeader>
-          <CardTitle>Suscripción</CardTitle>
-          <CardDescription>
-            Aún no tienes un salón asociado a tu cuenta.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+        <h2 className="tight text-[22px] font-medium text-ink">Suscripción</h2>
+        <p className="text-[14px] text-stone">
+          Aún no tienes un salón asociado a tu cuenta.
+        </p>
+      </div>
     );
   }
 
@@ -74,168 +63,235 @@ export default async function SuscripcionPage({
   const cancelado = planActual === 'cancelado';
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
       {params.success ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
-          Pago completado. Tu suscripción está activa. Puede tardar unos
-          segundos en reflejarse aquí.
+        <div className="flex items-center gap-2 rounded-xl border border-sage/40 bg-sage-soft px-4 py-3 text-[13px] text-sage-deep">
+          <Icon.Check width="14" height="14" />
+          Pago completado. Tu suscripción está activa.
         </div>
       ) : null}
       {params.canceled ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-300">
+        <div
+          className="rounded-xl border px-4 py-3 text-[13px]"
+          style={{
+            borderColor: 'rgba(197,142,44,0.4)',
+            background: 'rgba(197,142,44,0.10)',
+            color: '#7A5A1B',
+          }}
+        >
           Has cancelado el proceso de pago. No se ha hecho ningún cargo.
         </div>
       ) : null}
       {params.error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+        <div
+          className="rounded-xl border bg-[#F1D6D6] px-4 py-3 text-[13px] text-[#7C2E2E]"
+          style={{ borderColor: 'rgba(177,72,72,0.4)' }}
+        >
           {params.error}
         </div>
       ) : null}
 
       {trialExpirado && !planActivo ? (
-        <Card className="border-red-300 bg-red-50 dark:border-red-900/40 dark:bg-red-900/20">
-          <CardHeader>
-            <CardTitle className="text-red-800 dark:text-red-200">
-              Tu prueba gratuita ha terminado
-            </CardTitle>
-            <CardDescription className="text-red-700 dark:text-red-300">
-              Suscríbete a uno de los planes para seguir usando Gomper.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <section
+          className="card flex flex-col gap-1.5 p-6"
+          style={{
+            borderColor: 'rgba(177,72,72,0.4)',
+            background: '#F1D6D6',
+          }}
+        >
+          <span className="text-[11px] uppercase tracking-[0.22em] text-[#7C2E2E]/80">
+            Atención
+          </span>
+          <h2 className="tight text-[20px] font-medium text-[#7C2E2E]">
+            Tu prueba gratuita ha terminado
+          </h2>
+          <p className="text-[13.5px] text-[#7C2E2E]">
+            Suscríbete a uno de los planes para seguir usando Gomper.
+          </p>
+        </section>
       ) : null}
 
       {enTrial && !trialExpirado ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Estás en prueba gratuita</CardTitle>
-            <CardDescription>
-              {trialDias === 1
-                ? 'Queda 1 día de prueba.'
-                : `Quedan ${trialDias} días de prueba.`}{' '}
-              Elige un plan cuando estés list@.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <section className="card flex flex-col gap-1.5 p-6">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Trial
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            Estás en prueba gratuita
+          </h2>
+          <p className="text-[13.5px] text-stone">
+            {trialDias === 1
+              ? 'Queda 1 día de prueba.'
+              : `Quedan ${trialDias} días de prueba.`}{' '}
+            Elige un plan cuando estés list@.
+          </p>
+        </section>
       ) : null}
 
       {planActivo ? (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  Plan {PLANES[planActual as 'solo' | 'studio' | 'pro'].nombre}
-                  <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-transparent">
-                    Plan activo
-                  </Badge>
-                </CardTitle>
-                <CardDescription>
-                  Gestiona tu método de pago, facturas o cancela desde el portal
-                  de cliente de Stripe.
-                </CardDescription>
-              </div>
-              {customerId ? (
-                <form action={abrirPortalCliente}>
-                  <Button type="submit">Gestionar suscripción</Button>
-                </form>
-              ) : null}
-            </div>
-          </CardHeader>
-        </Card>
+        <section className="card flex items-start justify-between gap-4 p-6">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Plan activo
+            </span>
+            <h2 className="tight flex items-center gap-2 text-[20px] font-medium text-ink">
+              {PLANES[planActual as 'solo' | 'studio' | 'pro'].nombre}
+              <span
+                className="pill"
+                style={{
+                  background: 'rgba(139,157,122,0.15)',
+                  color: '#5A6B4D',
+                }}
+              >
+                <span
+                  className="pill-dot"
+                  style={{ background: '#8B9D7A' }}
+                />
+                Activo
+              </span>
+            </h2>
+            <p className="text-[13.5px] text-stone">
+              Gestiona tu método de pago, facturas o cancela desde Stripe.
+            </p>
+          </div>
+          {customerId ? (
+            <form action={abrirPortalCliente}>
+              <button
+                type="submit"
+                className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
+              >
+                Gestionar suscripción
+              </button>
+            </form>
+          ) : null}
+        </section>
       ) : null}
 
       {cancelado ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Suscripción cancelada</CardTitle>
-            <CardDescription>
-              Puedes reactivar tu cuenta eligiendo cualquiera de los planes.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <section className="card flex flex-col gap-1.5 p-6">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Estado
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            Suscripción cancelada
+          </h2>
+          <p className="text-[13.5px] text-stone">
+            Puedes reactivar tu cuenta eligiendo cualquiera de los planes.
+          </p>
+        </section>
       ) : null}
 
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight">Planes</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          Cancela cuando quieras. IVA no incluido.
+      <header className="flex flex-col gap-1">
+        <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+          Planes
+        </span>
+        <h2 className="tight text-[24px] font-medium text-ink">
+          Elige el que se adapta
+        </h2>
+        <p className="font-serif-it text-[14px] text-stone/70">
+          cancela cuando quieras · IVA no incluido
         </p>
-      </div>
+      </header>
 
       <div className="grid gap-4 md:grid-cols-3">
         {ORDEN.map((id) => {
           const p = PLANES[id];
           const esActual = planActual === id;
           const esRecomendado = id === RECOMENDADO;
+          const useReco = esRecomendado || esActual;
+          const cardClass = useReco
+            ? 'plan-reco relative flex flex-col gap-5 rounded-[20px] p-7'
+            : 'card relative flex flex-col gap-5 p-7';
+          const titleColor = useReco ? 'text-cream' : 'text-ink';
+          const stoneColor = useReco ? 'text-cream/70' : 'text-stone';
+          const featureColor = useReco ? 'text-cream/85' : 'text-ink/85';
           return (
-            <Card
-              key={id}
-              className={
-                esActual
-                  ? 'border-emerald-400 ring-2 ring-emerald-300 dark:border-emerald-700 dark:ring-emerald-900'
-                  : esRecomendado
-                    ? 'border-purple-300 dark:border-purple-800'
-                    : ''
-              }
-            >
-              <CardHeader>
-                <div className="flex items-center justify-between gap-2">
-                  <CardTitle>{p.nombre}</CardTitle>
-                  {esActual ? (
-                    <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-transparent">
-                      Tu plan
-                    </Badge>
-                  ) : esRecomendado ? (
-                    <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border-transparent">
-                      Recomendado
-                    </Badge>
-                  ) : null}
-                </div>
-                <CardDescription>
-                  <span className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">
+            <div key={id} className={cardClass}>
+              {esActual ? (
+                <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-terracotta text-paper text-[11px] uppercase tracking-[0.18em]">
+                  Tu plan
+                </span>
+              ) : esRecomendado ? (
+                <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-terracotta text-paper text-[11px] uppercase tracking-[0.18em]">
+                  Recomendado
+                </span>
+              ) : null}
+
+              <div className="flex flex-col gap-1.5">
+                <span
+                  className={`text-[11px] uppercase tracking-[0.22em] ${useReco ? 'text-cream/60' : 'text-stone/70'}`}
+                >
+                  Plan
+                </span>
+                <h3 className={`tight text-[24px] font-medium ${titleColor}`}>
+                  {p.nombre}
+                </h3>
+                <div className="flex items-baseline gap-1.5">
+                  <span
+                    className={`tight tabular text-[32px] font-medium ${titleColor}`}
+                  >
                     {p.precio.toFixed(2).replace('.', ',')} €
                   </span>
-                  <span className="text-zinc-500"> / mes</span>
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <ul className="space-y-1.5 text-sm text-zinc-700 dark:text-zinc-300">
-                  {p.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2">
-                      <span className="mt-0.5 text-emerald-600 dark:text-emerald-400">
-                        ✓
-                      </span>
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Separator />
+                  <span className={`text-[13px] ${stoneColor}`}>/ mes</span>
+                </div>
+              </div>
+
+              <ul className={`flex flex-col gap-2 text-[13.5px] ${featureColor}`}>
+                {p.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span
+                      className={`mt-1 inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${useReco ? 'bg-cream/20 text-cream' : 'bg-sage-soft text-sage-deep'}`}
+                    >
+                      <Icon.Check width="10" height="10" />
+                    </span>
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-auto pt-2">
                 {esActual ? (
-                  <Button disabled className="w-full" variant="outline">
+                  <button
+                    type="button"
+                    disabled
+                    className={`tight w-full rounded-full px-5 py-3 text-[13.5px] font-medium ${useReco ? 'border border-cream/30 text-cream/70' : 'border border-line text-stone'}`}
+                  >
                     Plan actual
-                  </Button>
+                  </button>
                 ) : planActivo ? (
                   <form action={abrirPortalCliente}>
-                    <Button type="submit" className="w-full" variant="outline">
+                    <button
+                      type="submit"
+                      className={`tight w-full rounded-full px-5 py-3 text-[13.5px] font-medium ${useReco ? 'bg-cream text-ink hover:opacity-90' : 'card-tight text-ink hover:bg-cream'}`}
+                    >
                       Cambiar plan
-                    </Button>
+                    </button>
                   </form>
                 ) : (
                   <form action={crearCheckout.bind(null, id)}>
-                    <Button type="submit" className="w-full">
+                    <button
+                      type="submit"
+                      className={
+                        useReco
+                          ? 'tight w-full rounded-full bg-cream px-5 py-3 text-[13.5px] font-medium text-ink hover:opacity-90'
+                          : 'gloss-btn tight w-full rounded-full px-5 py-3 text-[13.5px] font-medium'
+                      }
+                    >
                       Suscribirme
-                    </Button>
+                    </button>
                   </form>
                 )}
                 {!p.priceId ? (
-                  <p className="text-xs text-amber-600 dark:text-amber-400">
+                  <p
+                    className={`mt-2 text-[12px] ${useReco ? 'text-amber-soft/80' : ''}`}
+                    style={!useReco ? { color: '#7A5A1B' } : undefined}
+                  >
                     Plan no configurado en Stripe (falta STRIPE_PRICE_
                     {id.toUpperCase()}).
                   </p>
                 ) : null}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })}
       </div>

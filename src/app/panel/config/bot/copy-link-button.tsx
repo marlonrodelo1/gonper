@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 
 export function CopyLinkButton({ link }: { link: string }) {
   const [copied, setCopied] = useState(false);
@@ -17,8 +16,12 @@ export function CopyLinkButton({ link }: { link: string }) {
   }
 
   return (
-    <Button type="button" variant="outline" size="sm" onClick={handleCopy}>
+    <button
+      type="button"
+      onClick={handleCopy}
+      className="card-tight tight px-4 py-2.5 text-[13px] text-ink transition hover:bg-cream"
+    >
       {copied ? 'Copiado ✓' : 'Copiar enlace de reserva'}
-    </Button>
+    </button>
   );
 }

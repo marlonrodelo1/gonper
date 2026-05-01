@@ -6,67 +6,25 @@ import { db } from '@/lib/db';
 import { citas, clientes, profesionales, servicios } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Icon } from '@/app/panel/_components/icons';
+import {
+  estadoMeta,
+  type EstadoCita,
+} from '@/app/panel/_components/cita-row';
 
 import {
   confirmarCitaForm,
   completarCitaForm,
-  marcarNoShowForm,
 } from '../actions';
 import { CancelarCitaButton } from '../_components/cancelar-cita-button';
 import { NoShowCitaButton } from '../_components/no-show-cita-button';
-
-type EstadoCita =
-  | 'pendiente'
-  | 'confirmada'
-  | 'cancelada'
-  | 'no_show'
-  | 'completada';
-
-const estadoStyles: Record<EstadoCita, { label: string; className: string }> = {
-  completada: {
-    label: 'Completada',
-    className:
-      'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  },
-  confirmada: {
-    label: 'Confirmada',
-    className:
-      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  },
-  pendiente: {
-    label: 'Pendiente',
-    className:
-      'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  },
-  no_show: {
-    label: 'No-show',
-    className: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-  },
-  cancelada: {
-    label: 'Cancelada',
-    className:
-      'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  },
-};
-
-function fmtFechaLarga(fecha: Date, tz: string): string {
-  const txt = new Intl.DateTimeFormat('es-ES', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: tz,
-  }).format(fecha);
-  return txt.charAt(0).toUpperCase() + txt.slice(1);
-}
 
 function fmtHora(fecha: Date, tz: string): string {
   return new Intl.DateTimeFormat('es-ES', {
     hour: '2-digit',
     minute: '2-digit',
     timeZone: tz,
+    hour12: false,
   }).format(fecha);
 }
 
@@ -80,6 +38,49 @@ function fmtFechaHora(fecha: Date | null, tz: string): string {
     minute: '2-digit',
     timeZone: tz,
   }).format(fecha);
+}
+
+function fechaRelativa(fecha: Date, tz: string): string {
+  const fmt = new Intl.DateTimeFormat('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: tz,
+  });
+  const hoy = new Date();
+  const ayer = new Date(hoy);
+  ayer.setDate(hoy.getDate() - 1);
+  const manana = new Date(hoy);
+  manana.setDate(hoy.getDate() + 1);
+
+  const dia = (d: Date) =>
+    new Intl.DateTimeFormat('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: tz,
+    }).format(d);
+
+  if (dia(fecha) === dia(hoy)) return 'Hoy';
+  if (dia(fecha) === dia(manana)) return 'Mañana';
+  if (dia(fecha) === dia(ayer)) return 'Ayer';
+  const txt = fmt.format(fecha);
+  return txt.charAt(0).toUpperCase() + txt.slice(1);
+}
+
+function shortId(id: string): string {
+  // muestra los últimos 4 chars como "#XXXX"
+  return `#${id.slice(-4).toUpperCase()}`;
+}
+
+function iniciales(nombre: string): string {
+  return nombre
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 }
 
 const origenLabel: Record<string, string> = {
@@ -121,175 +122,241 @@ export default async function DetalleCitaPage({
 
   const { cita, cliente, servicio, profesional } = row;
   const estado = cita.estado as EstadoCita;
-  const estadoMeta = estadoStyles[estado] ?? estadoStyles.pendiente;
-  const colorProf = profesional.colorHex ?? '#3b82f6';
+  const m = estadoMeta[estado];
 
-  const esActiva = estado === 'pendiente' || estado === 'confirmada';
+  const esPendiente = estado === 'pendiente';
+  const esConfirmada = estado === 'confirmada';
+  const esActiva = esPendiente || esConfirmada;
+
+  const sugerirDeposito = (cliente.totalNoShows ?? 0) >= 2;
+  const dia = fechaRelativa(cita.inicio, tz);
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-6">
-      <header className="flex items-start justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            Cita
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-            {fmtFechaLarga(cita.inicio, tz)}
-          </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {fmtHora(cita.inicio, tz)} – {fmtHora(cita.fin, tz)} ·{' '}
-            {servicio.duracionMin} min
-          </p>
-        </div>
-        <span
-          className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${estadoMeta.className}`}
-        >
-          {estadoMeta.label}
-        </span>
-      </header>
-
-      <section className="grid gap-4 rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950 sm:grid-cols-2">
-        <Field label="Cliente">
-          <Link
-            href={`/panel/clientes/${cliente.id}`}
-            className="font-medium text-zinc-950 underline underline-offset-2 hover:text-zinc-700 dark:text-zinc-50 dark:hover:text-zinc-300"
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
+      {/* Header */}
+      <header className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span
+            className="pill"
+            style={{ background: m.bg, color: m.fg }}
           >
-            {cliente.nombre}
-          </Link>
-          {cliente.telefono ? (
-            <span className="block text-xs text-zinc-500 dark:text-zinc-400">
-              {cliente.telefono}
-            </span>
-          ) : null}
-          {(cliente.totalNoShows ?? 0) >= 2 ? (
-            <span className="mt-1 inline-block rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700 dark:bg-red-900/40 dark:text-red-300">
-              {cliente.totalNoShows} no-shows
-            </span>
-          ) : null}
-        </Field>
-
-        <Field label="Profesional">
-          <span className="inline-flex items-center gap-2 font-medium text-zinc-950 dark:text-zinc-50">
-            <span
-              className="inline-block size-2.5 rounded-full"
-              style={{ backgroundColor: colorProf }}
-              aria-hidden
-            />
-            {profesional.nombre}
+            <span className="pill-dot" style={{ background: m.dot }} />
+            {m.label}
           </span>
-        </Field>
-
-        <Field label="Servicio">
-          <span className="font-medium text-zinc-950 dark:text-zinc-50">
-            {servicio.nombre}
+          <span className="font-mono text-[12.5px] text-stone">
+            {shortId(cita.id)}
           </span>
-          <span className="block text-xs text-zinc-500 dark:text-zinc-400">
-            {servicio.duracionMin} min
-          </span>
-        </Field>
-
-        <Field label="Precio">
-          <span className="font-medium tabular-nums text-zinc-950 dark:text-zinc-50">
-            {Number(cita.precioEur).toFixed(2)} €
-          </span>
-        </Field>
-
-        <Field label="Origen">
-          <span className="text-zinc-700 dark:text-zinc-300">
-            {origenLabel[cita.origen] ?? cita.origen}
-          </span>
-        </Field>
-
-        <Field label="Creada">
-          <span className="text-zinc-700 dark:text-zinc-300">
-            {fmtFechaHora(cita.createdAt, tz)}
-          </span>
-        </Field>
-
-        {cita.notas ? (
-          <div className="sm:col-span-2">
-            <Field label="Notas">
-              <p className="whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">
-                {cita.notas}
-              </p>
-            </Field>
-          </div>
-        ) : null}
-      </section>
-
-      <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-          Cronología
-        </h2>
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <Timeline
-            label="Recordatorio enviado"
-            value={fmtFechaHora(cita.recordatorioEnviadoAt, tz)}
-          />
-          <Timeline
-            label="Confirmada"
-            value={fmtFechaHora(cita.confirmadaAt, tz)}
-          />
-          <Timeline
-            label="Cancelada"
-            value={fmtFechaHora(cita.canceladaAt, tz)}
-          />
-          {cita.canceladaPor ? (
-            <Timeline
-              label="Cancelada por"
-              value={cita.canceladaPor}
-            />
-          ) : null}
-          {cita.motivoCancelacion ? (
-            <div className="sm:col-span-2">
-              <dt className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                Motivo cancelación
-              </dt>
-              <dd className="mt-1 whitespace-pre-wrap text-zinc-800 dark:text-zinc-200">
-                {cita.motivoCancelacion}
-              </dd>
-            </div>
-          ) : null}
-        </dl>
-      </section>
-
-      {esActiva ? (
-        <section className="rounded-xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            Acciones
-          </h2>
-          <div className="flex flex-wrap items-center gap-2">
-            {estado === 'pendiente' ? (
-              <form action={confirmarCitaForm}>
-                <input type="hidden" name="id" value={cita.id} />
-                <Button type="submit">Confirmar</Button>
-              </form>
-            ) : null}
-            {estado === 'confirmada' ? (
-              <form action={completarCitaForm}>
-                <input type="hidden" name="id" value={cita.id} />
-                <Button type="submit">Marcar como completada</Button>
-              </form>
-            ) : null}
-            <Separator orientation="vertical" className="mx-1 h-6" />
-            <CancelarCitaButton citaId={cita.id} />
-            <NoShowCitaButton citaId={cita.id} />
-          </div>
-        </section>
-      ) : (
-        <section className="rounded-xl border border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/50 dark:text-zinc-400">
-          Esta cita está en estado <strong>{estadoMeta.label.toLowerCase()}</strong>{' '}
-          y ya no admite cambios.
-        </section>
-      )}
-
-      <div className="flex justify-start">
+        </div>
         <Link
           href="/panel/hoy"
-          className="inline-flex h-8 items-center justify-center rounded-lg px-2.5 text-sm font-medium text-zinc-700 hover:bg-muted hover:text-foreground dark:text-zinc-300"
+          className="card-tight tight inline-flex items-center gap-2 px-4 py-2.5 text-[13px] text-ink hover:bg-cream"
         >
-          ← Volver a Hoy
+          <Icon.X width="13" height="13" />
+          Volver
         </Link>
+      </header>
+
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+        {/* Hero */}
+        <section className="card flex flex-col gap-4 p-8">
+          <div className="flex flex-col gap-2">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Cita
+            </span>
+            <h1 className="tight text-[32px] font-medium leading-tight text-ink">
+              {servicio.nombre}{' '}
+              <span className="font-serif-it text-stone/70">
+                con {profesional.nombre}
+              </span>
+            </h1>
+            <p className="text-[14px] text-stone">
+              {dia} ·{' '}
+              <span className="tabular font-mono text-ink">
+                {fmtHora(cita.inicio, tz)}
+              </span>{' '}
+              ·{' '}
+              <span className="tabular">
+                {servicio.duracionMin} min
+              </span>{' '}
+              ·{' '}
+              <span className="tabular font-mono text-ink">
+                {Number(cita.precioEur).toFixed(0)} €
+              </span>
+            </p>
+          </div>
+        </section>
+
+        <div className="rule" />
+
+        {/* Cliente */}
+        <section className="card-tight flex items-center gap-4 p-5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-line bg-cream-2 text-[14px] font-medium text-ink">
+            {iniciales(cliente.nombre) || '·'}
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="tight flex items-center gap-2 text-[15px] font-medium text-ink">
+              <span className="truncate">{cliente.nombre}</span>
+              {(cliente.totalNoShows ?? 0) >= 2 ? (
+                <span
+                  className="rounded px-1.5 py-0.5 text-[10px] uppercase tracking-[0.16em]"
+                  style={{
+                    background: 'rgba(177,72,72,0.10)',
+                    color: '#B14848',
+                  }}
+                >
+                  {cliente.totalNoShows} no-shows
+                </span>
+              ) : null}
+            </div>
+            <div className="text-[12.5px] text-stone">
+              {cliente.telefono ?? '—'} · {cliente.totalCitas ?? 0} visita
+              {(cliente.totalCitas ?? 0) === 1 ? '' : 's'}
+            </div>
+          </div>
+          <Link
+            href={`/panel/clientes/${cliente.id}`}
+            className="tight inline-flex items-center gap-1.5 text-[12.5px] text-terracotta hover:text-terracotta-2"
+          >
+            Ver ficha
+            <Icon.Arrow width="12" height="12" />
+          </Link>
+        </section>
+
+        {/* Sugerencia de depósito */}
+        {sugerirDeposito ? (
+          <div
+            className="flex items-start gap-3 rounded-2xl border px-5 py-4"
+            style={{
+              borderColor: 'rgba(177,72,72,0.35)',
+              background: '#F1D6D6',
+              color: '#7C2E2E',
+            }}
+          >
+            <span className="mt-0.5 text-terracotta">
+              <Icon.Sparkle width="16" height="16" />
+            </span>
+            <div className="flex flex-col gap-1">
+              <p className="tight text-[14px] font-medium">
+                Cliente con histórico de no-shows
+              </p>
+              <p className="text-[13px] text-[#7C2E2E]/85">
+                Considera pedir depósito para esta cita. Reduce el riesgo de
+                ausencia.
+              </p>
+            </div>
+          </div>
+        ) : null}
+
+        <div className="rule" />
+
+        {/* Cita info */}
+        <section className="card-tight flex flex-col gap-4 p-6">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Detalle
+          </span>
+          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 text-[13.5px]">
+            <Field label="Notas">
+              {cita.notas ? (
+                <p className="whitespace-pre-wrap text-ink/85">{cita.notas}</p>
+              ) : (
+                <span className="text-stone/60">Sin notas</span>
+              )}
+            </Field>
+            <Field label="Origen">
+              <span className="text-ink/85">
+                {origenLabel[cita.origen] ?? cita.origen}
+              </span>
+            </Field>
+            <Field label="Recordatorio enviado">
+              <span className="tabular font-mono text-ink/85">
+                {fmtFechaHora(cita.recordatorioEnviadoAt, tz)}
+              </span>
+            </Field>
+            <Field label="Confirmada">
+              <span className="tabular font-mono text-ink/85">
+                {fmtFechaHora(cita.confirmadaAt, tz)}
+              </span>
+            </Field>
+            <Field label="Cancelada">
+              <span className="tabular font-mono text-ink/85">
+                {fmtFechaHora(cita.canceladaAt, tz)}
+              </span>
+            </Field>
+            {cita.canceladaPor ? (
+              <Field label="Cancelada por">
+                <span className="text-ink/85">{cita.canceladaPor}</span>
+              </Field>
+            ) : null}
+            {cita.motivoCancelacion ? (
+              <div className="sm:col-span-2">
+                <Field label="Motivo cancelación">
+                  <p className="whitespace-pre-wrap text-ink/85">
+                    {cita.motivoCancelacion}
+                  </p>
+                </Field>
+              </div>
+            ) : null}
+          </dl>
+        </section>
+
+        <div className="rule" />
+
+        {/* Acciones */}
+        <section className="card-tight flex flex-col gap-4 p-6">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Acciones
+          </span>
+
+          {esActiva ? (
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {esPendiente ? (
+                <form action={confirmarCitaForm}>
+                  <input type="hidden" name="id" value={cita.id} />
+                  <button
+                    type="submit"
+                    className="gloss-btn tight w-full rounded-full px-5 py-3 text-[13.5px] font-medium"
+                  >
+                    Confirmar
+                  </button>
+                </form>
+              ) : null}
+              {esConfirmada ? (
+                <form action={completarCitaForm}>
+                  <input type="hidden" name="id" value={cita.id} />
+                  <button
+                    type="submit"
+                    className="gloss-btn tight w-full rounded-full px-5 py-3 text-[13.5px] font-medium"
+                  >
+                    Marcar como completada
+                  </button>
+                </form>
+              ) : null}
+              <CancelarCitaButton
+                citaId={cita.id}
+                className="card-tight tight w-full rounded-full px-5 py-3 text-[13.5px] font-medium text-[#7C2E2E] hover:bg-[#F1D6D6]/40"
+              />
+              <NoShowCitaButton
+                citaId={cita.id}
+                className="card-tight tight w-full rounded-full px-5 py-3 text-[13.5px] font-medium text-[#7C2E2E] hover:bg-[#F1D6D6]/40"
+              />
+            </div>
+          ) : (
+            <p className="text-[13.5px] text-stone">
+              Esta cita está en estado{' '}
+              <strong className="text-ink">{m.label.toLowerCase()}</strong> y
+              ya no admite cambios.
+            </p>
+          )}
+        </section>
+
+        <section className="flex justify-start pt-2">
+          <Link
+            href="/panel/hoy"
+            className="tight text-[12.5px] text-stone hover:text-ink"
+          >
+            ← Volver a Hoy
+          </Link>
+        </section>
       </div>
     </div>
   );
@@ -303,20 +370,11 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+    <div className="flex flex-col gap-1">
+      <dt className="text-[10px] uppercase tracking-[0.2em] text-stone/70">
         {label}
-      </p>
-      <div className="mt-1 text-sm">{children}</div>
-    </div>
-  );
-}
-
-function Timeline({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between gap-4 border-b border-dashed border-zinc-200 py-1.5 last:border-0 dark:border-zinc-800">
-      <dt className="text-zinc-500 dark:text-zinc-400">{label}</dt>
-      <dd className="font-medium text-zinc-800 dark:text-zinc-200">{value}</dd>
+      </dt>
+      <dd className="text-[13.5px]">{children}</dd>
     </div>
   );
 }

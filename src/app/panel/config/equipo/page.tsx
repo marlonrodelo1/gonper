@@ -4,23 +4,7 @@ import { asc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { profesionales } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { Icon } from '@/app/panel/_components/icons';
 import { toggleProfesionalActivo } from './actions';
 import { EliminarProfesionalButton } from './eliminar-button';
 
@@ -36,14 +20,14 @@ export default async function EquipoPage({
 
   if (!salon) {
     return (
-      <Card className="mx-auto max-w-2xl">
-        <CardHeader>
-          <CardTitle>Configura tu salón</CardTitle>
-          <CardDescription>
-            Aún no tienes un salón asociado a tu cuenta.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+        <h2 className="tight text-[22px] font-medium text-ink">
+          Configura tu salón
+        </h2>
+        <p className="text-[14px] text-stone">
+          Aún no tienes un salón asociado a tu cuenta.
+        </p>
+      </div>
     );
   }
 
@@ -54,119 +38,140 @@ export default async function EquipoPage({
     .orderBy(asc(profesionales.orden), asc(profesionales.createdAt));
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-5">
       {params.error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+        <div
+          className="rounded-xl border bg-[#F1D6D6] px-4 py-3 text-[13px] text-[#7C2E2E]"
+          style={{ borderColor: 'rgba(177,72,72,0.4)' }}
+        >
           {params.error}
         </div>
       ) : null}
 
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
-          <div className="space-y-1">
-            <CardTitle>Equipo</CardTitle>
-            <CardDescription>
-              Profesionales que atienden citas en este salón.
-            </CardDescription>
+      <section className="card flex flex-col gap-5 p-6">
+        <header className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Equipo
+            </span>
+            <h2 className="tight text-[20px] font-medium text-ink">
+              Profesionales del salón
+            </h2>
+            <p className="text-[13px] text-stone">
+              Quien atiende cada cita.
+            </p>
           </div>
           <Link
             href="/panel/config/equipo/nuevo"
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+            className="gloss-btn tight inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-medium"
           >
-            <span>+</span>
-            <span>Nuevo profesional</span>
+            <Icon.Plus width="13" height="13" />
+            Nuevo profesional
           </Link>
-        </CardHeader>
+        </header>
 
-        <CardContent>
-          {filas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                Aún no hay profesionales
-              </p>
-              <p className="max-w-sm text-xs text-zinc-600 dark:text-zinc-400">
-                Añade al menos uno para poder asignar citas.
-              </p>
-              <Link
-                href="/panel/config/equipo/nuevo"
-                className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
-              >
-                Añadir profesional
-              </Link>
+        {filas.length === 0 ? (
+          <div className="card-tight flex flex-col items-center justify-center gap-2 border-dashed p-10 text-center">
+            <p className="tight text-[15px] font-medium text-ink">
+              Aún no hay profesionales
+            </p>
+            <p className="max-w-sm text-[12.5px] text-stone">
+              Añade al menos uno para poder asignar citas.
+            </p>
+            <Link
+              href="/panel/config/equipo/nuevo"
+              className="gloss-btn tight mt-2 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13px] font-medium"
+            >
+              Añadir profesional
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-col divide-y divide-line/70">
+            <div className="grid grid-cols-[44px_1fr_120px_220px] gap-3 bg-cream/40 px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
+              <div>Color</div>
+              <div>Nombre</div>
+              <div>Estado</div>
+              <div className="text-right">Acciones</div>
             </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[60px]">Color</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead className="w-[120px]">Estado</TableHead>
-                  <TableHead className="w-[280px] text-right">
-                    Acciones
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filas.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>
+            {filas.map((p) => (
+              <div
+                key={p.id}
+                className="grid grid-cols-[44px_1fr_120px_220px] items-center gap-3 px-4 py-3.5"
+              >
+                <div>
+                  <span
+                    className="inline-block h-6 w-6 rounded-full ring-1 ring-line"
+                    style={{ backgroundColor: p.colorHex ?? '#3b82f6' }}
+                    aria-label={`Color ${p.colorHex ?? '#3b82f6'}`}
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  {p.fotoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={p.fotoUrl}
+                      alt={p.nombre}
+                      className="h-8 w-8 rounded-full object-cover ring-1 ring-line"
+                    />
+                  ) : null}
+                  <span className="tight text-[14px] font-medium text-ink">
+                    {p.nombre}
+                  </span>
+                </div>
+                <div>
+                  {p.activo ? (
+                    <span
+                      className="pill"
+                      style={{
+                        background: 'rgba(139,157,122,0.15)',
+                        color: '#5A6B4D',
+                      }}
+                    >
                       <span
-                        className="inline-block h-5 w-5 rounded-full ring-1 ring-foreground/10"
-                        style={{ backgroundColor: p.colorHex ?? '#3b82f6' }}
-                        aria-label={`Color ${p.colorHex ?? '#3b82f6'}`}
+                        className="pill-dot"
+                        style={{ background: '#8B9D7A' }}
                       />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        {p.fotoUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={p.fotoUrl}
-                            alt={p.nombre}
-                            className="h-7 w-7 rounded-full object-cover ring-1 ring-foreground/10"
-                          />
-                        ) : null}
-                        <span className="font-medium text-zinc-950 dark:text-zinc-50">
-                          {p.nombre}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {p.activo ? (
-                        <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-300">
-                          Activo
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">Inactivo</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        <Link
-                          href={`/panel/config/equipo/${p.id}/editar`}
-                          className="inline-flex h-7 items-center justify-center rounded-md px-2.5 text-[0.8rem] font-medium text-zinc-700 hover:bg-muted hover:text-foreground dark:text-zinc-300"
-                        >
-                          Editar
-                        </Link>
-                        <form action={toggleProfesionalActivo}>
-                          <input type="hidden" name="id" value={p.id} />
-                          <Button type="submit" variant="ghost" size="sm">
-                            {p.activo ? 'Desactivar' : 'Activar'}
-                          </Button>
-                        </form>
-                        <EliminarProfesionalButton
-                          id={p.id}
-                          nombre={p.nombre}
-                        />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                      Activo
+                    </span>
+                  ) : (
+                    <span
+                      className="pill"
+                      style={{
+                        background: 'rgba(107,99,86,0.10)',
+                        color: '#6B6356',
+                      }}
+                    >
+                      <span
+                        className="pill-dot"
+                        style={{ background: '#8A8174' }}
+                      />
+                      Inactivo
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-end gap-1.5">
+                  <Link
+                    href={`/panel/config/equipo/${p.id}/editar`}
+                    className="card-tight tight px-3 py-1.5 text-[12.5px] text-ink hover:bg-cream"
+                  >
+                    Editar
+                  </Link>
+                  <form action={toggleProfesionalActivo}>
+                    <input type="hidden" name="id" value={p.id} />
+                    <button
+                      type="submit"
+                      className="card-tight tight px-3 py-1.5 text-[12.5px] text-stone hover:text-ink hover:bg-cream"
+                    >
+                      {p.activo ? 'Desactivar' : 'Activar'}
+                    </button>
+                  </form>
+                  <EliminarProfesionalButton id={p.id} nombre={p.nombre} />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }

@@ -11,7 +11,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { eliminarCierre } from './actions';
 
 export function EliminarCierreButton({
@@ -25,13 +24,13 @@ export function EliminarCierreButton({
     <AlertDialog>
       <AlertDialogTrigger
         render={
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
+          <button
+            type="button"
+            className="rounded-full border bg-paper px-3 py-1.5 text-[12.5px] tight text-[#7C2E2E] hover:bg-[#F1D6D6]/40"
+            style={{ borderColor: 'rgba(177,72,72,0.35)' }}
           >
             Eliminar
-          </Button>
+          </button>
         }
       />
       <AlertDialogContent>
@@ -48,7 +47,7 @@ export function EliminarCierreButton({
             <input type="hidden" name="id" value={id} />
             <AlertDialogAction
               type="submit"
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-[#B14848] text-white hover:bg-[#7C2E2E]"
             >
               Eliminar
             </AlertDialogAction>

@@ -1,23 +1,5 @@
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Icon } from '@/app/panel/_components/icons';
 import { actualizarAgente } from '../actions';
 
 type Salon = {
@@ -35,7 +17,7 @@ const GENEROS: { value: string; label: string }[] = [
   { value: 'neutro', label: 'Neutro' },
 ];
 
-const TONOS: { value: string; label: string; hint?: string }[] = [
+const TONOS: { value: string; label: string }[] = [
   { value: 'profesional', label: 'Profesional' },
   { value: 'cercano', label: 'Cercano (recomendado)' },
   { value: 'desenfadado', label: 'Desenfadado' },
@@ -45,9 +27,9 @@ const PLACEHOLDERS_BIENVENIDA: Record<string, string> = {
   profesional:
     'Ej: "Buenos días, soy Juanita, asistente del salón. ¿En qué puedo ayudarle?"',
   cercano:
-    'Ej: "¡Hola! 👋 Soy Juanita, encantada de conocerte. ¿En qué te ayudo?"',
+    'Ej: "¡Hola! Soy Juanita, encantada de conocerte. ¿En qué te ayudo?"',
   desenfadado:
-    'Ej: "¡Buenas! 💈 Soy Juanita, tu recepcionista virtual. Cuéntame en qué te ayudo."',
+    'Ej: "¡Buenas! Soy Juanita, tu recepcionista virtual. Cuéntame en qué te ayudo."',
 };
 
 const REGLAS_ABSOLUTAS = [
@@ -68,12 +50,21 @@ function generarSaludoBase(
     case 'profesional':
       return `Buenos días, soy ${nombreAgente}, asistente de ${nombreSalon}.`;
     case 'desenfadado':
-      return `¡Buenas! 💈 Soy ${nombreAgente}. ¿En qué te ayudo?`;
+      return `¡Buenas! Soy ${nombreAgente}. ¿En qué te ayudo?`;
     case 'cercano':
     default:
-      return `¡Hola! 👋 Soy ${nombreAgente}, la recepcionista de ${nombreSalon}. ¿Cómo te llamas?`;
+      return `¡Hola! Soy ${nombreAgente}, la recepcionista de ${nombreSalon}. ¿Cómo te llamas?`;
   }
 }
+
+const inputClass =
+  'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2';
+const selectClass =
+  'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink focus:outline-none focus:border-line-2 appearance-none';
+const textareaClass =
+  'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2 resize-y';
+const labelClass =
+  'text-[11px] uppercase tracking-[0.2em] text-stone/80';
 
 export default async function ConfigAgentePage({
   searchParams,
@@ -86,14 +77,14 @@ export default async function ConfigAgentePage({
 
   if (!salon) {
     return (
-      <Card className="mx-auto max-w-2xl">
-        <CardHeader>
-          <CardTitle>Configura tu salón</CardTitle>
-          <CardDescription>
-            Aún no tienes un salón asociado a tu cuenta.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+        <h2 className="tight text-[22px] font-medium text-ink">
+          Configura tu salón
+        </h2>
+        <p className="text-[14px] text-stone">
+          Aún no tienes un salón asociado a tu cuenta.
+        </p>
+      </div>
     );
   }
 
@@ -104,167 +95,193 @@ export default async function ConfigAgentePage({
     : generarSaludoBase(tono, salon.agenteNombre || 'Juanita', salon.nombre);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       {params.ok ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+        <div className="flex items-center gap-2 rounded-xl border border-sage/40 bg-sage-soft px-4 py-3 text-[13px] text-sage-deep">
+          <Icon.Check width="14" height="14" />
           Cambios guardados correctamente.
         </div>
       ) : null}
       {params.error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+        <div
+          className="rounded-xl border bg-[#F1D6D6] px-4 py-3 text-[13px] text-[#7C2E2E]"
+          style={{ borderColor: 'rgba(177,72,72,0.4)' }}
+        >
           {params.error}
         </div>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Personalidad</CardTitle>
-          <CardDescription>
-            Personaliza cómo se presenta y habla tu agente con los clientes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={actualizarAgente} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="agente_nombre">Nombre del agente</Label>
-              <Input
-                id="agente_nombre"
-                name="agente_nombre"
-                required
-                maxLength={60}
-                defaultValue={salon.agenteNombre || 'Juanita'}
-              />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                El nombre con el que se presenta a tus clientes.
+      <section className="card flex flex-col gap-5 p-8">
+        <header className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Personalidad
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            Cómo se presenta tu agente
+          </h2>
+          <p className="text-[13px] text-stone">
+            Personaliza el nombre, tono y mensaje de bienvenida.
+          </p>
+        </header>
+
+        <form action={actualizarAgente} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="agente_nombre" className={labelClass}>
+              Nombre del agente
+            </label>
+            <input
+              id="agente_nombre"
+              name="agente_nombre"
+              required
+              maxLength={60}
+              defaultValue={salon.agenteNombre || 'Juanita'}
+              className={inputClass}
+            />
+            <p className="text-[12px] text-stone/80">
+              El nombre con el que se presenta a tus clientes.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="agente_genero" className={labelClass}>
+              Género
+            </label>
+            <select
+              id="agente_genero"
+              name="agente_genero"
+              defaultValue={salon.agenteGenero || 'femenino'}
+              className={selectClass}
+            >
+              {GENEROS.map((g) => (
+                <option key={g.value} value={g.value}>
+                  {g.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label htmlFor="agente_tono" className={labelClass}>
+              Tono
+            </label>
+            <select
+              id="agente_tono"
+              name="agente_tono"
+              defaultValue={tono}
+              className={selectClass}
+            >
+              {TONOS.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+            <div className="card-tight flex flex-col gap-1 px-4 py-3 text-[12.5px] text-stone">
+              <p>
+                <strong className="text-ink">Profesional</strong>: trato formal,
+                sin emojis. Frases cortas y claras.
+              </p>
+              <p>
+                <strong className="text-ink">Cercano</strong>: tuteo, cálido y
+                natural.
+              </p>
+              <p>
+                <strong className="text-ink">Desenfadado</strong>: tuteo +
+                expresiones coloquiales suaves, humor ligero.
               </p>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="agente_genero">Género</Label>
-              <Select
-                name="agente_genero"
-                defaultValue={salon.agenteGenero || 'femenino'}
-              >
-                <SelectTrigger className="w-full" id="agente_genero">
-                  <SelectValue placeholder="Selecciona género" />
-                </SelectTrigger>
-                <SelectContent>
-                  {GENEROS.map((g) => (
-                    <SelectItem key={g.value} value={g.value}>
-                      {g.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="agente_bienvenida" className={labelClass}>
+              Mensaje de bienvenida personalizado
+            </label>
+            <textarea
+              id="agente_bienvenida"
+              name="agente_bienvenida"
+              maxLength={280}
+              rows={3}
+              defaultValue={salon.agenteBienvenida ?? ''}
+              placeholder={
+                PLACEHOLDERS_BIENVENIDA[tono] ?? PLACEHOLDERS_BIENVENIDA.cercano
+              }
+              className={textareaClass}
+            />
+            <p className="text-[12px] text-stone/80">
+              Opcional. Si lo dejas vacío, se genera según el tono. Máx. 280
+              caracteres.
+            </p>
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="agente_tono">Tono</Label>
-              <Select name="agente_tono" defaultValue={tono}>
-                <SelectTrigger className="w-full" id="agente_tono">
-                  <SelectValue placeholder="Selecciona tono" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TONOS.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="space-y-1 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-400">
-                <p>
-                  <strong className="text-zinc-900 dark:text-zinc-100">
-                    Profesional
-                  </strong>
-                  : trato formal, sin emojis. Frases cortas y claras.
-                </p>
-                <p>
-                  <strong className="text-zinc-900 dark:text-zinc-100">
-                    Cercano
-                  </strong>
-                  : tuteo, cálido y natural. 1-2 emojis bien escogidos.
-                </p>
-                <p>
-                  <strong className="text-zinc-900 dark:text-zinc-100">
-                    Desenfadado
-                  </strong>
-                  : tuteo + expresiones coloquiales suaves, más emojis y humor
-                  ligero.
-                </p>
-              </div>
-            </div>
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
+            >
+              Guardar cambios
+            </button>
+          </div>
+        </form>
+      </section>
 
-            <div className="space-y-2">
-              <Label htmlFor="agente_bienvenida">
-                Mensaje de bienvenida personalizado
-              </Label>
-              <Textarea
-                id="agente_bienvenida"
-                name="agente_bienvenida"
-                maxLength={280}
-                rows={3}
-                defaultValue={salon.agenteBienvenida ?? ''}
-                placeholder={PLACEHOLDERS_BIENVENIDA[tono] ?? PLACEHOLDERS_BIENVENIDA.cercano}
+      <section className="card flex flex-col gap-4 p-8">
+        <header className="flex items-start justify-between gap-2">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Vista previa
+            </span>
+            <h2 className="tight text-[20px] font-medium text-ink">
+              Saludo del agente
+            </h2>
+          </div>
+          {tieneCustom ? (
+            <span
+              className="pill"
+              style={{
+                background: 'rgba(197,86,44,0.12)',
+                color: '#A8451F',
+              }}
+            >
+              <span
+                className="pill-dot"
+                style={{ background: '#C5562C' }}
               />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                Opcional. Si lo dejas vacío, se genera automáticamente según el
-                tono. Máx. 280 caracteres.
-              </p>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <Button type="submit">Guardar cambios</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <CardTitle>Vista previa</CardTitle>
-              <CardDescription>
-                Así saludaría tu agente con la configuración guardada.
-              </CardDescription>
-            </div>
-            {tieneCustom ? (
-              <Badge variant="secondary">Personalizado</Badge>
-            ) : null}
+              Personalizado
+            </span>
+          ) : null}
+        </header>
+        <div className="flex items-end gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-terracotta/15 text-[14px] font-semibold text-terracotta">
+            {(salon.agenteNombre || 'J').charAt(0).toUpperCase()}
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-end gap-2">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-semibold text-white">
-              {(salon.agenteNombre || 'J').charAt(0).toUpperCase()}
-            </div>
-            <div className="max-w-[80%] rounded-2xl rounded-bl-sm bg-zinc-100 px-4 py-2.5 text-sm whitespace-pre-wrap text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100">
-              {saludoPreview}
-            </div>
+          <div className="card-tight max-w-[80%] rounded-bl-sm px-4 py-3 text-[14px] whitespace-pre-wrap text-ink">
+            {saludoPreview}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Reglas absolutas</CardTitle>
-          <CardDescription>
+      <section className="card flex flex-col gap-4 p-8">
+        <header className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Reglas absolutas
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            No negociables
+          </h2>
+          <p className="text-[13px] text-stone">
             Independientemente del tono, todos los agentes Gomper siguen estas
             reglas.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
-            {REGLAS_ABSOLUTAS.map((regla) => (
-              <li key={regla} className="flex gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-zinc-400 dark:bg-zinc-600" />
-                <span>{regla}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
+          </p>
+        </header>
+        <ul className="flex flex-col gap-2 text-[13.5px] text-ink/85">
+          {REGLAS_ABSOLUTAS.map((regla) => (
+            <li key={regla} className="flex gap-2.5">
+              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-terracotta" />
+              <span>{regla}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   );
 }

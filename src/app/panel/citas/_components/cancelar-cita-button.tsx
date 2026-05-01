@@ -18,18 +18,32 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { cancelarCita } from '../actions';
 
-export function CancelarCitaButton({ citaId }: { citaId: string }) {
+export function CancelarCitaButton({
+  citaId,
+  className,
+}: {
+  citaId: string;
+  className?: string;
+}) {
   const [motivo, setMotivo] = useState('');
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
+
+  const triggerClass =
+    className ??
+    'card-tight tight px-4 py-2.5 text-[13px] text-[#7C2E2E] hover:bg-[#F1D6D6]/40';
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger
         render={
-          <Button variant="ghost" size="sm">
-            ✕ Cancelar
-          </Button>
+          <button
+            type="button"
+            className={triggerClass}
+            style={{ borderColor: 'rgba(177,72,72,0.35)' }}
+          >
+            Cancelar cita
+          </button>
         }
       />
       <AlertDialogContent>
@@ -57,6 +71,7 @@ export function CancelarCitaButton({ citaId }: { citaId: string }) {
                     setMotivo('');
                   })
                 }
+                className="bg-[#B14848] text-white hover:bg-[#7C2E2E]"
               >
                 Cancelar cita
               </Button>

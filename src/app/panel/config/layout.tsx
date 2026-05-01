@@ -1,40 +1,57 @@
+'use client';
+
 import Link from 'next/link';
-import { Separator } from '@/components/ui/separator';
+import { usePathname } from 'next/navigation';
 
 const tabs = [
-  { href: '/panel/config', label: 'Datos del salón', emoji: '🏪', exact: true },
-  { href: '/panel/config/agente', label: 'Agente', emoji: '🤖' },
-  { href: '/panel/config/bot', label: 'Bot', emoji: '📱' },
-  { href: '/panel/config/equipo', label: 'Equipo', emoji: '👥' },
-  { href: '/panel/config/horario', label: 'Horario', emoji: '🕒' },
-  { href: '/panel/config/cierres', label: 'Cierres', emoji: '🌴' },
-  { href: '/panel/config/suscripcion', label: 'Suscripción', emoji: '💳' },
+  { href: '/panel/config', label: 'Datos del salón', exact: true },
+  { href: '/panel/config/agente', label: 'Agente' },
+  { href: '/panel/config/bot', label: 'Bot' },
+  { href: '/panel/config/equipo', label: 'Equipo' },
+  { href: '/panel/config/horario', label: 'Horario' },
+  { href: '/panel/config/cierres', label: 'Cierres' },
+  { href: '/panel/config/suscripcion', label: 'Suscripción' },
 ];
 
-export default function ConfigLayout({ children }: { children: React.ReactNode }) {
+export default function ConfigLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const pathname = usePathname() ?? '';
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configuración</h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          Datos de tu salón, equipo, agente, horario y cierres.
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
+      <header className="flex flex-col gap-1.5">
+        <h1 className="tight text-[28px] font-medium text-ink">
+          Configuración
+        </h1>
+        <p className="font-serif-it text-[15px] text-stone/70">
+          ajustes del salón
         </p>
-      </div>
+      </header>
 
-      <nav className="flex flex-wrap gap-1 border-b border-zinc-200 dark:border-zinc-800">
-        {tabs.map((t) => (
-          <Link
-            key={t.href}
-            href={t.href}
-            className="px-3 py-2 text-sm font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 border-b-2 border-transparent hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors -mb-px"
-          >
-            <span className="mr-2">{t.emoji}</span>
-            {t.label}
-          </Link>
-        ))}
+      <nav className="inline-flex w-fit max-w-full flex-wrap items-center gap-1 rounded-full border border-line bg-paper p-1">
+        {tabs.map((t) => {
+          const active = t.exact
+            ? pathname === t.href
+            : pathname === t.href || pathname.startsWith(t.href + '/');
+          return (
+            <Link
+              key={t.href}
+              href={t.href}
+              className={
+                'tight rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition ' +
+                (active
+                  ? 'bg-ink text-cream'
+                  : 'text-stone hover:text-ink')
+              }
+            >
+              {t.label}
+            </Link>
+          );
+        })}
       </nav>
-
-      <Separator className="hidden" />
 
       <div>{children}</div>
     </div>

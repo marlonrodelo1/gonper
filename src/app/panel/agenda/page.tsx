@@ -5,39 +5,8 @@ import { db } from '@/lib/db';
 import { citas, clientes, profesionales, servicios } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 
-type EstadoCita =
-  | 'pendiente'
-  | 'confirmada'
-  | 'cancelada'
-  | 'no_show'
-  | 'completada';
-
-const estadoStyles: Record<EstadoCita, { label: string; className: string }> = {
-  completada: {
-    label: 'Completada',
-    className:
-      'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  },
-  confirmada: {
-    label: 'Confirmada',
-    className:
-      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  },
-  pendiente: {
-    label: 'Pendiente',
-    className:
-      'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  },
-  no_show: {
-    label: 'No-show',
-    className: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-  },
-  cancelada: {
-    label: 'Cancelada',
-    className:
-      'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  },
-};
+import { estadoMeta, type EstadoCita } from '@/app/panel/_components/cita-row';
+import { Icon } from '@/app/panel/_components/icons';
 
 const NOMBRES_DIAS_CORTOS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -151,14 +120,15 @@ export default async function AgendaPage({
 
   if (!salon) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 rounded-xl border border-zinc-200 bg-white p-10 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <span className="text-4xl">🪑</span>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-          Configura tu salón
-        </h1>
-        <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400">
-          Aún no tienes un salón asociado a tu cuenta.
-        </p>
+      <div className="px-8 py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+          <h1 className="tight text-[28px] font-medium text-ink">
+            Configura tu salón
+          </h1>
+          <p className="max-w-md text-[14px] text-stone">
+            Aún no tienes un salón asociado a tu cuenta.
+          </p>
+        </div>
       </div>
     );
   }
@@ -273,7 +243,6 @@ export default async function AgendaPage({
   const hrefVistaMes = (() => {
     const params = new URLSearchParams();
     params.set('vista', 'mes');
-    // usar primer día del mes que contiene a 'lunes'
     const primero = new Date(lunes.getFullYear(), lunes.getMonth(), 1);
     params.set('fecha', toISODate(primero));
     if (profesionalSeleccionado)
@@ -282,114 +251,108 @@ export default async function AgendaPage({
   })();
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6">
-      <header className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-              Agenda · {salon.nombre}
-            </p>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-              {rango}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <ToggleVista activo="semana" hrefSemana={hrefVistaSemana} hrefMes={hrefVistaMes} />
-            <Link
-              href="/panel/citas/nueva"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
-            >
-              <span>+</span>
-              <span>Nueva cita</span>
-            </Link>
-          </div>
+    <div className="flex flex-col gap-6 px-8 py-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Agenda
+          </p>
+          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+            {rango}{' '}
+            <span className="font-serif-it text-stone/70">· {salon.nombre}</span>
+          </h1>
         </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <nav className="flex items-center gap-2">
-            <Link
-              href={buildHref(semanaAnterior)}
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              ← Semana anterior
-            </Link>
-            <Link
-              href={buildHref(semanaHoy)}
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              Hoy
-            </Link>
-            <Link
-              href={buildHref(semanaSiguiente)}
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              Semana siguiente →
-            </Link>
-          </nav>
-
-          <form
-            method="GET"
-            action="/panel/agenda"
-            className="flex items-center gap-2"
+        <div className="flex flex-wrap items-center gap-2">
+          <ToggleVista activo="semana" hrefSemana={hrefVistaSemana} hrefMes={hrefVistaMes} />
+          <Link
+            href="/panel/citas/nueva"
+            className="gloss-btn tight inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] text-cream"
           >
-            <input type="hidden" name="semana" value={toISODate(lunes)} />
-            <label
-              htmlFor="profesional"
-              className="text-sm text-zinc-500 dark:text-zinc-400"
-            >
-              Profesional:
-            </label>
-            <select
-              id="profesional"
-              name="profesional"
-              defaultValue={profesionalSeleccionado ?? 'todos'}
-              className="rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300"
-            >
-              <option value="todos">Todos</option>
-              {profesionalesSalon.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              Filtrar
-            </button>
-          </form>
+            <Icon.Plus width="13" height="13" />
+            Nueva cita
+          </Link>
         </div>
       </header>
 
-      <section className="grid grid-cols-1 gap-2 md:grid-cols-7">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <nav className="flex items-center gap-2">
+          <Link
+            href={buildHref(semanaAnterior)}
+            className="card-tight tight px-3 py-2 text-[13px] text-ink transition hover:bg-paper"
+          >
+            ← Anterior
+          </Link>
+          <Link
+            href={buildHref(semanaHoy)}
+            className="card-tight tight px-3 py-2 text-[13px] text-ink transition hover:bg-paper"
+          >
+            Hoy
+          </Link>
+          <Link
+            href={buildHref(semanaSiguiente)}
+            className="card-tight tight px-3 py-2 text-[13px] text-ink transition hover:bg-paper"
+          >
+            Siguiente →
+          </Link>
+        </nav>
+
+        <form
+          method="GET"
+          action="/panel/agenda"
+          className="flex items-center gap-2"
+        >
+          <input type="hidden" name="semana" value={toISODate(lunes)} />
+          <label
+            htmlFor="profesional"
+            className="text-[12px] uppercase tracking-[0.18em] text-stone/70"
+          >
+            Profesional
+          </label>
+          <select
+            id="profesional"
+            name="profesional"
+            defaultValue={profesionalSeleccionado ?? 'todos'}
+            className="rounded-full border border-line bg-paper px-4 py-2 text-[13px] text-ink"
+          >
+            <option value="todos">Todos</option>
+            {profesionalesSalon.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="card-tight tight px-3 py-2 text-[13px] text-ink hover:bg-paper"
+          >
+            Filtrar
+          </button>
+        </form>
+      </div>
+
+      <section className="grid grid-cols-1 gap-3 md:grid-cols-7">
         {dias.map((dia, idx) => {
           const esHoy = mismoDia(dia, hoy);
           const items = citasPorDia[idx];
           return (
-            <div
-              key={idx}
-              className="flex flex-col rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950"
-            >
+            <div key={idx} className="card flex flex-col overflow-hidden">
               <div
-                className={`rounded-t-xl border-b px-3 py-2 text-sm font-semibold ${
-                  esHoy
-                    ? 'border-purple-200 bg-purple-100 text-purple-900 dark:border-purple-900/40 dark:bg-purple-900/30 dark:text-purple-200'
-                    : 'border-zinc-200 bg-zinc-50 text-zinc-700 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-300'
+                className={`tight border-b border-line bg-cream/40 px-3 py-2.5 text-[13px] font-medium ${
+                  esHoy ? 'text-terracotta' : 'text-ink'
                 }`}
               >
                 {formatearDiaCorto(dia)}
               </div>
               <div className="flex flex-1 flex-col gap-2 p-2">
                 {items.length === 0 ? (
-                  <p className="px-1 py-2 text-xs text-zinc-400 dark:text-zinc-500">
+                  <p className="px-1 py-2 text-[12px] italic text-stone/60">
                     Sin citas
                   </p>
                 ) : (
                   items.map(({ cita, cliente, servicio, profesional }) => {
-                    const estado =
-                      estadoStyles[cita.estado as EstadoCita] ??
-                      estadoStyles.pendiente;
+                    const m =
+                      estadoMeta[cita.estado as EstadoCita] ??
+                      estadoMeta.pendiente;
                     const hora = formatearHora(cita.inicio, timezone);
                     const colorProfesional =
                       profesional.colorHex ?? '#3b82f6';
@@ -397,22 +360,27 @@ export default async function AgendaPage({
                       <Link
                         key={cita.id}
                         href={`/panel/citas/${cita.id}`}
-                        className="block rounded-lg border border-zinc-200 bg-white p-2 text-left transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:hover:bg-zinc-900"
+                        className="block rounded-xl border border-line bg-paper p-2.5 transition hover:bg-cream"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-sm font-bold tabular-nums text-zinc-900 dark:text-zinc-100">
+                          <span className="tabular font-mono text-[13px] text-ink">
                             {hora}
                           </span>
                           <span
-                            className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${estado.className}`}
+                            className="pill"
+                            style={{ background: m.bg, color: m.fg }}
                           >
-                            {estado.label}
+                            <span
+                              className="pill-dot"
+                              style={{ background: m.dot }}
+                            />
+                            {m.label}
                           </span>
                         </div>
-                        <div className="mt-1 truncate text-sm font-medium text-zinc-950 dark:text-zinc-50">
+                        <div className="tight mt-1 truncate text-[13px] text-ink">
                           {cliente.nombre}
                         </div>
-                        <div className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400">
+                        <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-stone">
                           <span
                             className="inline-block size-2 shrink-0 rounded-full"
                             style={{ backgroundColor: colorProfesional }}
@@ -431,17 +399,12 @@ export default async function AgendaPage({
       </section>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <ResumenCard
-          label="Citas en la semana"
-          value={`${totalSemana}`}
-          accent="blue"
-        />
+        <ResumenCard label="Citas en la semana" value={`${totalSemana}`} />
         <ResumenCard
           label="Facturado (completadas)"
           value={`${facturado.toFixed(0)} €`}
-          accent="emerald"
         />
-        <ResumenCard label="No-shows" value={`${noShows}`} accent="red" />
+        <ResumenCard label="No-shows" value={`${noShows}`} />
       </section>
     </div>
   );
@@ -466,7 +429,6 @@ async function VistaMes({
   profesionalSeleccionado: string | null;
   profesionalesSalon: Array<{ id: string; nombre: string }>;
 }) {
-  // fecha base = primer día del mes que toca mostrar
   const fechaBase = parseFechaISO(sp.fecha) ?? hoy;
   const primerDiaMes = new Date(fechaBase.getFullYear(), fechaBase.getMonth(), 1, 12, 0, 0, 0);
   const ultimoDiaMes = new Date(
@@ -479,9 +441,7 @@ async function VistaMes({
     0,
   );
 
-  // Inicio de la rejilla = lunes anterior (o el mismo si ya es lunes)
   const inicioGrid = inicioDeSemana(primerDiaMes);
-  // Fin de rejilla = domingo siguiente al último día. Forzamos 6 semanas (42 días).
   const finGrid = addDays(inicioGrid, 41);
   const finRango = new Date(finGrid);
   finRango.setHours(23, 59, 59, 999);
@@ -509,7 +469,6 @@ async function VistaMes({
     .where(and(...condiciones))
     .orderBy(asc(citas.inicio));
 
-  // Agrupar por clave YYYY-MM-DD
   const citasPorDia: Record<string, typeof filas> = {};
   for (const f of filas) {
     const k = toISODate(f.cita.inicio);
@@ -517,7 +476,6 @@ async function VistaMes({
     citasPorDia[k].push(f);
   }
 
-  // Construir 6 semanas x 7 días
   const semanas: Date[][] = [];
   for (let s = 0; s < 6; s++) {
     const fila: Date[] = [];
@@ -542,7 +500,6 @@ async function VistaMes({
 
   const hrefVistaSemana = (() => {
     const params = new URLSearchParams();
-    // tomar el lunes que contenga al primer día del mes
     const lunesRef = inicioDeSemana(
       mismoDia(primerDiaMes, hoy) || (hoy >= primerDiaMes && hoy <= ultimoDiaMes)
         ? hoy
@@ -555,7 +512,6 @@ async function VistaMes({
   })();
   const hrefVistaMes = buildHref(toISODate(primerDiaMes));
 
-  // Resumen del mes (sólo días dentro del mes actual)
   let totalMes = 0;
   let facturadoMes = 0;
   let noShowsMes = 0;
@@ -569,94 +525,93 @@ async function VistaMes({
   }
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-6">
-      <header className="flex flex-col gap-4">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-              Agenda · {salon.nombre}
-            </p>
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-              {formatearMesAno(primerDiaMes)}
-            </h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <ToggleVista activo="mes" hrefSemana={hrefVistaSemana} hrefMes={hrefVistaMes} />
-            <Link
-              href="/panel/citas/nueva"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
-            >
-              <span>+</span>
-              <span>Nueva cita</span>
-            </Link>
-          </div>
+    <div className="flex flex-col gap-6 px-8 py-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Agenda
+          </p>
+          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+            {formatearMesAno(primerDiaMes)}{' '}
+            <span className="font-serif-it text-stone/70">· {salon.nombre}</span>
+          </h1>
         </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <nav className="flex items-center gap-2">
-            <Link
-              href={buildHref(mesAnterior)}
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              ← Mes anterior
-            </Link>
-            <Link
-              href={buildHref(mesHoy)}
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              Hoy
-            </Link>
-            <Link
-              href={buildHref(mesSiguiente)}
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              Mes siguiente →
-            </Link>
-          </nav>
-
-          <form
-            method="GET"
-            action="/panel/agenda"
-            className="flex items-center gap-2"
+        <div className="flex flex-wrap items-center gap-2">
+          <ToggleVista activo="mes" hrefSemana={hrefVistaSemana} hrefMes={hrefVistaMes} />
+          <Link
+            href="/panel/citas/nueva"
+            className="gloss-btn tight inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] text-cream"
           >
-            <input type="hidden" name="vista" value="mes" />
-            <input type="hidden" name="fecha" value={toISODate(primerDiaMes)} />
-            <label
-              htmlFor="profesional"
-              className="text-sm text-zinc-500 dark:text-zinc-400"
-            >
-              Profesional:
-            </label>
-            <select
-              id="profesional"
-              name="profesional"
-              defaultValue={profesionalSeleccionado ?? 'todos'}
-              className="rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-sm text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300"
-            >
-              <option value="todos">Todos</option>
-              {profesionalesSalon.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nombre}
-                </option>
-              ))}
-            </select>
-            <button
-              type="submit"
-              className="inline-flex items-center rounded-md border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900"
-            >
-              Filtrar
-            </button>
-          </form>
+            <Icon.Plus width="13" height="13" />
+            Nueva cita
+          </Link>
         </div>
       </header>
 
-      {/* Cabecera de días */}
-      <section className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <div className="grid grid-cols-7 border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <nav className="flex items-center gap-2">
+          <Link
+            href={buildHref(mesAnterior)}
+            className="card-tight tight px-3 py-2 text-[13px] text-ink transition hover:bg-paper"
+          >
+            ← Anterior
+          </Link>
+          <Link
+            href={buildHref(mesHoy)}
+            className="card-tight tight px-3 py-2 text-[13px] text-ink transition hover:bg-paper"
+          >
+            Hoy
+          </Link>
+          <Link
+            href={buildHref(mesSiguiente)}
+            className="card-tight tight px-3 py-2 text-[13px] text-ink transition hover:bg-paper"
+          >
+            Siguiente →
+          </Link>
+        </nav>
+
+        <form
+          method="GET"
+          action="/panel/agenda"
+          className="flex items-center gap-2"
+        >
+          <input type="hidden" name="vista" value="mes" />
+          <input type="hidden" name="fecha" value={toISODate(primerDiaMes)} />
+          <label
+            htmlFor="profesional"
+            className="text-[12px] uppercase tracking-[0.18em] text-stone/70"
+          >
+            Profesional
+          </label>
+          <select
+            id="profesional"
+            name="profesional"
+            defaultValue={profesionalSeleccionado ?? 'todos'}
+            className="rounded-full border border-line bg-paper px-4 py-2 text-[13px] text-ink"
+          >
+            <option value="todos">Todos</option>
+            {profesionalesSalon.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="card-tight tight px-3 py-2 text-[13px] text-ink hover:bg-paper"
+          >
+            Filtrar
+          </button>
+        </form>
+      </div>
+
+      {/* Calendario */}
+      <section className="card overflow-hidden">
+        <div className="grid grid-cols-7 border-b border-line bg-cream/40">
           {NOMBRES_DIAS_CORTOS.map((d) => (
             <div
               key={d}
-              className="px-2 py-2 text-center text-xs font-semibold text-zinc-600 dark:text-zinc-400"
+              className="px-2 py-2.5 text-center text-[11px] uppercase tracking-[0.18em] text-stone/70"
             >
               {d}
             </div>
@@ -682,28 +637,24 @@ async function VistaMes({
                       ? `${items.length} cita${items.length === 1 ? '' : 's'}`
                       : 'Sin citas'
                   }
-                  className={`group min-h-[100px] border-r border-b border-zinc-200 p-1.5 transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-900/50 ${
-                    esDelMes
-                      ? 'bg-white dark:bg-zinc-950'
-                      : 'bg-zinc-50/50 dark:bg-zinc-900/30'
-                  } ${dIdx === 6 ? 'border-r-0' : ''} ${
-                    sIdx === 5 ? 'border-b-0' : ''
-                  }`}
+                  className={`min-h-[110px] border-r border-b border-line p-1.5 transition-colors hover:bg-paper ${
+                    dIdx === 6 ? 'border-r-0' : ''
+                  } ${sIdx === 5 ? 'border-b-0' : ''}`}
                 >
                   <div className="flex items-center justify-between">
                     <span
-                      className={`inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold tabular-nums ${
+                      className={`tabular inline-flex size-6 items-center justify-center rounded-full text-[11px] font-medium ${
                         esHoy
-                          ? 'ring-2 ring-purple-500 bg-purple-100 text-purple-900 dark:bg-purple-900/40 dark:text-purple-200'
+                          ? 'bg-terracotta/15 text-terracotta ring-2 ring-terracotta'
                           : esDelMes
-                            ? 'text-zinc-900 dark:text-zinc-100'
-                            : 'text-zinc-400 dark:text-zinc-600'
+                            ? 'text-ink'
+                            : 'text-stone/30'
                       }`}
                     >
                       {dia.getDate()}
                     </span>
                     {items.length > 3 && (
-                      <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
+                      <span className="text-[10px] text-stone/60">
                         {items.length}
                       </span>
                     )}
@@ -717,15 +668,15 @@ async function VistaMes({
                         <Link
                           key={cita.id}
                           href={`/panel/citas/${cita.id}`}
-                          className="flex items-center gap-1 truncate rounded px-1 py-0.5 text-[10px] hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                          className="flex items-center gap-1 truncate rounded px-1 py-0.5 text-[10px] hover:bg-cream"
                           style={{
                             borderLeft: `3px solid ${colorProfesional}`,
                           }}
                         >
-                          <span className="font-semibold tabular-nums text-zinc-700 dark:text-zinc-300">
+                          <span className="tabular font-mono text-ink">
                             {hora}
                           </span>
-                          <span className="truncate text-zinc-600 dark:text-zinc-400">
+                          <span className="truncate text-stone">
                             {cliente.nombre}
                           </span>
                         </Link>
@@ -734,7 +685,7 @@ async function VistaMes({
                     {restantes > 0 && (
                       <Link
                         href={`/panel/citas?fecha=${key}`}
-                        className="px-1 py-0.5 text-[10px] font-medium text-purple-600 hover:underline dark:text-purple-400"
+                        className="px-1 py-0.5 text-[10px] font-medium text-terracotta hover:underline"
                       >
                         +{restantes} más
                       </Link>
@@ -748,17 +699,12 @@ async function VistaMes({
       </section>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <ResumenCard
-          label="Citas en el mes"
-          value={`${totalMes}`}
-          accent="blue"
-        />
+        <ResumenCard label="Citas en el mes" value={`${totalMes}`} />
         <ResumenCard
           label="Facturado (completadas)"
           value={`${facturadoMes.toFixed(0)} €`}
-          accent="emerald"
         />
-        <ResumenCard label="No-shows" value={`${noShowsMes}`} accent="red" />
+        <ResumenCard label="No-shows" value={`${noShowsMes}`} />
       </section>
     </div>
   );
@@ -774,13 +720,11 @@ function ToggleVista({
   hrefMes: string;
 }) {
   const baseCls =
-    'inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium transition-colors';
-  const activoCls =
-    'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900';
-  const inactivoCls =
-    'bg-white text-zinc-700 hover:bg-zinc-50 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900';
+    'tight inline-flex items-center justify-center rounded-full px-3.5 py-1.5 text-[12px] transition';
+  const activoCls = 'bg-ink text-cream';
+  const inactivoCls = 'text-stone hover:text-ink';
   return (
-    <div className="inline-flex overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800">
+    <div className="flex items-center gap-1 rounded-full border border-line bg-cream p-1 text-[12px]">
       <Link
         href={hrefSemana}
         className={`${baseCls} ${activo === 'semana' ? activoCls : inactivoCls}`}
@@ -789,9 +733,7 @@ function ToggleVista({
       </Link>
       <Link
         href={hrefMes}
-        className={`${baseCls} border-l border-zinc-200 dark:border-zinc-800 ${
-          activo === 'mes' ? activoCls : inactivoCls
-        }`}
+        className={`${baseCls} ${activo === 'mes' ? activoCls : inactivoCls}`}
       >
         Mes
       </Link>
@@ -799,30 +741,21 @@ function ToggleVista({
   );
 }
 
-type Accent = 'emerald' | 'blue' | 'red';
-
-const accentStyles: Record<Accent, string> = {
-  emerald: 'text-emerald-600 dark:text-emerald-400',
-  blue: 'text-blue-600 dark:text-blue-400',
-  red: 'text-red-600 dark:text-red-400',
-};
-
 function ResumenCard({
   label,
   value,
-  accent,
 }: {
   label: string;
   value: string;
-  accent: Accent;
 }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+    <div className="card p-5">
+      <div className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
         {label}
-      </p>
+      </div>
       <p
-        className={`mt-2 text-2xl font-bold tabular-nums ${accentStyles[accent]}`}
+        className="tight tabular mt-2 font-medium text-ink"
+        style={{ fontSize: '28px', lineHeight: 1 }}
       >
         {value}
       </p>

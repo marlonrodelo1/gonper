@@ -5,8 +5,6 @@ import { and, desc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { citas, clientes, profesionales, servicios } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,41 +16,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Icon } from '../../_components/icons';
+import { estadoMeta, type EstadoCita } from '../../_components/cita-row';
 import {
   eliminarCliente,
   toggleRequiereDeposito,
 } from '../actions';
-
-type EstadoCita =
-  | 'pendiente'
-  | 'confirmada'
-  | 'cancelada'
-  | 'no_show'
-  | 'completada';
-
-const estadoStyles: Record<EstadoCita, { label: string; className: string }> = {
-  completada: {
-    label: 'Completada',
-    className: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  },
-  confirmada: {
-    label: 'Confirmada',
-    className:
-      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-  },
-  pendiente: {
-    label: 'Pendiente',
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  },
-  no_show: {
-    label: 'No-show',
-    className: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-  },
-  cancelada: {
-    label: 'Cancelada',
-    className: 'bg-zinc-200 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
-  },
-};
 
 function fmtFecha(fecha: Date | null, tz: string): string {
   if (!fecha) return '—';
@@ -78,21 +47,25 @@ function fmtFechaHora(fecha: Date, tz: string): string {
   return `${f} · ${fmtHora(fecha, tz)}`;
 }
 
-function Field({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number | null | undefined;
-}) {
+function iniciales(nombre: string): string {
+  return nombre
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <dt className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+    <div className="flex flex-col gap-1">
+      <span className="text-[10px] uppercase tracking-[0.22em] text-stone/70">
         {label}
-      </dt>
-      <dd className="text-sm text-zinc-900 dark:text-zinc-100">
-        {value ?? '—'}
-      </dd>
+      </span>
+      <span className="tight tabular text-[24px] font-medium text-ink">
+        {value}
+      </span>
     </div>
   );
 }
@@ -134,49 +107,92 @@ export default async function ClienteFichaPage({
   const eliminarBound = eliminarCliente.bind(null, id);
   const toggleBound = toggleRequiereDeposito.bind(null, id);
 
+  const totalFacturado = `${Number(cliente.totalFacturado).toFixed(0)} €`;
+
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Link
-            href="/panel/clientes"
-            className="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
-          >
-            ← Clientes
-          </Link>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
+      <Link
+        href="/panel/clientes"
+        className="text-[12.5px] text-stone hover:text-ink"
+      >
+        ← Clientes
+      </Link>
+
+      <header className="card flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-line bg-cream-2 text-[18px] font-medium text-ink/80">
+            {iniciales(cliente.nombre) || '·'}
+          </div>
+          <div>
+            <h1 className="tight text-[28px] font-medium text-ink">
               {cliente.nombre}
             </h1>
-            {cliente.telegramId !== null && cliente.telegramId !== undefined && (
-              <span className="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-700 dark:bg-sky-900/40 dark:text-sky-300">
-                📱 Telegram
+            <p className="mt-1 text-[13.5px] text-stone">
+              <span className="font-serif-it">con</span>{' '}
+              <span className="tabular text-ink">{cliente.totalCitas}</span>{' '}
+              visita{cliente.totalCitas === 1 ? '' : 's'},{' '}
+              <span className="tabular text-ink">{totalFacturado}</span> totales
+              <span className="font-serif-it text-stone/70">
+                {' '}
+                · cliente desde {fmtFecha(cliente.createdAt, tz)}
               </span>
-            )}
-            {cliente.requiereDeposito && (
-              <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
-                Depósito requerido
-              </span>
-            )}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              {cliente.telegramId !== null &&
+                cliente.telegramId !== undefined && (
+                  <span
+                    className="pill"
+                    style={{
+                      background: 'rgba(43,40,35,0.06)',
+                      color: '#2B2823',
+                    }}
+                  >
+                    <Icon.Tg width="11" height="11" />
+                    Telegram
+                  </span>
+                )}
+              {cliente.requiereDeposito && (
+                <span
+                  className="pill"
+                  style={{
+                    background: 'rgba(197,142,44,0.14)',
+                    color: '#7A5A1B',
+                  }}
+                >
+                  <span
+                    className="pill-dot"
+                    style={{ background: '#C58E2C' }}
+                  />
+                  Depósito requerido
+                </span>
+              )}
+            </div>
           </div>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            Cliente desde {fmtFecha(cliente.createdAt, tz)}
-          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex shrink-0 gap-2">
           <Link
             href={`/panel/clientes/${id}/editar`}
-            className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-2.5 text-sm font-medium hover:bg-muted"
+            className="tight inline-flex items-center justify-center gap-1.5 rounded-full border border-line bg-paper px-4 py-2 text-[13px] font-medium text-ink hover:bg-cream"
           >
             Editar
           </Link>
           <AlertDialog>
             <AlertDialogTrigger
-              render={<Button variant="destructive">Eliminar</Button>}
+              render={
+                <button
+                  type="button"
+                  className="tight inline-flex items-center justify-center rounded-full border border-line bg-paper px-4 py-2 text-[13px] font-medium hover:bg-paper/80"
+                  style={{ color: '#B14848' }}
+                >
+                  Eliminar
+                </button>
+              }
             />
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>¿Eliminar a {cliente.nombre}?</AlertDialogTitle>
+                <AlertDialogTitle>
+                  ¿Eliminar a {cliente.nombre}?
+                </AlertDialogTitle>
                 <AlertDialogDescription>
                   Esta acción no se puede deshacer. Si el cliente tiene citas
                   registradas, no podrá eliminarse hasta que se limpie su
@@ -188,7 +204,7 @@ export default async function ClienteFichaPage({
                 <form action={eliminarBound} className="contents">
                   <AlertDialogAction
                     type="submit"
-                    variant="destructive"
+                    className="bg-[#B14848] text-white hover:bg-[#7C2E2E]"
                   >
                     Eliminar
                   </AlertDialogAction>
@@ -200,67 +216,112 @@ export default async function ClienteFichaPage({
       </header>
 
       {sp.error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+        <div
+          className="rounded-xl border px-4 py-3 text-[13.5px]"
+          style={{
+            background: '#F1D6D6',
+            borderColor: 'rgba(177,72,72,0.4)',
+            color: '#7C2E2E',
+          }}
+        >
           {sp.error}
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="flex flex-col gap-4">
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <h2 className="mb-4 text-base font-semibold text-zinc-950 dark:text-zinc-50">
-              Información personal
-            </h2>
-            <dl className="grid grid-cols-2 gap-4">
-              <Field label="Nombre" value={cliente.nombre} />
-              <Field label="Teléfono" value={cliente.telefono} />
-              <Field label="Email" value={cliente.email} />
-              <Field
-                label="Telegram"
-                value={
-                  cliente.telegramUsername
-                    ? `@${cliente.telegramUsername}`
-                    : null
-                }
-              />
-              <Field label="WhatsApp" value={cliente.whatsappPhone} />
-              <Field
-                label="Telegram ID"
-                value={
-                  cliente.telegramId !== null && cliente.telegramId !== undefined
-                    ? String(cliente.telegramId)
-                    : null
-                }
-              />
-            </dl>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="flex flex-col gap-6">
+          <section className="card p-6">
+            <div className="mb-4 text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Datos de contacto
+            </div>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cream-2 text-stone">
+                  <Icon.Phone width="13" height="13" />
+                </span>
+                <span className="text-[14px] text-ink">
+                  {cliente.telefono ?? (
+                    <span className="text-stone">— sin teléfono</span>
+                  )}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cream-2 text-stone text-[12px]">
+                  @
+                </span>
+                <span className="text-[14px] text-ink">
+                  {cliente.email ?? (
+                    <span className="text-stone">— sin email</span>
+                  )}
+                </span>
+              </div>
+              {cliente.whatsappPhone && (
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cream-2 text-stone text-[11px]">
+                    WA
+                  </span>
+                  <span className="text-[14px] text-ink">
+                    {cliente.whatsappPhone}
+                  </span>
+                </div>
+              )}
+              {(cliente.telegramUsername ||
+                cliente.telegramId !== null) && (
+                <div className="flex items-center gap-3">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cream-2 text-stone">
+                    <Icon.Tg width="13" height="13" />
+                  </span>
+                  <span className="text-[14px] text-ink">
+                    {cliente.telegramUsername
+                      ? `@${cliente.telegramUsername}`
+                      : `Telegram ID ${String(cliente.telegramId)}`}
+                  </span>
+                </div>
+              )}
+            </div>
+            {cliente.notasPrivadas ? (
+              <>
+                <div className="rule my-5" />
+                <div className="mb-2 text-[11px] uppercase tracking-[0.22em] text-stone/70">
+                  Notas privadas
+                </div>
+                <p className="whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink">
+                  {cliente.notasPrivadas}
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="rule my-5" />
+                <p className="font-serif-it text-[13px] text-stone/70">
+                  Sin notas. Edita el cliente para añadir información interna.
+                </p>
+              </>
+            )}
           </section>
 
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <h2 className="mb-4 text-base font-semibold text-zinc-950 dark:text-zinc-50">
+          <section className="card p-6">
+            <div className="mb-4 text-[11px] uppercase tracking-[0.22em] text-stone/70">
               Métricas
-            </h2>
-            <dl className="grid grid-cols-2 gap-4">
-              <Field label="Total citas" value={cliente.totalCitas} />
-              <Field label="No-shows" value={cliente.totalNoShows} />
-              <Field
-                label="Total facturado"
-                value={`${Number(cliente.totalFacturado).toFixed(2)} €`}
-              />
-              <Field
+            </div>
+            <div className="grid grid-cols-2 gap-5">
+              <Stat label="Total citas" value={String(cliente.totalCitas)} />
+              <Stat label="No-shows" value={String(cliente.totalNoShows)} />
+              <Stat label="Total facturado" value={totalFacturado} />
+              <Stat
                 label="Última visita"
                 value={fmtFecha(cliente.ultimaVisita, tz)}
               />
-            </dl>
-            <Separator className="my-4" />
+            </div>
+            <div className="rule my-5" />
             <form
               action={toggleBound}
               className="flex items-center justify-between gap-3"
             >
               <div>
-                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                <p className="tight text-[14px] font-medium text-ink">
                   Requiere depósito
                 </p>
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-[12px] text-stone">
                   {cliente.requiereDeposito
                     ? 'Activado: se le pedirá depósito al reservar.'
                     : 'Desactivado: reservas normales sin depósito.'}
@@ -268,93 +329,96 @@ export default async function ClienteFichaPage({
               </div>
               <button
                 type="submit"
-                className={`inline-flex h-8 shrink-0 items-center justify-center rounded-lg border px-3 text-xs font-medium transition-colors ${
+                className={`tight inline-flex h-8 shrink-0 items-center justify-center rounded-full border px-4 text-[12px] font-medium transition-colors ${
                   cliente.requiereDeposito
-                    ? 'border-amber-300 bg-amber-100 text-amber-700 hover:bg-amber-200 dark:border-amber-900/40 dark:bg-amber-900/40 dark:text-amber-300'
-                    : 'border-border bg-background hover:bg-muted'
+                    ? 'border-transparent text-[#7A5A1B] hover:opacity-80'
+                    : 'border-line bg-paper text-ink hover:bg-cream'
                 }`}
+                style={
+                  cliente.requiereDeposito
+                    ? { background: 'rgba(197,142,44,0.14)' }
+                    : undefined
+                }
               >
                 {cliente.requiereDeposito ? 'Quitar' : 'Activar'}
               </button>
             </form>
           </section>
-
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <h2 className="mb-2 text-base font-semibold text-zinc-950 dark:text-zinc-50">
-              Notas privadas
-            </h2>
-            {cliente.notasPrivadas ? (
-              <p className="whitespace-pre-wrap text-sm text-zinc-700 dark:text-zinc-300">
-                {cliente.notasPrivadas}
-              </p>
-            ) : (
-              <p className="text-sm italic text-zinc-500 dark:text-zinc-400">
-                Sin notas. Edita el cliente para añadir información interna.
-              </p>
-            )}
-          </section>
         </div>
 
-        <div>
-          <section className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-            <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-800">
-              <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
-                Últimas citas
-              </h2>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                {historial.length === 20 ? 'Últimas 20' : `${historial.length} totales`}
-              </span>
-            </div>
-            {historial.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-2 px-6 py-12 text-center">
-                <span className="text-3xl">📅</span>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Aún no hay citas registradas para este cliente.
-                </p>
+        <section className="card overflow-hidden">
+          <div className="flex items-center justify-between border-b border-line px-5 py-4">
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+                Historial de citas
               </div>
-            ) : (
-              <ul className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                {historial.map(({ cita, servicio, profesional }) => {
-                  const estado =
-                    estadoStyles[cita.estado as EstadoCita] ??
-                    estadoStyles.pendiente;
-                  return (
-                    <li key={cita.id} className="flex flex-col gap-1 px-5 py-3">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                          {fmtFechaHora(cita.inicio, tz)}
-                        </span>
+              <div className="tight mt-0.5 text-[16px] font-medium text-ink">
+                {historial.length === 20
+                  ? 'Últimas 20'
+                  : `${historial.length} ${historial.length === 1 ? 'cita' : 'citas'}`}
+              </div>
+            </div>
+          </div>
+          {historial.length === 0 ? (
+            <div className="px-5 py-16 text-center">
+              <p className="tight text-[15px] font-medium text-ink">
+                Sin historial
+              </p>
+              <p className="mt-1 text-[12.5px] text-stone">
+                Aún no hay citas registradas para este cliente.
+              </p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-line/70">
+              {historial.map(({ cita, servicio, profesional }) => {
+                const m =
+                  estadoMeta[cita.estado as EstadoCita] ??
+                  estadoMeta.pendiente;
+                return (
+                  <li
+                    key={cita.id}
+                    className="flex flex-col gap-1 px-5 py-3.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="tight tabular font-mono text-[13.5px] text-ink">
+                        {fmtFechaHora(cita.inicio, tz)}
+                      </span>
+                      <span
+                        className="pill"
+                        style={{ background: m.bg, color: m.fg }}
+                      >
                         <span
-                          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${estado.className}`}
-                        >
-                          {estado.label}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-                        <span>{servicio.nombre}</span>
-                        <span aria-hidden>·</span>
-                        <span className="inline-flex items-center gap-1.5">
-                          <span
-                            className="inline-block size-2 rounded-full"
-                            style={{
-                              backgroundColor: profesional.colorHex ?? '#3b82f6',
-                            }}
-                            aria-hidden
-                          />
-                          {profesional.nombre}
-                        </span>
-                        <span aria-hidden>·</span>
-                        <span className="font-medium tabular-nums text-zinc-700 dark:text-zinc-300">
-                          {Number(cita.precioEur).toFixed(0)} €
-                        </span>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
-        </div>
+                          className="pill-dot"
+                          style={{ background: m.dot }}
+                        />
+                        {m.label}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-[12px] text-stone">
+                      <span>{servicio.nombre}</span>
+                      <span aria-hidden>·</span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          className="inline-block size-2 rounded-full"
+                          style={{
+                            backgroundColor:
+                              profesional.colorHex ?? '#C5562C',
+                          }}
+                          aria-hidden
+                        />
+                        {profesional.nombre}
+                      </span>
+                      <span aria-hidden>·</span>
+                      <span className="tabular font-mono font-medium text-ink">
+                        {Number(cita.precioEur).toFixed(0)}€
+                      </span>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
       </div>
     </div>
   );

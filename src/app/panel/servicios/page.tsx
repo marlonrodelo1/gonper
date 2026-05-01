@@ -1,18 +1,10 @@
 import Link from 'next/link';
-import { and, asc, eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { servicios } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
+import { Icon } from '../_components/icons';
 import { toggleServicioActivo } from './actions';
 import { EliminarServicioButton } from './eliminar-servicio-button';
 
@@ -28,13 +20,15 @@ export default async function ServiciosPage({
 
   if (!salon) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 rounded-xl border border-zinc-200 bg-white p-10 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-          Configura tu salón
-        </h1>
-        <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400">
-          Aún no tienes un salón asociado a tu cuenta.
-        </p>
+      <div className="px-8 py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+          <h1 className="tight text-[28px] font-medium text-ink">
+            Configura tu salón
+          </h1>
+          <p className="max-w-md text-[14px] text-stone">
+            Aún no tienes un salón asociado a tu cuenta.
+          </p>
+        </div>
       </div>
     );
   }
@@ -45,120 +39,146 @@ export default async function ServiciosPage({
     .where(eq(servicios.salonId, salon.id))
     .orderBy(asc(servicios.orden), asc(servicios.createdAt));
 
+  const activos = filas.filter((s) => s.activo).length;
+
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
+      <header className="flex flex-col items-start gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            Catálogo · {salon.nombre}
+          <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Catálogo
           </p>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-            Servicios
+          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+            {filas.length} {filas.length === 1 ? 'servicio' : 'servicios'}{' '}
+            <span className="font-serif-it text-stone/70">
+              {filas.length > 0 ? `· ${activos} activos` : 'en tu salón'}
+            </span>
           </h1>
         </div>
         <Link
           href="/panel/servicios/nuevo"
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+          className="gloss-btn tight inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] font-medium"
         >
-          <span>+</span>
-          <span>Nuevo servicio</span>
+          <Icon.Plus width="15" height="15" /> Nuevo servicio
         </Link>
       </header>
 
       {params.error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+        <div
+          className="rounded-xl border px-4 py-3 text-[13.5px]"
+          style={{
+            background: '#F1D6D6',
+            borderColor: 'rgba(177,72,72,0.4)',
+            color: '#7C2E2E',
+          }}
+        >
           {params.error}
         </div>
       ) : null}
 
       {filas.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-zinc-200 bg-white p-10 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
+        <div className="card flex flex-col items-center justify-center gap-3 p-12 text-center">
+          <h2 className="tight text-[18px] font-medium text-ink">
             Aún no hay servicios
           </h2>
-          <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="max-w-md text-[13.5px] text-stone">
             Crea el primero (corte, barba, color…) para que tu agente y tus
             clientes puedan reservarlo.
           </p>
           <Link
             href="/panel/servicios/nuevo"
-            className="mt-2 inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+            className="gloss-btn tight mt-2 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] font-medium"
           >
-            Crear primer servicio
+            <Icon.Plus width="15" height="15" /> Crear primer servicio
           </Link>
         </div>
       ) : (
-        <section className="rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead className="w-[120px]">Duración</TableHead>
-                <TableHead className="w-[120px]">Precio</TableHead>
-                <TableHead className="w-[120px]">Estado</TableHead>
-                <TableHead className="w-[260px] text-right">
-                  Acciones
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filas.map((s) => (
-                <TableRow key={s.id}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-zinc-950 dark:text-zinc-50">
-                        {s.nombre}
-                      </span>
-                      {s.descripcion ? (
-                        <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                          {s.descripcion}
-                        </span>
-                      ) : null}
-                    </div>
-                  </TableCell>
-                  <TableCell className="tabular-nums text-zinc-700 dark:text-zinc-300">
-                    {s.duracionMin} min
-                  </TableCell>
-                  <TableCell className="tabular-nums text-zinc-700 dark:text-zinc-300">
-                    {Number(s.precioEur).toFixed(2)} €
-                  </TableCell>
-                  <TableCell>
-                    {s.activo ? (
-                      <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                        Activo
-                      </span>
-                    ) : (
-                      <span className="inline-flex rounded-full bg-zinc-200 px-2.5 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                        Inactivo
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center justify-end gap-1">
-                      <Link
-                        href={`/panel/servicios/${s.id}/editar`}
-                        className="inline-flex h-7 items-center justify-center rounded-md px-2.5 text-[0.8rem] font-medium text-zinc-700 hover:bg-muted hover:text-foreground dark:text-zinc-300"
-                      >
-                        Editar
-                      </Link>
-                      <form action={toggleServicioActivo}>
-                        <input type="hidden" name="id" value={s.id} />
-                        <Button
-                          type="submit"
-                          variant="ghost"
-                          size="sm"
-                        >
-                          {s.activo ? 'Desactivar' : 'Activar'}
-                        </Button>
-                      </form>
-                      <EliminarServicioButton id={s.id} nombre={s.nombre} />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </section>
+        <div className="card overflow-hidden">
+          <div className="grid grid-cols-[1fr_120px_120px_120px_220px] items-center gap-3 border-b border-line bg-cream/40 px-5 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
+            <div>Nombre</div>
+            <div className="text-right">Duración</div>
+            <div className="text-right">Precio</div>
+            <div>Estado</div>
+            <div className="text-right">Acciones</div>
+          </div>
+          <div className="divide-y divide-line/70">
+            {filas.map((s) => (
+              <div
+                key={s.id}
+                className="grid grid-cols-[1fr_120px_120px_120px_220px] items-center gap-3 border-l-2 border-l-transparent px-5 py-3.5 transition hover:border-l-terracotta hover:bg-paper/60"
+              >
+                <div className="min-w-0">
+                  <Link
+                    href={`/panel/servicios/${s.id}/editar`}
+                    className="tight block truncate text-[14.5px] font-medium text-ink hover:text-terracotta"
+                  >
+                    {s.nombre}
+                  </Link>
+                  {s.descripcion ? (
+                    <span className="block truncate text-[12px] text-stone">
+                      {s.descripcion}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="tabular text-right font-mono text-[13px] text-ink">
+                  {s.duracionMin} min
+                </div>
+                <div className="tabular text-right font-mono text-[13px] text-ink">
+                  {Number(s.precioEur).toFixed(2)} €
+                </div>
+                <div>
+                  {s.activo ? (
+                    <span
+                      className="pill"
+                      style={{
+                        background: 'rgba(139,157,122,0.15)',
+                        color: '#5A6B4D',
+                      }}
+                    >
+                      <span
+                        className="pill-dot"
+                        style={{ background: '#8B9D7A' }}
+                      />
+                      Activo
+                    </span>
+                  ) : (
+                    <span
+                      className="pill"
+                      style={{
+                        background: 'rgba(107,99,86,0.10)',
+                        color: '#6B6356',
+                      }}
+                    >
+                      <span
+                        className="pill-dot"
+                        style={{ background: '#8A8174' }}
+                      />
+                      Inactivo
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center justify-end gap-1.5">
+                  <Link
+                    href={`/panel/servicios/${s.id}/editar`}
+                    className="tight inline-flex h-7 items-center justify-center rounded-full border border-line bg-paper px-3 text-[12px] font-medium text-ink hover:bg-cream"
+                  >
+                    Editar
+                  </Link>
+                  <form action={toggleServicioActivo}>
+                    <input type="hidden" name="id" value={s.id} />
+                    <button
+                      type="submit"
+                      className="tight inline-flex h-7 items-center justify-center rounded-full border border-line bg-paper px-3 text-[12px] font-medium text-stone hover:bg-cream hover:text-ink"
+                    >
+                      {s.activo ? 'Desactivar' : 'Activar'}
+                    </button>
+                  </form>
+                  <EliminarServicioButton id={s.id} nombre={s.nombre} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

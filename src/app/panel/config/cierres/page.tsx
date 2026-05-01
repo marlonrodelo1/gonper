@@ -3,29 +3,15 @@ import { asc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { cierres } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { agregarCierre } from './actions';
 import { EliminarCierreButton } from './eliminar-button';
 
 type CurrentSalon = { id: string; timezone: string } | null;
+
+const inputClass =
+  'w-full bg-paper border border-line rounded-2xl px-4 py-3 text-[14px] text-ink focus:outline-none focus:border-line-2';
+const labelClass =
+  'text-[11px] uppercase tracking-[0.2em] text-stone/80';
 
 export default async function CierresPage({
   searchParams,
@@ -37,14 +23,14 @@ export default async function CierresPage({
 
   if (!salon) {
     return (
-      <Card className="mx-auto max-w-2xl">
-        <CardHeader>
-          <CardTitle>Configura tu salón</CardTitle>
-          <CardDescription>
-            Aún no tienes un salón asociado a tu cuenta.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+        <h2 className="tight text-[22px] font-medium text-ink">
+          Configura tu salón
+        </h2>
+        <p className="text-[14px] text-stone">
+          Aún no tienes un salón asociado a tu cuenta.
+        </p>
+      </div>
     );
   }
 
@@ -65,119 +51,132 @@ export default async function CierresPage({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-5">
       {params.error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+        <div
+          className="rounded-xl border bg-[#F1D6D6] px-4 py-3 text-[13px] text-[#7C2E2E]"
+          style={{ borderColor: 'rgba(177,72,72,0.4)' }}
+        >
           {params.error}
         </div>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Cierres y vacaciones</CardTitle>
-          <CardDescription>
-            Días u horas en los que el salón permanecerá cerrado.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          {filas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center dark:border-zinc-700 dark:bg-zinc-900/40">
-              <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                Sin cierres programados
-              </p>
-              <p className="max-w-sm text-xs text-zinc-600 dark:text-zinc-400">
-                Añade vacaciones, festivos o cierres puntuales para que el
-                agente no acepte citas en esos rangos.
-              </p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Desde</TableHead>
-                  <TableHead>Hasta</TableHead>
-                  <TableHead>Motivo</TableHead>
-                  <TableHead className="w-[120px] text-right">
-                    Acciones
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filas.map((c) => {
-                  const desde = fechaFmt.format(c.fechaInicio);
-                  const hasta = fechaFmt.format(c.fechaFin);
-                  return (
-                    <TableRow key={c.id}>
-                      <TableCell className="tabular-nums text-zinc-700 dark:text-zinc-300">
-                        {desde}
-                      </TableCell>
-                      <TableCell className="tabular-nums text-zinc-700 dark:text-zinc-300">
-                        {hasta}
-                      </TableCell>
-                      <TableCell className="text-zinc-700 dark:text-zinc-300">
-                        {c.motivo ?? (
-                          <span className="text-zinc-400 dark:text-zinc-500">
-                            —
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <EliminarCierreButton
-                          id={c.id}
-                          resumen={`${desde} → ${hasta}`}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          )}
+      <section className="card flex flex-col gap-5 p-8">
+        <header className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Cierres y vacaciones
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            Días en los que el salón estará cerrado
+          </h2>
+          <p className="text-[13px] text-stone">
+            El agente no aceptará citas en esos rangos.
+          </p>
+        </header>
 
-          <Separator />
-
-          <div>
-            <h3 className="mb-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-              Añadir cierre
-            </h3>
-            <form
-              action={agregarCierre}
-              className="grid grid-cols-1 gap-3 sm:grid-cols-2"
-            >
-              <div className="space-y-1.5">
-                <Label htmlFor="fecha_inicio">Desde</Label>
-                <Input
-                  id="fecha_inicio"
-                  name="fecha_inicio"
-                  type="datetime-local"
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="fecha_fin">Hasta</Label>
-                <Input
-                  id="fecha_fin"
-                  name="fecha_fin"
-                  type="datetime-local"
-                  required
-                />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="motivo">Motivo (opcional)</Label>
-                <Input
-                  id="motivo"
-                  name="motivo"
-                  maxLength={200}
-                  placeholder="Ej. Vacaciones de verano"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <Button type="submit">Añadir cierre</Button>
-              </div>
-            </form>
+        {filas.length === 0 ? (
+          <div className="card-tight flex flex-col items-center justify-center gap-2 border-dashed p-10 text-center">
+            <p className="tight text-[15px] font-medium text-ink">
+              Sin cierres programados
+            </p>
+            <p className="max-w-sm text-[12.5px] text-stone">
+              Añade vacaciones, festivos o cierres puntuales.
+            </p>
           </div>
-        </CardContent>
-      </Card>
+        ) : (
+          <div className="flex flex-col divide-y divide-line/70">
+            <div className="grid grid-cols-[1fr_1fr_1.2fr_120px] gap-3 bg-cream/40 px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
+              <div>Desde</div>
+              <div>Hasta</div>
+              <div>Motivo</div>
+              <div className="text-right">Acciones</div>
+            </div>
+            {filas.map((c) => {
+              const desde = fechaFmt.format(c.fechaInicio);
+              const hasta = fechaFmt.format(c.fechaFin);
+              return (
+                <div
+                  key={c.id}
+                  className="grid grid-cols-[1fr_1fr_1.2fr_120px] items-center gap-3 px-4 py-3.5"
+                >
+                  <div className="tabular font-mono text-[13px] text-ink">
+                    {desde}
+                  </div>
+                  <div className="tabular font-mono text-[13px] text-ink">
+                    {hasta}
+                  </div>
+                  <div className="text-[13px] text-stone">
+                    {c.motivo ?? <span className="text-stone/50">—</span>}
+                  </div>
+                  <div className="text-right">
+                    <EliminarCierreButton
+                      id={c.id}
+                      resumen={`${desde} → ${hasta}`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="rule" />
+
+        <div className="flex flex-col gap-3">
+          <h3 className="tight text-[15px] font-medium text-ink">
+            Añadir cierre
+          </h3>
+          <form
+            action={agregarCierre}
+            className="grid grid-cols-1 gap-3 sm:grid-cols-2"
+          >
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="fecha_inicio" className={labelClass}>
+                Desde
+              </label>
+              <input
+                id="fecha_inicio"
+                name="fecha_inicio"
+                type="datetime-local"
+                required
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="fecha_fin" className={labelClass}>
+                Hasta
+              </label>
+              <input
+                id="fecha_fin"
+                name="fecha_fin"
+                type="datetime-local"
+                required
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <label htmlFor="motivo" className={labelClass}>
+                Motivo (opcional)
+              </label>
+              <input
+                id="motivo"
+                name="motivo"
+                maxLength={200}
+                placeholder="Ej. Vacaciones de verano"
+                className={inputClass}
+              />
+            </div>
+            <div className="sm:col-span-2 flex justify-end">
+              <button
+                type="submit"
+                className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
+              >
+                Añadir cierre
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }

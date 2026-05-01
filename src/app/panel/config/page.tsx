@@ -1,22 +1,5 @@
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Icon } from '@/app/panel/_components/icons';
 import { actualizarDatosSalon } from './actions';
 
 type Salon = {
@@ -59,19 +42,6 @@ const PLAN_LABEL: Record<string, string> = {
   cancelado: 'Cancelado',
 };
 
-const PLAN_CLASSES: Record<string, string> = {
-  trial:
-    'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 border-transparent',
-  solo:
-    'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 border-transparent',
-  studio:
-    'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border-transparent',
-  pro:
-    'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300 border-transparent',
-  cancelado:
-    'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-transparent',
-};
-
 function formatTrialUntil(value: string | Date | null): string | null {
   if (!value) return null;
   const d = value instanceof Date ? value : new Date(value);
@@ -82,6 +52,13 @@ function formatTrialUntil(value: string | Date | null): string | null {
     year: 'numeric',
   });
 }
+
+const inputClass =
+  'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2';
+const selectClass =
+  'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink focus:outline-none focus:border-line-2 appearance-none';
+const labelClass =
+  'text-[11px] uppercase tracking-[0.2em] text-stone/80';
 
 export default async function ConfigPage({
   searchParams,
@@ -94,14 +71,14 @@ export default async function ConfigPage({
 
   if (!salon) {
     return (
-      <Card className="mx-auto max-w-2xl">
-        <CardHeader>
-          <CardTitle>Configura tu salón</CardTitle>
-          <CardDescription>
-            Aún no tienes un salón asociado a tu cuenta.
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+        <h2 className="tight text-[22px] font-medium text-ink">
+          Configura tu salón
+        </h2>
+        <p className="text-[14px] text-stone">
+          Aún no tienes un salón asociado a tu cuenta.
+        </p>
+      </div>
     );
   }
 
@@ -109,161 +86,192 @@ export default async function ConfigPage({
   const trialFormatted = formatTrialUntil(salon.trialUntil);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-4">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       {params.ok ? (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-300">
+        <div className="flex items-center gap-2 rounded-xl border border-sage/40 bg-sage-soft px-4 py-3 text-[13px] text-sage-deep">
+          <Icon.Check width="14" height="14" />
           Cambios guardados correctamente.
         </div>
       ) : null}
       {params.error ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+        <div
+          className="rounded-xl border bg-[#F1D6D6] px-4 py-3 text-[13px] text-[#7C2E2E]"
+          style={{ borderColor: 'rgba(177,72,72,0.4)' }}
+        >
           {params.error}
         </div>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Datos generales</CardTitle>
-          <CardDescription>
-            Información de tu negocio. El agente la usa para presentarse y
-            responder preguntas.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={actualizarDatosSalon} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="nombre">Nombre del salón</Label>
-              <Input
-                id="nombre"
-                name="nombre"
-                required
-                maxLength={120}
-                defaultValue={salon.nombre}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tipo_negocio">Tipo de negocio</Label>
-              <Select name="tipo_negocio" defaultValue={salon.tipoNegocio}>
-                <SelectTrigger className="w-full" id="tipo_negocio">
-                  <SelectValue placeholder="Selecciona un tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIPOS_NEGOCIO.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="direccion">Dirección</Label>
-              <Input
-                id="direccion"
-                name="direccion"
-                defaultValue={salon.direccion ?? ''}
-                placeholder="Calle, número, ciudad"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="telefono">Teléfono</Label>
-                <Input
-                  id="telefono"
-                  name="telefono"
-                  type="tel"
-                  defaultValue={salon.telefono ?? ''}
-                  placeholder="+34 600 000 000"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email de contacto</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  defaultValue={salon.email ?? ''}
-                  placeholder="hola@tusalon.es"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="timezone">Zona horaria</Label>
-              <Select name="timezone" defaultValue={salon.timezone}>
-                <SelectTrigger className="w-full" id="timezone">
-                  <SelectValue placeholder="Selecciona zona horaria" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIMEZONES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <Button type="submit">Guardar cambios</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Identificador</CardTitle>
-          <CardDescription>
-            Tu URL pública. Para cambiarlo, contacta soporte.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="space-y-1">
-            <Label className="text-xs text-zinc-500">Slug</Label>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 font-mono text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-              {salon.slug}
-            </div>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-zinc-500">URL pública</Label>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 font-mono text-sm dark:border-zinc-800 dark:bg-zinc-900/40">
-              gomper.es/{salon.slug}
-            </div>
-          </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Para cambiar el slug contacta con soporte (cambiarlo rompe URLs ya
-            compartidas).
+      <section className="card flex flex-col gap-5 p-8">
+        <header className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Datos generales
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            Información del negocio
+          </h2>
+          <p className="text-[13px] text-stone">
+            La usa el agente para presentarse y responder preguntas.
           </p>
-        </CardContent>
-      </Card>
+        </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Suscripción</CardTitle>
-          <CardDescription>Tu plan actual en Gomper.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="flex items-center gap-3">
-            <Label className="text-xs text-zinc-500">Plan</Label>
-            <Badge className={PLAN_CLASSES[planKey]}>
-              {PLAN_LABEL[planKey]}
-            </Badge>
+        <form action={actualizarDatosSalon} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="nombre" className={labelClass}>
+              Nombre del salón
+            </label>
+            <input
+              id="nombre"
+              name="nombre"
+              required
+              maxLength={120}
+              defaultValue={salon.nombre}
+              className={inputClass}
+            />
           </div>
-          {planKey === 'trial' && trialFormatted ? (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Tu periodo de prueba termina el{' '}
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                {trialFormatted}
-              </span>
-              .
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="tipo_negocio" className={labelClass}>
+              Tipo de negocio
+            </label>
+            <select
+              id="tipo_negocio"
+              name="tipo_negocio"
+              defaultValue={salon.tipoNegocio}
+              className={selectClass}
+            >
+              {TIPOS_NEGOCIO.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="direccion" className={labelClass}>
+              Dirección
+            </label>
+            <input
+              id="direccion"
+              name="direccion"
+              defaultValue={salon.direccion ?? ''}
+              placeholder="Calle, número, ciudad"
+              className={inputClass}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="telefono" className={labelClass}>
+                Teléfono
+              </label>
+              <input
+                id="telefono"
+                name="telefono"
+                type="tel"
+                defaultValue={salon.telefono ?? ''}
+                placeholder="+34 600 000 000"
+                className={inputClass}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="email" className={labelClass}>
+                Email de contacto
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                defaultValue={salon.email ?? ''}
+                placeholder="hola@tusalon.es"
+                className={inputClass}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="timezone" className={labelClass}>
+              Zona horaria
+            </label>
+            <select
+              id="timezone"
+              name="timezone"
+              defaultValue={salon.timezone}
+              className={selectClass}
+            >
+              {TIMEZONES.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
+            >
+              Guardar cambios
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section className="card flex flex-col gap-4 p-8">
+        <header className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Identificador
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            Tu URL pública
+          </h2>
+          <p className="text-[13px] text-stone">
+            Para cambiarlo, contacta con soporte.
+          </p>
+        </header>
+
+        <div className="flex flex-col gap-1.5">
+          <span className={labelClass}>Slug</span>
+          <div className="card-tight px-4 py-2.5 font-mono text-[13.5px] text-ink">
+            {salon.slug}
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <span className={labelClass}>URL pública</span>
+          <div className="card-tight px-4 py-2.5 font-mono text-[13.5px] text-ink">
+            gomper.es/{salon.slug}
+          </div>
+        </div>
+        <p className="text-[12px] text-stone">
+          Cambiar el slug rompe URLs ya compartidas.
+        </p>
+      </section>
+
+      <section className="card flex flex-col gap-3 p-8">
+        <header className="flex flex-col gap-1.5">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+            Suscripción
+          </span>
+          <h2 className="tight text-[20px] font-medium text-ink">
+            Tu plan actual
+          </h2>
+        </header>
+        <div className="flex items-center gap-3">
+          <span className={labelClass}>Plan</span>
+          <span className="pill" style={{ background: 'rgba(43,40,35,0.06)', color: '#2B2823' }}>
+            <span className="pill-dot" style={{ background: '#2B2823' }} />
+            {PLAN_LABEL[planKey]}
+          </span>
+        </div>
+        {planKey === 'trial' && trialFormatted ? (
+          <p className="text-[13px] text-stone">
+            Tu prueba termina el{' '}
+            <span className="font-medium text-ink">{trialFormatted}</span>.
+          </p>
+        ) : null}
+      </section>
     </div>
   );
 }

@@ -11,7 +11,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { eliminarCliente } from './actions';
 
 export function EliminarClienteButton({
@@ -27,13 +26,13 @@ export function EliminarClienteButton({
     <AlertDialog>
       <AlertDialogTrigger
         render={
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-red-600 hover:bg-red-50 hover:text-red-700 dark:hover:bg-red-900/20"
+          <button
+            type="button"
+            className="tight inline-flex h-7 items-center justify-center rounded-full border border-line bg-paper px-3 text-[12px] font-medium transition hover:bg-paper/80"
+            style={{ color: '#B14848' }}
           >
             Eliminar
-          </Button>
+          </button>
         }
       />
       <AlertDialogContent>
@@ -50,7 +49,7 @@ export function EliminarClienteButton({
           <form action={action} className="contents">
             <AlertDialogAction
               type="submit"
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-[#B14848] text-white hover:bg-[#7C2E2E]"
             >
               Eliminar
             </AlertDialogAction>

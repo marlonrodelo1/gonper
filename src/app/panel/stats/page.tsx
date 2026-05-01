@@ -5,12 +5,14 @@ import { db } from '@/lib/db';
 import { citas, clientes, profesionales, servicios } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 
+import { StatCard } from '@/app/panel/_components/stat-card';
+
 type Periodo = '7' | '30' | '90';
 
-const PERIODOS: { value: Periodo; label: string }[] = [
-  { value: '7', label: 'Últimos 7 días' },
-  { value: '30', label: 'Últimos 30 días' },
-  { value: '90', label: 'Últimos 90 días' },
+const PERIODOS: { value: Periodo; label: string; corto: string }[] = [
+  { value: '7', label: 'Últimos 7 días', corto: '7 días' },
+  { value: '30', label: 'Últimos 30 días', corto: '30 días' },
+  { value: '90', label: 'Últimos 90 días', corto: '90 días' },
 ];
 
 const eurFormatter = new Intl.NumberFormat('es-ES', {
@@ -47,15 +49,16 @@ export default async function StatsPage({
 
   if (!salon) {
     return (
-      <div className="mx-auto flex max-w-2xl flex-col items-center justify-center gap-4 rounded-xl border border-zinc-200 bg-white p-10 text-center shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-        <span className="text-4xl">📊</span>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
-          Configura tu salón
-        </h1>
-        <p className="max-w-md text-sm text-zinc-600 dark:text-zinc-400">
-          Aún no tienes un salón asociado a tu cuenta. Cuando completes el
-          onboarding aparecerán aquí tus estadísticas.
-        </p>
+      <div className="px-8 py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+          <h1 className="tight text-[28px] font-medium text-ink">
+            Configura tu salón
+          </h1>
+          <p className="max-w-md text-[14px] text-stone">
+            Aún no tienes un salón asociado a tu cuenta. Cuando completes el
+            onboarding aparecerán aquí tus estadísticas.
+          </p>
+        </div>
       </div>
     );
   }
@@ -134,7 +137,6 @@ export default async function StatsPage({
     .limit(5);
 
   // 5. Profesionales: completadas, no_shows y facturación.
-  // Usamos FILTER para combinar agregados en una sola pasada por profesional.
   const filasProfesionales = await db
     .select({
       profesionalId: profesionales.id,
@@ -174,34 +176,39 @@ export default async function StatsPage({
     }))
     .sort((a, b) => b.facturado - a.facturado);
 
-  // Estilo del badge de tasa de no-show
-  const tasaNoShowBadge = (() => {
+  // Estilo del pill de tasa de no-show
+  const tasaNoShowStyle = (() => {
     if (tasaNoShow === null) {
-      return 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400';
+      return { bg: 'rgba(107,99,86,0.10)', fg: '#6B6356' };
     }
     if (tasaNoShow > 10) {
-      return 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300';
+      return { bg: 'rgba(177,72,72,0.15)', fg: '#7C2E2E' };
     }
     if (tasaNoShow < 5) {
-      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+      return { bg: 'rgba(139,157,122,0.15)', fg: '#5A6B4D' };
     }
-    return 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+    return { bg: 'rgba(197,142,44,0.14)', fg: '#7A5A1B' };
   })();
 
+  const periodoActual = PERIODOS.find((p) => p.value === periodo)!;
+
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6">
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-6 px-8 py-6">
+      <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            Estadísticas · {salon.nombre}
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50">
+          <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Estadísticas
+          </p>
+          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+            {periodoActual.label}{' '}
+            <span className="font-serif-it text-stone/70">
+              · {salon.nombre}
+            </span>
           </h1>
         </div>
         <nav
           aria-label="Periodo"
-          className="inline-flex flex-wrap gap-2"
+          className="flex items-center gap-1 rounded-full border border-line bg-cream p-1 text-[12px]"
         >
           {PERIODOS.map((p) => {
             const active = p.value === periodo;
@@ -210,13 +217,13 @@ export default async function StatsPage({
                 key={p.value}
                 href={`/panel/stats?periodo=${p.value}`}
                 className={
-                  'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ' +
+                  'tight inline-flex items-center justify-center rounded-full px-3.5 py-1.5 transition ' +
                   (active
-                    ? 'bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900'
-                    : 'border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-100 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900')
+                    ? 'bg-ink text-cream'
+                    : 'text-stone hover:text-ink')
                 }
               >
-                {p.label}
+                {p.corto}
               </Link>
             );
           })}
@@ -224,60 +231,60 @@ export default async function StatsPage({
       </header>
 
       {/* KPIs principales */}
-      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <KpiCard
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          id="stat-facturacion"
           label="Facturación"
-          value={formatEur(facturado)}
-          accent="emerald"
+          value={facturado.toFixed(0)}
+          suffix="€"
         />
-        <KpiCard
+        <StatCard
+          id="stat-completadas"
           label="Citas completadas"
-          value={completadas.toString()}
-          accent="blue"
+          value={completadas}
         />
-        <KpiCardConBadge
-          label="Tasa de no-show"
+        <TasaNoShowCard
           value={tasaNoShow === null ? 'N/A' : `${tasaNoShow.toFixed(1)}%`}
-          badgeClassName={tasaNoShowBadge}
+          style={tasaNoShowStyle}
         />
-        <KpiCard
+        <StatCard
+          id="stat-clientes"
           label="Clientes únicos"
-          value={clientesUnicos.toString()}
-          accent="amber"
+          value={clientesUnicos}
         />
       </section>
 
       {/* Top 5 servicios y Top 5 clientes */}
       <section className="grid gap-4 lg:grid-cols-2">
-        <Card titulo="Top 5 servicios">
+        <Card titulo="Top 5 servicios" subtitulo="por nº de citas completadas">
           {topServicios.length === 0 ? (
             <EmptyTabla mensaje="No hay servicios completados en este periodo." />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                  <tr>
-                    <th className="px-6 py-3 font-medium">#</th>
-                    <th className="px-6 py-3 font-medium">Servicio</th>
-                    <th className="px-6 py-3 text-right font-medium">Citas</th>
-                    <th className="px-6 py-3 text-right font-medium">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-line bg-cream/40 text-left text-[10px] uppercase tracking-[0.2em] text-stone/70">
+                    <th className="px-5 py-3 font-medium">#</th>
+                    <th className="px-5 py-3 font-medium">Servicio</th>
+                    <th className="px-5 py-3 text-right font-medium">Citas</th>
+                    <th className="px-5 py-3 text-right font-medium">
                       Facturación
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                <tbody className="divide-y divide-line/70">
                   {topServicios.map((s, idx) => (
                     <tr key={s.servicioId}>
-                      <td className="px-6 py-3 text-base">
+                      <td className="px-5 py-3 text-base">
                         {medalla(idx + 1)}
                       </td>
-                      <td className="px-6 py-3 font-medium text-zinc-900 dark:text-zinc-100">
+                      <td className="tight px-5 py-3 text-[14px] text-ink">
                         {s.nombre}
                       </td>
-                      <td className="px-6 py-3 text-right tabular-nums text-zinc-700 dark:text-zinc-300">
+                      <td className="tabular px-5 py-3 text-right text-[13px] text-stone">
                         {Number(s.total) || 0}
                       </td>
-                      <td className="px-6 py-3 text-right tabular-nums font-semibold text-zinc-950 dark:text-zinc-50">
+                      <td className="tabular px-5 py-3 text-right text-[13px] text-ink">
                         {formatEur(s.facturado)}
                       </td>
                     </tr>
@@ -288,40 +295,40 @@ export default async function StatsPage({
           )}
         </Card>
 
-        <Card titulo="Top 5 clientes">
+        <Card titulo="Top 5 clientes" subtitulo="por nº de citas completadas">
           {topClientes.length === 0 ? (
             <EmptyTabla mensaje="No hay clientes con citas completadas en este periodo." />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                  <tr>
-                    <th className="px-6 py-3 font-medium">#</th>
-                    <th className="px-6 py-3 font-medium">Cliente</th>
-                    <th className="px-6 py-3 text-right font-medium">Citas</th>
-                    <th className="px-6 py-3 text-right font-medium">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-line bg-cream/40 text-left text-[10px] uppercase tracking-[0.2em] text-stone/70">
+                    <th className="px-5 py-3 font-medium">#</th>
+                    <th className="px-5 py-3 font-medium">Cliente</th>
+                    <th className="px-5 py-3 text-right font-medium">Citas</th>
+                    <th className="px-5 py-3 text-right font-medium">
                       Facturación
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                <tbody className="divide-y divide-line/70">
                   {topClientes.map((c, idx) => (
                     <tr key={c.clienteId}>
-                      <td className="px-6 py-3 text-base">
+                      <td className="px-5 py-3 text-base">
                         {medalla(idx + 1)}
                       </td>
-                      <td className="px-6 py-3 font-medium">
+                      <td className="tight px-5 py-3 text-[14px]">
                         <Link
                           href={`/panel/clientes/${c.clienteId}`}
-                          className="text-zinc-900 hover:text-purple-600 hover:underline dark:text-zinc-100 dark:hover:text-purple-400"
+                          className="text-ink hover:text-terracotta"
                         >
                           {c.nombre}
                         </Link>
                       </td>
-                      <td className="px-6 py-3 text-right tabular-nums text-zinc-700 dark:text-zinc-300">
+                      <td className="tabular px-5 py-3 text-right text-[13px] text-stone">
                         {Number(c.total) || 0}
                       </td>
-                      <td className="px-6 py-3 text-right tabular-nums font-semibold text-zinc-950 dark:text-zinc-50">
+                      <td className="tabular px-5 py-3 text-right text-[13px] text-ink">
                         {formatEur(c.facturado)}
                       </td>
                     </tr>
@@ -335,48 +342,48 @@ export default async function StatsPage({
 
       {/* Profesionales */}
       <section>
-        <Card titulo="Profesionales">
+        <Card titulo="Profesionales" subtitulo="ranking por facturación">
           {profesionalesData.length === 0 ? (
             <EmptyTabla mensaje="No hay profesionales activos." />
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="border-b border-zinc-200 text-left text-xs uppercase tracking-wide text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                  <tr>
-                    <th className="px-6 py-3 font-medium">Profesional</th>
-                    <th className="px-6 py-3 text-right font-medium">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-line bg-cream/40 text-left text-[10px] uppercase tracking-[0.2em] text-stone/70">
+                    <th className="px-5 py-3 font-medium">Profesional</th>
+                    <th className="px-5 py-3 text-right font-medium">
                       Completadas
                     </th>
-                    <th className="px-6 py-3 text-right font-medium">
+                    <th className="px-5 py-3 text-right font-medium">
                       No-shows
                     </th>
-                    <th className="px-6 py-3 text-right font-medium">
+                    <th className="px-5 py-3 text-right font-medium">
                       Facturación
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                <tbody className="divide-y divide-line/70">
                   {profesionalesData.map((p) => (
                     <tr key={p.id}>
-                      <td className="px-6 py-3">
+                      <td className="px-5 py-3">
                         <span className="inline-flex items-center gap-2">
                           <span
                             className="inline-block size-2.5 rounded-full"
                             style={{ backgroundColor: p.colorHex }}
                             aria-hidden
                           />
-                          <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                          <span className="tight text-[14px] text-ink">
                             {p.nombre}
                           </span>
                         </span>
                       </td>
-                      <td className="px-6 py-3 text-right tabular-nums text-zinc-700 dark:text-zinc-300">
+                      <td className="tabular px-5 py-3 text-right text-[13px] text-stone">
                         {p.completadas}
                       </td>
-                      <td className="px-6 py-3 text-right tabular-nums text-zinc-700 dark:text-zinc-300">
+                      <td className="tabular px-5 py-3 text-right text-[13px] text-stone">
                         {p.noShows}
                       </td>
-                      <td className="px-6 py-3 text-right tabular-nums font-semibold text-zinc-950 dark:text-zinc-50">
+                      <td className="tabular px-5 py-3 text-right text-[13px] text-ink">
                         {formatEur(p.facturado)}
                       </td>
                     </tr>
@@ -388,7 +395,7 @@ export default async function StatsPage({
         </Card>
       </section>
 
-      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      <p className="mt-6 text-center text-[11px] text-stone/60">
         Datos en tiempo real. Las citas pendientes y canceladas no cuentan en
         la facturación.
       </p>
@@ -396,75 +403,57 @@ export default async function StatsPage({
   );
 }
 
-type Accent = 'emerald' | 'blue' | 'red' | 'amber';
-
-const accentStyles: Record<Accent, string> = {
-  emerald: 'text-emerald-600 dark:text-emerald-400',
-  blue: 'text-blue-600 dark:text-blue-400',
-  red: 'text-red-600 dark:text-red-400',
-  amber: 'text-amber-600 dark:text-amber-400',
-};
-
-function KpiCard({
-  label,
+function TasaNoShowCard({
   value,
-  accent,
+  style,
 }: {
-  label: string;
   value: string;
-  accent: Accent;
+  style: { bg: string; fg: string };
 }) {
   return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-        {label}
-      </p>
-      <p
-        className={`mt-2 text-2xl font-bold tabular-nums ${accentStyles[accent]}`}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function KpiCardConBadge({
-  label,
-  value,
-  badgeClassName,
-}: {
-  label: string;
-  value: string;
-  badgeClassName: string;
-}) {
-  return (
-    <div className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-        {label}
-      </p>
-      <p className="mt-2">
+    <div className="card relative flex flex-col gap-3 overflow-hidden p-5">
+      <div className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+        Tasa de no-show
+      </div>
+      <div>
         <span
-          className={`inline-flex items-center rounded-full px-3 py-1 text-xl font-bold tabular-nums ${badgeClassName}`}
+          className="tight tabular inline-flex items-center rounded-full px-4 py-1.5 font-medium"
+          style={{
+            background: style.bg,
+            color: style.fg,
+            fontSize: '28px',
+            lineHeight: 1.1,
+          }}
         >
           {value}
         </span>
-      </p>
+      </div>
+      <div className="text-[12px] text-stone">
+        no_shows / (completadas + no_shows)
+      </div>
     </div>
   );
 }
 
 function Card({
   titulo,
+  subtitulo,
   children,
 }: {
   titulo: string;
+  subtitulo?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-      <div className="border-b border-zinc-200 px-6 py-4 dark:border-zinc-800">
-        <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+    <div className="card overflow-hidden">
+      <div className="border-b border-line px-5 py-4">
+        <h2 className="tight text-[18px] font-medium text-ink">
           {titulo}
+          {subtitulo && (
+            <span className="font-serif-it ml-2 text-[14px] text-stone/70">
+              · {subtitulo}
+            </span>
+          )}
         </h2>
       </div>
       {children}
@@ -474,7 +463,7 @@ function Card({
 
 function EmptyTabla({ mensaje }: { mensaje: string }) {
   return (
-    <p className="px-6 py-10 text-center text-sm text-zinc-500 dark:text-zinc-400">
+    <p className="px-5 py-10 text-center text-[12px] italic text-stone/60">
       {mensaje}
     </p>
   );
