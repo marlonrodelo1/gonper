@@ -49,13 +49,14 @@ A diferencia de Fresha, Booksy o Treatwell:
 
 ## Modelo de negocio
 
-| Plan | Precio/mes | Incluye |
-|---|---|---|
-| Solo | 19,90 € | 1 profesional, Telegram, recordatorios, panel básico |
-| Studio | 29,90 € | Hasta 4 profesionales, lista de espera, depósitos, Juanita Pro |
-| Pro | 79,90 € | Profesionales ilimitados, multi-local, WhatsApp, API |
+**Plan único — 30,00 €/mes**, recurrente, sin comisión por reserva.
 
-**Precio objetivo principal:** 29,90 €/mes (Studio).
+Incluye todo: panel completo, chat web del salón, bot Telegram (multi-tenant),
+recordatorios automáticos, lista de espera, promociones, galería, reseñas,
+personaje configurable (Juanita y derivados) y conversaciones unificadas en panel.
+
+**Trial:** 7 días gratis al registrarse. Pasado el trial sin suscripción, se
+bloquea el panel hasta activar el plan vía Stripe Checkout.
 
 ## Métricas de éxito (12 meses)
 

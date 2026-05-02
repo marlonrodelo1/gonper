@@ -682,6 +682,24 @@ export const rateLimits = pgTable(
 );
 
 // ============================================
+// TABLA: admin_users (super admins de la plataforma)
+// ============================================
+export const adminUsers = pgTable(
+  'admin_users',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    authUserId: uuid('auth_user_id').notNull().unique(),
+    notas: text('notas'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxAuth: index('idx_admin_users_auth').on(t.authUserId),
+  }),
+);
+
+// ============================================
 // TIPOS INFERIDOS
 // ============================================
 export type Salon = typeof salones.$inferSelect;
@@ -728,3 +746,6 @@ export type NewLead = typeof leads.$inferInsert;
 
 export type RateLimit = typeof rateLimits.$inferSelect;
 export type NewRateLimit = typeof rateLimits.$inferInsert;
+
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type NewAdminUser = typeof adminUsers.$inferInsert;

@@ -1,15 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Icon } from './icons';
 
 type Mensaje = { from: 'pro' | 'me'; text: string };
 
 const sugerencias = [
-  '¿Cuánto facturamos esta semana?',
-  'Bloquea mañana de 14h a 16h',
-  'Avisa a Ana si no confirma',
+  '¿Cuántas citas tengo hoy?',
+  '¿Quiénes son mis top 3 clientes?',
+  '¿Quién tiene más no-shows?',
 ];
 
 export type JuanitaProProps = {
@@ -21,22 +21,60 @@ export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
     { from: 'pro', text: mensajeInicial },
   ]);
   const [draft, setDraft] = useState('');
+  const [enviando, setEnviando] = useState(false);
+  const sessionIdRef = useRef<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  // TODO: en futuro, llamar a /api/v1/juanita-pro que invoca Gemini.
-  const send = (txt: string) => {
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [msgs]);
+
+  const send = async (txt: string) => {
     const limpio = txt.trim();
-    if (!limpio) return;
+    if (!limpio || enviando) return;
+
     setMsgs((m) => [...m, { from: 'me', text: limpio }]);
     setDraft('');
-    setTimeout(() => {
-      const lower = limpio.toLowerCase();
-      const reply = lower.includes('semana')
-        ? 'Esta semana llevas 412 €, 21 citas, 1 no-show. Mejor día: martes (98 €).'
-        : lower.includes('bloquea')
-          ? 'Hecho. Mañana 14:00–16:00 bloqueado. Aviso a los 2 clientes que tenían hueco ahí.'
-          : 'Anotado. Te aviso si Ana no confirma en 30 min.';
-      setMsgs((m) => [...m, { from: 'pro', text: reply }]);
-    }, 700);
+    setEnviando(true);
+
+    try {
+      const res = await fetch('/api/v1/juanita-pro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: limpio,
+          session_id: sessionIdRef.current ?? undefined,
+        }),
+      });
+
+      const data = (await res.json().catch(() => null)) as
+        | { reply?: string; session_id?: string; error?: string }
+        | null;
+
+      if (!res.ok) {
+        const errText =
+          data?.error ?? 'No pude contactar con el asistente. Inténtalo otra vez.';
+        setMsgs((m) => [...m, { from: 'pro', text: errText }]);
+        return;
+      }
+
+      if (data?.session_id) sessionIdRef.current = data.session_id;
+      setMsgs((m) => [
+        ...m,
+        { from: 'pro', text: data?.reply ?? '…' },
+      ]);
+    } catch {
+      setMsgs((m) => [
+        ...m,
+        {
+          from: 'pro',
+          text: 'Se cortó la conexión. Vuelve a intentarlo.',
+        },
+      ]);
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -59,7 +97,7 @@ export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
                 className="pill-dot"
                 style={{ background: '#8B9D7A' }}
               />
-              en línea
+              {enviando ? 'pensando…' : 'en línea'}
             </span>
           </div>
           <div className="text-[11px] text-stone">
@@ -75,14 +113,17 @@ export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
         </button>
       </div>
 
-      <div className="nice-scroll flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-5">
+      <div
+        ref={scrollRef}
+        className="nice-scroll flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-5"
+      >
         {msgs.map((m, i) => (
           <div
             key={i}
             className={`flex ${m.from === 'me' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] px-4 py-2.5 text-[13.5px] leading-relaxed ${
+              className={`max-w-[85%] whitespace-pre-wrap px-4 py-2.5 text-[13.5px] leading-relaxed ${
                 m.from === 'me'
                   ? 'rounded-2xl rounded-br-md bg-ink text-cream'
                   : 'rounded-2xl rounded-bl-md border border-line bg-paper text-ink'
@@ -92,6 +133,13 @@ export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
             </div>
           </div>
         ))}
+        {enviando && (
+          <div className="flex justify-start">
+            <div className="rounded-2xl rounded-bl-md border border-line bg-paper px-4 py-2.5 text-[13.5px] text-stone">
+              …
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="border-t border-line bg-paper px-4 pt-2 pb-3">
@@ -100,8 +148,9 @@ export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
             <button
               key={s}
               type="button"
+              disabled={enviando}
               onClick={() => send(s)}
-              className="rounded-full border border-line bg-cream px-2.5 py-1 text-[11.5px] text-stone transition hover:border-line-2 hover:text-ink"
+              className="rounded-full border border-line bg-cream px-2.5 py-1 text-[11.5px] text-stone transition hover:border-line-2 hover:text-ink disabled:opacity-50"
             >
               {s}
             </button>
@@ -118,12 +167,14 @@ export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="Pregúntale algo a Juanita…"
-            className="flex-1 rounded-full border border-line bg-cream px-3.5 py-2.5 text-[13px] outline-none focus:border-line-2"
+            disabled={enviando}
+            className="flex-1 rounded-full border border-line bg-cream px-3.5 py-2.5 text-[13px] outline-none focus:border-line-2 disabled:opacity-50"
           />
           <button
             type="submit"
+            disabled={enviando || !draft.trim()}
             aria-label="Enviar"
-            className="gloss-btn flex h-10 w-10 items-center justify-center rounded-full"
+            className="gloss-btn flex h-10 w-10 items-center justify-center rounded-full disabled:opacity-50"
           >
             <Icon.Send width="14" height="14" />
           </button>
