@@ -11,6 +11,7 @@ export type PanelSidebarProps = {
   salonNombre: string | null;
   salonPlan: string | null;
   salonSlug: string | null;
+  isSuperAdmin?: boolean;
 };
 
 type NavItem = {
@@ -47,6 +48,7 @@ export function PanelSidebar({
   userEmail,
   salonNombre,
   salonSlug,
+  isSuperAdmin = false,
 }: PanelSidebarProps) {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
@@ -254,6 +256,21 @@ export function PanelSidebar({
         {/* Footer user */}
         {userEmail && (
           <div className="flex flex-col gap-2 border-t border-line px-4 py-3">
+            {isSuperAdmin && (
+              <a
+                href="https://admin.gestori.es"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={cerrar}
+                className="tight flex items-center justify-between gap-2 rounded-lg border border-sage/40 bg-sage-soft/60 px-3 py-2 text-[12px] text-sage-deep transition hover:bg-sage-soft"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="h-1.5 w-1.5 rounded-full bg-sage" />
+                  Panel super admin
+                </span>
+                <Icon.Arrow width="11" height="11" />
+              </a>
+            )}
             <span className="truncate text-[11px] text-stone">{userEmail}</span>
             <form action="/auth/sign-out" method="POST">
               <button

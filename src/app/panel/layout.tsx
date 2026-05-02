@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentSalon } from "@/lib/supabase/get-current-salon";
+import { getCurrentSuperAdmin } from "@/lib/auth/super-admin";
 import { Toaster } from "@/components/ui/sonner";
 import { PanelSidebar } from "./_components/panel-sidebar";
 
@@ -12,7 +13,10 @@ export default async function PanelLayout({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const salon = await getCurrentSalon();
+  const [salon, superAdmin] = await Promise.all([
+    getCurrentSalon(),
+    getCurrentSuperAdmin(),
+  ]);
 
   const salonNombre =
     salon && typeof salon.nombre === "string" ? salon.nombre : null;
@@ -30,6 +34,7 @@ export default async function PanelLayout({
         salonNombre={salonNombre}
         salonPlan={salonPlan}
         salonSlug={salonSlug}
+        isSuperAdmin={superAdmin !== null}
       />
       <main className="min-w-0 flex-1 pt-12 md:pt-0">{children}</main>
       <Toaster position="top-right" theme="system" />
