@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { and, asc, eq, gte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { mensajes, salones, servicios, horarios } from '@/lib/db/schema';
+import {
+  chatDeepSeek,
+  calcularCosteEur,
+  type ChatMessage,
+} from '@/lib/llm/deepseek';
 
 const bodySchema = z.object({
   session_id: z.string().uuid(),
@@ -22,20 +27,17 @@ const DIA_NOMBRES = [
   'sábado',
 ];
 
-function getDiaActualEnTz(tz: string): number {
-  const fmt = new Intl.DateTimeFormat('en-US', { timeZone: tz, weekday: 'short' });
-  const w = fmt.format(new Date());
-  const map: Record<string, number> = {
-    Sun: 0,
-    Mon: 1,
-    Tue: 2,
-    Wed: 3,
-    Thu: 4,
-    Fri: 5,
-    Sat: 6,
-  };
-  return map[w] ?? new Date().getDay();
-}
+const TIPO_NEGOCIO_LEGIBLE: Record<string, string> = {
+  barberia: 'barbería',
+  peluqueria: 'peluquería',
+  estetica: 'centro de estética',
+  manicura: 'salón de manicura',
+  otro: 'salón',
+};
+
+const FALLBACK_REPLY =
+  'Estoy teniendo un problema, vuelve a probar en un momento.';
+const HISTORIAL_LIMITE = 10;
 
 function formatPrecio(precioEur: string | number): string {
   const n = typeof precioEur === 'string' ? Number(precioEur) : precioEur;
@@ -43,92 +45,72 @@ function formatPrecio(precioEur: string | number): string {
   return n.toFixed(2).replace(/\.00$/, '') + ' €';
 }
 
-// TODO: reemplazar con Gemini
-async function generarRespuesta(
-  salonId: string,
-  salonNombre: string,
-  agenteNombre: string,
-  salonTelefono: string | null,
-  timezone: string,
-  mensaje: string,
-): Promise<string> {
-  const lower = mensaje.toLowerCase();
-
-  // Reservas
-  if (/(reservar|reserva|cita|hueco|huecos|disponibilidad)/.test(lower)) {
-    return 'Genial. Para reservar, ve al calendario debajo y elige día y hora. Si te puedo ayudar con algo más, dime.';
+function formatHorarios(
+  tramos: Array<{ diaSemana: number; inicio: unknown; fin: unknown }>,
+): string {
+  if (tramos.length === 0) return '(sin horarios publicados)';
+  const porDia: Record<number, string[]> = {
+    0: [],
+    1: [],
+    2: [],
+    3: [],
+    4: [],
+    5: [],
+    6: [],
+  };
+  for (const t of tramos) {
+    const ini = String(t.inicio).slice(0, 5);
+    const fin = String(t.fin).slice(0, 5);
+    porDia[t.diaSemana]?.push(`${ini}–${fin}`);
   }
-
-  // Precios
-  if (/(precio|precios|cuánto cuesta|cuanto cuesta|tarifa|tarifas|coste)/.test(lower)) {
-    const lista = await db
-      .select({
-        nombre: servicios.nombre,
-        precioEur: servicios.precioEur,
-        duracionMin: servicios.duracionMin,
-      })
-      .from(servicios)
-      .where(and(eq(servicios.salonId, salonId), eq(servicios.activo, true)))
-      .orderBy(asc(servicios.orden), asc(servicios.createdAt))
-      .limit(20);
-
-    if (lista.length === 0) {
-      return 'Aún no tenemos servicios publicados. Cuéntame qué buscas y te oriento.';
-    }
-    const filas = lista
-      .map((s) => `• ${s.nombre} — ${formatPrecio(s.precioEur)} (${s.duracionMin} min)`)
-      .join('\n');
-    return `Estos son nuestros servicios:\n${filas}`;
+  const lineas: string[] = [];
+  for (let d = 1; d <= 6; d++) {
+    const arr = porDia[d] ?? [];
+    lineas.push(`- ${DIA_NOMBRES[d]}: ${arr.length ? arr.join(' · ') : 'cerrado'}`);
   }
+  lineas.push(
+    `- ${DIA_NOMBRES[0]}: ${porDia[0]?.length ? porDia[0].join(' · ') : 'cerrado'}`,
+  );
+  return lineas.join('\n');
+}
 
-  // Horarios
-  if (/(horario|abierto|abierta|abren|abrís|abris|cerrado|cierran)/.test(lower)) {
-    const tramos = await db
-      .select()
-      .from(horarios)
-      .where(eq(horarios.salonId, salonId))
-      .orderBy(asc(horarios.diaSemana), asc(horarios.inicio));
+function formatServicios(
+  lista: Array<{ nombre: string; duracionMin: number; precioEur: string }>,
+): string {
+  if (lista.length === 0) return '(sin servicios publicados)';
+  return lista
+    .map(
+      (s) =>
+        `- ${s.nombre} — ${s.duracionMin} min — ${formatPrecio(s.precioEur)}`,
+    )
+    .join('\n');
+}
 
-    if (tramos.length === 0) {
-      return 'Aún no tenemos horarios publicados. Pregúntame por reservas y te ayudo.';
-    }
+function buildSystemPrompt(args: {
+  agenteNombre: string;
+  agenteTono: string;
+  salonNombre: string;
+  tipoNegocio: string;
+  direccion: string | null;
+  telefono: string | null;
+  serviciosTexto: string;
+  horariosTexto: string;
+  fechaHoy: string;
+}): string {
+  const tipo = TIPO_NEGOCIO_LEGIBLE[args.tipoNegocio] ?? args.tipoNegocio;
+  const lugar = args.direccion ?? 'España';
+  return `Eres ${args.agenteNombre}, la recepcionista virtual de ${args.salonNombre}, un ${tipo} en ${lugar}.
+Tono: ${args.agenteTono}. Habla SIEMPRE en español, con frases cortas y útiles.
+Tu rol: atender clientes que escriben por la web del salón. Puedes responder sobre precios, horarios, servicios. Para reservar dile que use el calendario que tiene debajo.
+Lo que NO sabes / debes preguntar al usuario, no inventes.
+Hoy es ${args.fechaHoy}.
 
-    const porDia: Record<number, string[]> = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
-    for (const t of tramos) {
-      const ini = String(t.inicio).slice(0, 5);
-      const fin = String(t.fin).slice(0, 5);
-      porDia[t.diaSemana]?.push(`${ini}–${fin}`);
-    }
-
-    const lineas: string[] = [];
-    for (let d = 1; d <= 6; d++) {
-      const arr = porDia[d] ?? [];
-      lineas.push(`${DIA_NOMBRES[d]}: ${arr.length ? arr.join(' · ') : 'cerrado'}`);
-    }
-    lineas.push(`${DIA_NOMBRES[0]}: ${porDia[0]?.length ? porDia[0].join(' · ') : 'cerrado'}`);
-
-    const diaActual = getDiaActualEnTz(timezone);
-    const hoyTramos = porDia[diaActual] ?? [];
-    const hoyTexto = hoyTramos.length ? hoyTramos.join(' · ') : 'Cerrado';
-
-    return `Estos son nuestros horarios:\n${lineas.join('\n')}\n\nHoy: ${hoyTexto}.`;
-  }
-
-  // Teléfono / llamar
-  if (/(teléfono|telefono|llamar|llamada|móvil|movil|contacto)/.test(lower)) {
-    if (salonTelefono) {
-      return `Puedes llamarnos al ${salonTelefono}. También puedes escribirme por aquí.`;
-    }
-    return 'Aún no tenemos teléfono publicado, mejor escríbenos por aquí. ¿Cómo te puedo ayudar?';
-  }
-
-  // Saludo
-  if (/(hola|buenas|hey|buenos días|buenos dias|buenas tardes|buenas noches)/.test(lower)) {
-    return `¡Hola! Soy ${agenteNombre}, la recepcionista de ${salonNombre}. ¿En qué puedo ayudarte?`;
-  }
-
-  // Default
-  return 'Cuéntame, ¿qué necesitas? Puedo ayudarte con precios, horarios o reservas.';
+## Datos del salón
+Servicios:
+${args.serviciosTexto}
+Horarios:
+${args.horariosTexto}
+Teléfono: ${args.telefono ?? '—'}`;
 }
 
 export async function POST(
@@ -145,21 +127,52 @@ export async function POST(
         { status: 400 },
       );
     }
-    const { session_id, message, visitor_nombre, visitor_telefono } = parsed.data;
+    const { session_id, message, visitor_nombre, visitor_telefono } =
+      parsed.data;
 
-    const [salon] = await db
-      .select({
-        id: salones.id,
-        nombre: salones.nombre,
-        timezone: salones.timezone,
-        telefono: salones.telefono,
-        agenteNombre: salones.agenteNombre,
-        activo: salones.activo,
-      })
-      .from(salones)
-      .where(eq(salones.slug, slug))
-      .limit(1);
+    // Carga salón + servicios + horarios en paralelo
+    const [salonRows, listaServicios, listaHorarios] = await Promise.all([
+      db
+        .select({
+          id: salones.id,
+          nombre: salones.nombre,
+          tipoNegocio: salones.tipoNegocio,
+          direccion: salones.direccion,
+          timezone: salones.timezone,
+          telefono: salones.telefono,
+          agenteNombre: salones.agenteNombre,
+          agenteTono: salones.agenteTono,
+          activo: salones.activo,
+        })
+        .from(salones)
+        .where(eq(salones.slug, slug))
+        .limit(1),
+      // Para servicios y horarios necesitamos el salonId; los pediremos por slug via subquery sería más limpio,
+      // pero como aún no lo tenemos hacemos un join explícito.
+      db
+        .select({
+          nombre: servicios.nombre,
+          precioEur: servicios.precioEur,
+          duracionMin: servicios.duracionMin,
+        })
+        .from(servicios)
+        .innerJoin(salones, eq(salones.id, servicios.salonId))
+        .where(and(eq(salones.slug, slug), eq(servicios.activo, true)))
+        .orderBy(asc(servicios.orden), asc(servicios.createdAt))
+        .limit(50),
+      db
+        .select({
+          diaSemana: horarios.diaSemana,
+          inicio: horarios.inicio,
+          fin: horarios.fin,
+        })
+        .from(horarios)
+        .innerJoin(salones, eq(salones.id, horarios.salonId))
+        .where(eq(salones.slug, slug))
+        .orderBy(asc(horarios.diaSemana), asc(horarios.inicio)),
+    ]);
 
+    const salon = salonRows[0];
     if (!salon || !salon.activo) {
       return NextResponse.json({ error: 'Salón no encontrado' }, { status: 404 });
     }
@@ -199,6 +212,30 @@ export async function POST(
       .limit(1);
     const esPrimerMensaje = previos.length === 0;
 
+    // Cargar historial (últimos 10) en orden cronológico para mandar al LLM
+    const historialDesc = await db
+      .select({
+        direccion: mensajes.direccion,
+        contenido: mensajes.contenido,
+      })
+      .from(mensajes)
+      .where(
+        and(
+          eq(mensajes.salonId, salon.id),
+          eq(mensajes.sessionId, session_id),
+        ),
+      )
+      .orderBy(desc(mensajes.createdAt))
+      .limit(HISTORIAL_LIMITE);
+
+    const historial: ChatMessage[] = historialDesc
+      .slice()
+      .reverse()
+      .map((m) => ({
+        role: m.direccion === 'out' ? ('assistant' as const) : ('user' as const),
+        content: m.contenido,
+      }));
+
     // INSERT mensaje IN
     await db.insert(mensajes).values({
       salonId: salon.id,
@@ -210,22 +247,61 @@ export async function POST(
       webVisitorTelefono: visitor_telefono ?? null,
     });
 
-    // Generar respuesta del agente (mock)
-    let reply = await generarRespuesta(
-      salon.id,
-      salon.nombre,
-      salon.agenteNombre,
-      salon.telefono,
-      salon.timezone || 'Europe/Madrid',
-      message,
-    );
+    // Construir prompt y llamar a DeepSeek
+    const fechaHoy = new Date().toLocaleDateString('es-ES', {
+      timeZone: salon.timezone || 'Europe/Madrid',
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+
+    const systemPrompt = buildSystemPrompt({
+      agenteNombre: salon.agenteNombre,
+      agenteTono: salon.agenteTono,
+      salonNombre: salon.nombre,
+      tipoNegocio: salon.tipoNegocio,
+      direccion: salon.direccion,
+      telefono: salon.telefono,
+      serviciosTexto: formatServicios(listaServicios),
+      horariosTexto: formatHorarios(listaHorarios),
+      fechaHoy,
+    });
+
+    // Mensajes para el LLM: historial + mensaje actual
+    const llmMessages: ChatMessage[] = [
+      ...historial,
+      { role: 'user', content: message },
+    ];
+
+    let reply = FALLBACK_REPLY;
+    let tokensIn = 0;
+    let tokensOut = 0;
+    let modelo: string | null = null;
+
+    try {
+      const result = await chatDeepSeek({
+        systemPrompt,
+        messages: llmMessages,
+        temperature: 0.5,
+        maxTokens: 400,
+      });
+      reply = result.reply;
+      tokensIn = result.tokensIn;
+      tokensOut = result.tokensOut;
+      modelo = 'deepseek-chat';
+    } catch (e) {
+      // No tirar 500 al cliente: log y respuesta de fallback
+      console.error('[chat][deepseek] error:', e);
+    }
 
     if (esPrimerMensaje) {
       const saludo = `¡Hola! 👋 Soy ${salon.agenteNombre}, la recepcionista de ${salon.nombre}. ¿Cómo te llamas?`;
       reply = `${saludo}\n\n${reply}`;
     }
 
-    // INSERT mensaje OUT
+    // INSERT mensaje OUT (con métricas LLM si hubo respuesta del modelo)
+    const costeEur = modelo ? calcularCosteEur(tokensIn, tokensOut) : null;
     await db.insert(mensajes).values({
       salonId: salon.id,
       canal: 'web',
@@ -234,6 +310,10 @@ export async function POST(
       sessionId: session_id,
       webVisitorNombre: visitor_nombre ?? null,
       webVisitorTelefono: visitor_telefono ?? null,
+      llmModelo: modelo,
+      llmTokensIn: modelo ? tokensIn : null,
+      llmTokensOut: modelo ? tokensOut : null,
+      llmCosteEur: costeEur !== null ? costeEur.toFixed(6) : null,
     });
 
     return NextResponse.json({ reply, session_id });

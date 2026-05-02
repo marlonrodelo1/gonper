@@ -2,7 +2,22 @@
 
 import { useState } from 'react';
 
-export function CopyLinkButton({ link }: { link: string }) {
+type Props = {
+  link: string;
+  label?: string;
+  copiedLabel?: string;
+};
+
+/**
+ * Botón genérico para copiar al portapapeles. Lo usamos tanto para enlaces
+ * de reserva (`t.me/...?start=...`) como para comandos de vinculación
+ * (`/start CODIGO`).
+ */
+export function CopyLinkButton({
+  link,
+  label = 'Copiar',
+  copiedLabel = 'Copiado',
+}: Props) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -21,7 +36,7 @@ export function CopyLinkButton({ link }: { link: string }) {
       onClick={handleCopy}
       className="card-tight tight px-4 py-2.5 text-[13px] text-ink transition hover:bg-cream"
     >
-      {copied ? 'Copiado ✓' : 'Copiar enlace de reserva'}
+      {copied ? `${copiedLabel} ✓` : label}
     </button>
   );
 }

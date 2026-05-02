@@ -10,14 +10,14 @@ import { redirect } from 'next/navigation';
 type CurrentSalon = { id: string } | null;
 
 const BOT_PATH = '/panel/config/bot';
-const TOKEN_RE = /^\d+:[A-Za-z0-9_-]{30,}$/;
-const USERNAME_RE = /^[a-z0-9_]+$/;
-const CHAT_ID_RE = /^-?\d+$/;
+const TOKEN_RE = /^\d{8,12}:[A-Za-z0-9_-]{30,}$/;
 
 async function requireSalon(): Promise<{ id: string }> {
   const salon = (await getCurrentSalon()) as CurrentSalon;
   if (!salon || !salon.id) {
-    redirect(`${BOT_PATH}?error=${encodeURIComponent('No se pudo identificar el salón')}`);
+    redirect(
+      `${BOT_PATH}?error=${encodeURIComponent('No se pudo identificar el salón')}`,
+    );
   }
   return salon;
 }
@@ -26,34 +26,26 @@ function redirectError(msg: string): never {
   redirect(`${BOT_PATH}?error=${encodeURIComponent(msg)}`);
 }
 
-export async function actualizarBotSalon(formData: FormData) {
+function isRedirectError(e: unknown): boolean {
+  return (
+    e instanceof Error &&
+    typeof e.message === 'string' &&
+    e.message.startsWith('NEXT_REDIRECT')
+  );
+}
+
+/**
+ * Desvincula el chat de Telegram del dueño: pone el campo a null para que
+ * Juanita Pro deje de mandarle avisos hasta que se vuelva a vincular.
+ */
+export async function desvincularTelegramDueno() {
   const salon = await requireSalon();
-
-  const tokenRaw = String(formData.get('telegram_bot_token') || '').trim();
-  let usernameRaw = String(formData.get('telegram_bot_username') || '').trim();
-
-  // Permitir borrar: si ambos vacíos -> null
-  if (tokenRaw !== '' && !TOKEN_RE.test(tokenRaw)) {
-    redirectError('Token de bot inválido. Formato esperado: 123456789:AA...');
-  }
-
-  if (usernameRaw !== '') {
-    if (usernameRaw.startsWith('@')) usernameRaw = usernameRaw.slice(1);
-    usernameRaw = usernameRaw.toLowerCase();
-    if (!USERNAME_RE.test(usernameRaw)) {
-      redirectError('El username solo puede contener letras, números y guiones bajos.');
-    }
-    if (usernameRaw.length < 3 || usernameRaw.length > 64) {
-      redirectError('El username debe tener entre 3 y 64 caracteres.');
-    }
-  }
 
   try {
     const result = await db
       .update(salones)
       .set({
-        telegramBotToken: tokenRaw === '' ? null : tokenRaw,
-        telegramBotUsername: usernameRaw === '' ? null : usernameRaw,
+        telegramChatIdDueno: null,
         updatedAt: new Date(),
       })
       .where(eq(salones.id, salon.id))
@@ -63,6 +55,7 @@ export async function actualizarBotSalon(formData: FormData) {
       redirectError('No autorizado');
     }
   } catch (e) {
+    if (isRedirectError(e)) throw e;
     const msg = e instanceof Error ? e.message : 'Error desconocido';
     redirectError(msg);
   }
@@ -71,25 +64,58 @@ export async function actualizarBotSalon(formData: FormData) {
   redirect(`${BOT_PATH}?ok=1`);
 }
 
-export async function actualizarBotDueno(formData: FormData) {
+/**
+ * Guarda el token del bot público (clientes finales).
+ * Valida formato, hace getMe contra Telegram y guarda token + username.
+ */
+export async function guardarTokenBotCliente(formData: FormData) {
   const salon = await requireSalon();
 
-  const tokenRaw = String(formData.get('telegram_bot_dueno_token') || '').trim();
-  const chatIdRaw = String(formData.get('telegram_chat_id_dueno') || '').trim();
+  const tokenRaw = String(formData.get('bot_token') || '').trim();
 
-  if (tokenRaw !== '' && !TOKEN_RE.test(tokenRaw)) {
-    redirectError('Token de bot del dueño inválido. Formato: 123456789:AA...');
+  if (!tokenRaw) {
+    redirectError('Tienes que pegar el token del bot');
   }
-  if (chatIdRaw !== '' && !CHAT_ID_RE.test(chatIdRaw)) {
-    redirectError('El chat_id debe ser un número entero.');
+
+  if (!TOKEN_RE.test(tokenRaw)) {
+    redirectError(
+      'El formato del token no es válido (debe ser 123456789:AA...)',
+    );
+  }
+
+  // Validar contra Telegram + obtener username.
+  let username: string | null = null;
+  try {
+    const res = await fetch(
+      `https://api.telegram.org/bot${tokenRaw}/getMe`,
+      { cache: 'no-store' },
+    );
+    const data = (await res.json()) as {
+      ok: boolean;
+      result?: { username?: string };
+      description?: string;
+    };
+    if (!data.ok || !data.result?.username) {
+      redirectError(
+        data.description
+          ? `Telegram rechazó el token: ${data.description}`
+          : 'Telegram no validó el token. Revísalo e inténtalo de nuevo.',
+      );
+    }
+    username = data.result.username ?? null;
+  } catch (e) {
+    if (isRedirectError(e)) throw e;
+    redirectError(
+      'No se pudo contactar con Telegram para validar el token. Inténtalo de nuevo.',
+    );
   }
 
   try {
     const result = await db
       .update(salones)
       .set({
-        telegramBotDuenoToken: tokenRaw === '' ? null : tokenRaw,
-        telegramChatIdDueno: chatIdRaw === '' ? null : chatIdRaw,
+        telegramBotToken: tokenRaw,
+        telegramBotUsername: username,
         updatedAt: new Date(),
       })
       .where(eq(salones.id, salon.id))
@@ -99,6 +125,7 @@ export async function actualizarBotDueno(formData: FormData) {
       redirectError('No autorizado');
     }
   } catch (e) {
+    if (isRedirectError(e)) throw e;
     const msg = e instanceof Error ? e.message : 'Error desconocido';
     redirectError(msg);
   }
