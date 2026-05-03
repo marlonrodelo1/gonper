@@ -3,6 +3,7 @@ import { Icon } from '@/app/panel/_components/icons';
 import {
   desvincularTelegramDueno,
   guardarTokenBotCliente,
+  desconectarBotSalon,
 } from './actions';
 import { CopyLinkButton } from './copy-link-button';
 
@@ -19,19 +20,14 @@ const inputClass =
   'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2';
 const labelClass = 'text-[11px] uppercase tracking-[0.2em] text-stone/80';
 
-// TODO: Cuando @gomper_bot esté creado en BotFather, sustituir aquí y en
-// los enlaces de abajo. De momento usamos el bot existente del proyecto.
-const BOT_DUENO_USERNAME = 'rogobot2026_bot';
-const BOT_DUENO_URL = `https://t.me/${BOT_DUENO_USERNAME}`;
-
-function VinculadoPill({ ok }: { ok: boolean }) {
+function StatePill({ ok, okText, koText }: { ok: boolean; okText: string; koText: string }) {
   return ok ? (
     <span
       className="pill"
       style={{ background: 'rgba(139,157,122,0.15)', color: '#5A6B4D' }}
     >
       <span className="pill-dot" style={{ background: '#8B9D7A' }} />
-      Vinculado
+      {okText}
     </span>
   ) : (
     <span
@@ -39,27 +35,7 @@ function VinculadoPill({ ok }: { ok: boolean }) {
       style={{ background: 'rgba(107,99,86,0.10)', color: '#6B6356' }}
     >
       <span className="pill-dot" style={{ background: '#8A8174' }} />
-      Sin vincular
-    </span>
-  );
-}
-
-function ConfiguradoPill({ ok }: { ok: boolean }) {
-  return ok ? (
-    <span
-      className="pill"
-      style={{ background: 'rgba(139,157,122,0.15)', color: '#5A6B4D' }}
-    >
-      <span className="pill-dot" style={{ background: '#8B9D7A' }} />
-      Configurado
-    </span>
-  ) : (
-    <span
-      className="pill"
-      style={{ background: 'rgba(107,99,86,0.10)', color: '#6B6356' }}
-    >
-      <span className="pill-dot" style={{ background: '#8A8174' }} />
-      Sin configurar
+      {koText}
     </span>
   );
 }
@@ -88,9 +64,10 @@ export default async function ConfigBotPage({
 
   const codigoVinculacion = salon.id.replace(/-/g, '').slice(0, 8).toUpperCase();
   const comandoVinculacion = `/start ${codigoVinculacion}`;
+  const tieneBot = !!salon.telegramBotToken;
+  const usernameBot = salon.telegramBotUsername;
   const duenoVinculado = !!salon.telegramChatIdDueno;
-  const tieneBotSalon = !!salon.telegramBotToken;
-  const usernameBotSalon = salon.telegramBotUsername;
+  const botUrl = usernameBot ? `https://t.me/${usernameBot}` : null;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
@@ -110,26 +87,135 @@ export default async function ConfigBotPage({
       ) : null}
 
       {/* ============================================
-          Bot del dueño (Juanita Pro)
+          PASO 1 · Token del bot
           ============================================ */}
       <section className="card flex flex-col gap-5 p-8">
         <header className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1.5">
             <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
-              Bot del dueño
+              Paso 1 · Bot Telegram
             </span>
             <h2 className="tight text-[20px] font-medium text-ink">
-              Juanita Pro en tu Telegram
+              Bot del salón
             </h2>
             <p className="text-[13px] text-stone">
-              Recibe avisos del agente y consúltale lo que quieras desde tu
-              propio Telegram.
+              Un único bot que atiende a tus clientes para reservas <strong className="text-ink">y</strong> que tú usarás
+              como dueño para hablar con tu Juanita Pro. Pega el token de @BotFather y lo configuramos
+              automáticamente.
             </p>
           </div>
-          <VinculadoPill ok={duenoVinculado} />
+          <StatePill ok={tieneBot} okText="Configurado" koText="Sin configurar" />
         </header>
 
-        {duenoVinculado ? (
+        {tieneBot && usernameBot ? (
+          <div className="card-tight flex flex-col gap-2.5 px-4 py-4">
+            <p className={labelClass}>Bot configurado</p>
+            <a
+              href={botUrl ?? '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tight text-[13.5px] font-medium text-terracotta hover:text-terracotta-2"
+            >
+              Abrir en Telegram → t.me/{usernameBot}
+            </a>
+            <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-stone/80">
+              Enlace de reserva para clientes
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <code className="rounded-lg bg-cream-2 px-2.5 py-1.5 font-mono text-[12px] text-ink">
+                t.me/{usernameBot}?start={salon.slug}
+              </code>
+              <CopyLinkButton
+                link={`https://t.me/${usernameBot}?start=${salon.slug}`}
+                label="Copiar enlace"
+                copiedLabel="Copiado"
+              />
+            </div>
+          </div>
+        ) : null}
+
+        <form action={guardarTokenBotCliente} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="bot_token" className={labelClass}>
+              {tieneBot ? 'Cambiar token del bot' : 'Token del bot'}
+            </label>
+            <input
+              id="bot_token"
+              name="bot_token"
+              type="password"
+              autoComplete="off"
+              required
+              placeholder="123456789:AAH..."
+              className={inputClass}
+            />
+            <p className="text-[12px] text-stone/80">
+              Lo obtienes al crear el bot con @BotFather. Validamos contra Telegram y configuramos el
+              webhook automáticamente.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap justify-end gap-2 pt-2">
+            {tieneBot ? (
+              <form action={desconectarBotSalon}>
+                <button
+                  type="submit"
+                  className="tight rounded-full border border-line bg-paper px-5 py-3 text-[13.5px] font-medium text-ink transition hover:bg-cream"
+                >
+                  Desconectar bot
+                </button>
+              </form>
+            ) : null}
+            <button
+              type="submit"
+              className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
+            >
+              {tieneBot ? 'Cambiar token' : 'Guardar token'}
+            </button>
+          </div>
+        </form>
+
+        <div className="rule" />
+
+        <ol className="flex flex-col gap-1.5 pl-5 text-[12.5px] text-stone list-decimal">
+          <li>
+            Abre Telegram y busca <strong className="text-ink">@BotFather</strong>.
+          </li>
+          <li>
+            Envíale{' '}
+            <code className="rounded bg-cream-2 px-1.5 py-0.5 font-mono text-[11.5px]">
+              /newbot
+            </code>{' '}
+            y sigue las instrucciones (nombre + username terminado en <code className="font-mono">bot</code>).
+          </li>
+          <li>Copia el token que te da y pégalo arriba.</li>
+        </ol>
+      </section>
+
+      {/* ============================================
+          PASO 2 · Vincular tu Telegram personal como dueño
+          ============================================ */}
+      <section className="card flex flex-col gap-5 p-8">
+        <header className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Paso 2 · Vincular como dueño
+            </span>
+            <h2 className="tight text-[20px] font-medium text-ink">
+              Tu Telegram → Juanita Pro
+            </h2>
+            <p className="text-[13px] text-stone">
+              Cuando escribes a tu propio bot, te tratamos como dueño y respondemos con datos de tu
+              negocio. Cualquier otra persona verá info pública (servicios, precios, link a reservar).
+            </p>
+          </div>
+          <StatePill ok={duenoVinculado} okText="Vinculado" koText="Sin vincular" />
+        </header>
+
+        {!tieneBot ? (
+          <div className="card-tight px-4 py-4 text-[13px] text-stone">
+            Configura primero el token del bot arriba para poder vincularte.
+          </div>
+        ) : duenoVinculado ? (
           <div className="flex flex-col gap-4">
             <div className="card-tight flex flex-col gap-2 px-4 py-4">
               <span className={labelClass}>Chat ID conectado</span>
@@ -139,15 +225,11 @@ export default async function ConfigBotPage({
             </div>
 
             <p className="text-[13px] text-stone">
-              Recibirás avisos del agente Juanita Pro por aquí. Cualquier
-              pregunta que le hagas a tu Juanita por Telegram tendrá la misma
-              capacidad que el chat del panel.
+              Recibirás avisos del agente Juanita Pro por aquí. Cualquier pregunta que le hagas a tu
+              Juanita por Telegram tendrá la misma capacidad que el chat del panel.
             </p>
 
-            <form
-              action={desvincularTelegramDueno}
-              className="flex justify-end pt-1"
-            >
+            <form action={desvincularTelegramDueno} className="flex justify-end pt-1">
               <button
                 type="submit"
                 className="tight rounded-full border border-line bg-paper px-5 py-3 text-[13.5px] font-medium text-ink transition hover:bg-cream"
@@ -161,14 +243,18 @@ export default async function ConfigBotPage({
             <ol className="flex flex-col gap-3 pl-5 text-[13.5px] text-ink/85 list-decimal">
               <li>
                 Abre{' '}
-                <a
-                  href={BOT_DUENO_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-terracotta hover:text-terracotta-2"
-                >
-                  @{BOT_DUENO_USERNAME} en Telegram
-                </a>
+                {botUrl ? (
+                  <a
+                    href={botUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-terracotta hover:text-terracotta-2"
+                  >
+                    @{usernameBot} en Telegram
+                  </a>
+                ) : (
+                  <strong className="text-ink">tu bot en Telegram</strong>
+                )}
                 .
               </li>
               <li>
@@ -185,8 +271,7 @@ export default async function ConfigBotPage({
                 </div>
               </li>
               <li>
-                El bot te responderá confirmando que estás vinculado y al
-                volver a esta página verás tu chat ID.
+                El bot te confirmará la vinculación. Recarga esta página y verás tu chat ID.
               </li>
             </ol>
 
@@ -194,109 +279,12 @@ export default async function ConfigBotPage({
 
             <p className="text-[12.5px] text-stone">
               Tu código de vinculación es{' '}
-              <code className="font-mono text-ink">{codigoVinculacion}</code>.
-              Son los primeros 8 caracteres de tu salón. No lo compartas con
-              clientes.
+              <code className="font-mono text-ink">{codigoVinculacion}</code>. Son los primeros 8
+              caracteres de tu salón. <strong className="text-ink">No lo compartas con clientes</strong> —
+              quien lo tenga puede vincularse como dueño.
             </p>
           </div>
         )}
-      </section>
-
-      {/* ============================================
-          Bot del salón (clientes finales)
-          ============================================ */}
-      <section className="card flex flex-col gap-5 p-8">
-        <header className="flex items-start justify-between gap-3">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
-              Bot del salón (clientes finales)
-            </span>
-            <h2 className="tight text-[20px] font-medium text-ink">
-              Atención a clientes 24/7
-            </h2>
-            <p className="text-[13px] text-stone">
-              Crea uno gratis con @BotFather y pega aquí el token. Es el bot
-              que tus clientes verán para reservar.
-            </p>
-          </div>
-          <ConfiguradoPill ok={tieneBotSalon} />
-        </header>
-
-        {tieneBotSalon && usernameBotSalon ? (
-          <div className="card-tight flex flex-col gap-2.5 px-4 py-4">
-            <p className={labelClass}>Bot configurado</p>
-            <a
-              href={`https://t.me/${usernameBotSalon}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="tight text-[13.5px] font-medium text-terracotta hover:text-terracotta-2"
-            >
-              Abrir en Telegram → t.me/{usernameBotSalon}
-            </a>
-            <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-stone/80">
-              Enlace de reserva
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <code className="rounded-lg bg-cream-2 px-2.5 py-1.5 font-mono text-[12px] text-ink">
-                t.me/{usernameBotSalon}?start={salon.slug}
-              </code>
-              <CopyLinkButton
-                link={`https://t.me/${usernameBotSalon}?start=${salon.slug}`}
-                label="Copiar enlace"
-                copiedLabel="Copiado"
-              />
-            </div>
-          </div>
-        ) : null}
-
-        <form
-          action={guardarTokenBotCliente}
-          className="flex flex-col gap-5"
-        >
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="bot_token" className={labelClass}>
-              {tieneBotSalon ? 'Cambiar token del bot' : 'Token del bot'}
-            </label>
-            <input
-              id="bot_token"
-              name="bot_token"
-              type="password"
-              autoComplete="off"
-              required
-              placeholder="123456789:AAH..."
-              className={inputClass}
-            />
-            <p className="text-[12px] text-stone/80">
-              Lo obtienes al crear el bot con @BotFather. Validamos contra
-              Telegram al guardar.
-            </p>
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <button
-              type="submit"
-              className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
-            >
-              Guardar token
-            </button>
-          </div>
-        </form>
-
-        <div className="rule" />
-
-        <ol className="flex flex-col gap-1.5 pl-5 text-[12.5px] text-stone list-decimal">
-          <li>
-            Abre Telegram y busca <strong className="text-ink">@BotFather</strong>.
-          </li>
-          <li>
-            Envíale{' '}
-            <code className="rounded bg-cream-2 px-1.5 py-0.5 font-mono text-[11.5px]">
-              /newbot
-            </code>{' '}
-            y sigue las instrucciones.
-          </li>
-          <li>Copia el token que te da y pégalo arriba.</li>
-        </ol>
       </section>
     </div>
   );
