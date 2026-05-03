@@ -89,13 +89,36 @@ export async function signup(formData: FormData) {
     redirect('/signup?error=' + encodeURIComponent('Slug solo puede contener a-z, 0-9 y guiones'));
   }
 
-  const supabase = await createClient();
-  const { data: authData, error: authError } = await supabase.auth.signUp({ email, password });
-  if (authError || !authData.user) {
-    redirect('/signup?error=' + encodeURIComponent(authError?.message || 'Error al registrar'));
+  const admin = createAdminClient();
+
+  // 1. Crear usuario YA confirmado vía admin (no depende de email confirmation).
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email,
+    password,
+    email_confirm: true,
+  });
+  if (createError || !created.user) {
+    const msg = createError?.message || 'Error al registrar';
+    if (msg.toLowerCase().includes('already')) {
+      redirect('/signup?error=' + encodeURIComponent('Ya existe una cuenta con ese email. Inicia sesión.'));
+    }
+    redirect('/signup?error=' + encodeURIComponent(msg));
+  }
+  const newUser = created.user;
+
+  // 2. Verificar slug libre antes de crear el salón (mejor mensaje al usuario).
+  const { data: existingSlug } = await admin
+    .from('salones')
+    .select('id')
+    .eq('slug', salonSlug)
+    .maybeSingle();
+  if (existingSlug) {
+    // Limpieza: borrar el user recién creado si el slug colisiona.
+    await admin.auth.admin.deleteUser(newUser.id).catch(() => {});
+    redirect('/signup?error=' + encodeURIComponent(`El slug "${salonSlug}" ya está en uso. Prueba con otro.`));
   }
 
-  const admin = createAdminClient();
+  // 3. Crear el salón.
   const { data: salon, error: salonError } = await admin
     .from('salones')
     .insert({
@@ -108,16 +131,26 @@ export async function signup(formData: FormData) {
     .select()
     .single();
 
-  if (salonError) {
-    redirect('/signup?error=' + encodeURIComponent('Error creando salón: ' + salonError.message));
+  if (salonError || !salon) {
+    await admin.auth.admin.deleteUser(newUser.id).catch(() => {});
+    redirect('/signup?error=' + encodeURIComponent('Error creando salón: ' + (salonError?.message || 'desconocido')));
   }
 
+  // 4. Vincular user con el salón.
   const { error: linkError } = await admin
     .from('usuarios_salon')
-    .insert({ salon_id: salon.id, auth_user_id: authData.user.id, rol: 'dueno' });
+    .insert({ salon_id: salon.id, auth_user_id: newUser.id, rol: 'dueno' });
 
   if (linkError) {
     redirect('/signup?error=' + encodeURIComponent('Error vinculando user: ' + linkError.message));
+  }
+
+  // 5. Iniciar sesión inmediatamente para que /panel/hoy funcione.
+  const supabase = await createClient();
+  const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+  if (signInError) {
+    // El user existe, salón creado, pero no pudimos firmar. Le mandamos a login con email pre-rellenado.
+    redirect('/login?error=' + encodeURIComponent('Cuenta creada. Inicia sesión.'));
   }
 
   // ----- Seed: servicios, horarios, profesional -----

@@ -5,9 +5,9 @@ import { signup } from '../actions';
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; email?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, email: emailFromQuery } = await searchParams;
 
   return (
     <>
@@ -37,6 +37,7 @@ export default async function SignupPage({
             type="email"
             autoComplete="email"
             required
+            defaultValue={emailFromQuery ?? ''}
             placeholder="tu@email.com"
             className="w-full rounded-xl border border-line bg-paper px-4 py-2.5 text-[14px] text-ink outline-none transition focus:border-line-2 focus:bg-cream"
           />

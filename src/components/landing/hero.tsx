@@ -42,8 +42,7 @@ export function Hero() {
       </div>
 
       <div
-        className="relative z-10 mx-auto max-w-[1200px] px-6 pb-32"
-        style={{ paddingTop: "290px" }}
+        className="relative z-10 mx-auto max-w-[1200px] px-6 pb-24 sm:pb-32 pt-[200px] sm:pt-[260px] md:pt-[290px]"
       >
         <div className="flex flex-col gap-8 max-w-[820px]">
           <div className="reveal" data-delay="0">
@@ -92,35 +91,37 @@ export function Hero() {
           <div className="reveal flex flex-col gap-4" data-delay="360" id="cta">
             <form
               onSubmit={onSubmit}
-              className="soft-input flex items-center gap-1 p-1.5 max-w-[520px] w-full"
-              style={{ borderRadius: "40px" }}
+              className="soft-input flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-1 p-2 sm:p-1.5 max-w-[520px] w-full"
+              style={{ borderRadius: "28px" }}
             >
-              <span className="pl-4 pr-1 text-stone/70">
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="2" y="4" width="20" height="16" rx="2" />
-                  <path d="M22 7l-10 6L2 7" />
-                </svg>
-              </span>
-              <input
-                type="email"
-                required
-                placeholder="tu@salón.es"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-[15px] py-2 placeholder:text-stone/50 text-ink"
-              />
+              <div className="flex items-center flex-1 min-w-0 px-3">
+                <span className="text-stone/70 mr-2 shrink-0">
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <path d="M22 7l-10 6L2 7" />
+                  </svg>
+                </span>
+                <input
+                  type="email"
+                  required
+                  placeholder="tu@salón.es"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="flex-1 min-w-0 bg-transparent outline-none text-[15px] py-2 placeholder:text-stone/50 text-ink"
+                />
+              </div>
               <button
                 type="submit"
-                className="gloss-btn px-5 py-3 rounded-full text-[14px] font-medium tracking-tight whitespace-nowrap"
+                className="gloss-btn px-5 py-3 rounded-full text-[14px] font-medium tracking-tight whitespace-nowrap shrink-0"
               >
                 {submitted ? "¡Listo! ✓" : "Empezar prueba gratis 7 días"}
               </button>
