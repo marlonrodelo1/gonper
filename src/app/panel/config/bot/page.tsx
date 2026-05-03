@@ -69,6 +69,11 @@ export default async function ConfigBotPage({
   const duenoVinculado = !!salon.telegramChatIdDueno;
   const botUrl = usernameBot ? `https://t.me/${usernameBot}` : null;
 
+  const todoOk = tieneBot && duenoVinculado;
+  const linkCliente = usernameBot
+    ? `https://t.me/${usernameBot}?start=${salon.slug}`
+    : null;
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
       {params.ok ? (
@@ -84,6 +89,102 @@ export default async function ConfigBotPage({
         >
           {params.error}
         </div>
+      ) : null}
+
+      {/* ============================================
+          BANNER · Bot operativo (cliente + dueño)
+          ============================================ */}
+      {todoOk ? (
+        <section
+          className="card grain flex flex-col gap-4 p-5 md:p-7"
+          style={{
+            borderColor: 'rgba(139,157,122,0.45)',
+            background:
+              'linear-gradient(180deg, rgba(139,157,122,0.10) 0%, rgba(139,157,122,0.02) 100%)',
+          }}
+        >
+          <header className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span
+                className="flex h-9 w-9 items-center justify-center rounded-full"
+                style={{ background: 'rgba(139,157,122,0.25)', color: '#3F4D34' }}
+              >
+                <Icon.Check width="16" height="16" />
+              </span>
+              <div className="flex flex-col">
+                <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+                  Bot operativo
+                </span>
+                <h2 className="tight text-[18px] font-medium text-ink">
+                  Atiende a clientes y a ti como dueño
+                </h2>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span
+                className="pill"
+                style={{ background: 'rgba(139,157,122,0.18)', color: '#3F4D34' }}
+              >
+                <span
+                  className="pill-dot"
+                  style={{ background: '#8B9D7A' }}
+                />
+                Clientes
+              </span>
+              <span
+                className="pill"
+                style={{ background: 'rgba(139,157,122,0.18)', color: '#3F4D34' }}
+              >
+                <span
+                  className="pill-dot"
+                  style={{ background: '#8B9D7A' }}
+                />
+                Dueño vinculado
+              </span>
+            </div>
+          </header>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            {/* Lado cliente */}
+            <div className="card-tight flex flex-col gap-2 px-4 py-4">
+              <span className={labelClass}>Para clientes (compártelo)</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <code className="rounded-lg bg-cream-2 px-2.5 py-1.5 font-mono text-[12px] text-ink">
+                  t.me/{usernameBot}?start={salon.slug}
+                </code>
+                {linkCliente ? (
+                  <CopyLinkButton
+                    link={linkCliente}
+                    label="Copiar enlace"
+                    copiedLabel="Copiado"
+                  />
+                ) : null}
+              </div>
+              <p className="text-[12px] text-stone">
+                Quien lo abra reserva con Juanita 24/7.
+              </p>
+            </div>
+
+            {/* Lado dueño */}
+            <div className="card-tight flex flex-col gap-2 px-4 py-4">
+              <span className={labelClass}>Tú como dueño</span>
+              <a
+                href={botUrl ?? '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="tight text-[13.5px] font-medium text-terracotta hover:text-terracotta-2"
+              >
+                Abrir Juanita Pro en Telegram →
+              </a>
+              <p className="font-mono text-[11.5px] text-stone">
+                Chat ID {salon.telegramChatIdDueno}
+              </p>
+              <p className="text-[12px] text-stone">
+                Pregúntale por tu agenda, KPIs o clientes.
+              </p>
+            </div>
+          </div>
+        </section>
       ) : null}
 
       {/* ============================================
