@@ -16,6 +16,10 @@ export function useReveal() {
     const els = document.querySelectorAll<HTMLElement>(".reveal");
     if (els.length === 0) return;
 
+    // Activar el modo animado solo cuando JS está corriendo. Sin esta clase
+    // los .reveal son visibles por defecto (fallback para no-JS / hidratación lenta).
+    document.body.classList.add("js-reveal-active");
+
     const io = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
@@ -31,6 +35,9 @@ export function useReveal() {
     );
 
     els.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    return () => {
+      io.disconnect();
+      document.body.classList.remove("js-reveal-active");
+    };
   }, []);
 }

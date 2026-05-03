@@ -37,9 +37,7 @@ export function Hero() {
         ></div>
       </div>
 
-      <div className="relative z-10">
-        <TopNav />
-      </div>
+      <TopNav />
 
       <div
         className="relative z-10 mx-auto max-w-[1200px] px-6 pb-24 sm:pb-32 pt-[200px] sm:pt-[260px] md:pt-[290px]"
