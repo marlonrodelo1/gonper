@@ -49,9 +49,9 @@ export default async function StatsPage({
 
   if (!salon) {
     return (
-      <div className="px-8 py-12">
-        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
-          <h1 className="tight text-[28px] font-medium text-ink">
+      <div className="px-4 py-8 md:px-8 md:py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-6 text-center md:p-10">
+          <h1 className="tight text-[24px] font-medium text-ink md:text-[28px]">
             Configura tu salón
           </h1>
           <p className="max-w-md text-[14px] text-stone">
@@ -193,13 +193,13 @@ export default async function StatsPage({
   const periodoActual = PERIODOS.find((p) => p.value === periodo)!;
 
   return (
-    <div className="flex flex-col gap-6 px-8 py-6">
+    <div className="flex flex-col gap-6 px-4 py-4 md:px-8 md:py-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Estadísticas
           </p>
-          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+          <h1 className="tight mt-1 text-[22px] font-medium text-ink md:text-[28px]">
             {periodoActual.label}{' '}
             <span className="font-serif-it text-stone/70">
               · {salon.nombre}

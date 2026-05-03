@@ -25,7 +25,7 @@ export default async function NuevoServicioPage({
         <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-stone/70">
           Nuevo servicio
         </p>
-        <h1 className="tight text-[28px] font-medium text-ink">
+        <h1 className="tight text-[22px] font-medium text-ink md:text-[28px]">
           Añade un servicio{' '}
           <span className="font-serif-it text-stone/70">a tu catálogo</span>
         </h1>

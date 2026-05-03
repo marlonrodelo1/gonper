@@ -89,8 +89,8 @@ export default async function ConfigBotPage({
       {/* ============================================
           PASO 1 · Token del bot
           ============================================ */}
-      <section className="card flex flex-col gap-5 p-8">
-        <header className="flex items-start justify-between gap-3">
+      <section className="card flex flex-col gap-5 p-5 md:p-8">
+        <header className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1.5">
             <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
               Paso 1 · Bot Telegram
@@ -194,8 +194,8 @@ export default async function ConfigBotPage({
       {/* ============================================
           PASO 2 · Vincular tu Telegram personal como dueño
           ============================================ */}
-      <section className="card flex flex-col gap-5 p-8">
-        <header className="flex items-start justify-between gap-3">
+      <section className="card flex flex-col gap-5 p-5 md:p-8">
+        <header className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1.5">
             <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
               Paso 2 · Vincular como dueño

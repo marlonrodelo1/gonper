@@ -120,9 +120,9 @@ export default async function AgendaPage({
 
   if (!salon) {
     return (
-      <div className="px-8 py-12">
-        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
-          <h1 className="tight text-[28px] font-medium text-ink">
+      <div className="px-4 py-8 md:px-8 md:py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-6 text-center md:p-10">
+          <h1 className="tight text-[24px] font-medium text-ink md:text-[28px]">
             Configura tu salón
           </h1>
           <p className="max-w-md text-[14px] text-stone">
@@ -251,13 +251,13 @@ export default async function AgendaPage({
   })();
 
   return (
-    <div className="flex flex-col gap-6 px-8 py-6">
+    <div className="flex flex-col gap-6 px-4 py-4 md:px-8 md:py-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Agenda
           </p>
-          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+          <h1 className="tight mt-1 text-[22px] font-medium text-ink md:text-[28px]">
             {rango}{' '}
             <span className="font-serif-it text-stone/70">· {salon.nombre}</span>
           </h1>
@@ -275,7 +275,7 @@ export default async function AgendaPage({
       </header>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex items-center gap-2">
+        <nav className="flex flex-wrap items-center gap-2">
           <Link
             href={buildHref(semanaAnterior)}
             className="card-tight tight px-3 py-2 text-[13px] text-ink transition hover:bg-paper"
@@ -299,7 +299,7 @@ export default async function AgendaPage({
         <form
           method="GET"
           action="/panel/agenda"
-          className="flex items-center gap-2"
+          className="flex flex-wrap items-center gap-2"
         >
           <input type="hidden" name="semana" value={toISODate(lunes)} />
           <label
@@ -525,13 +525,13 @@ async function VistaMes({
   }
 
   return (
-    <div className="flex flex-col gap-6 px-8 py-6">
+    <div className="flex flex-col gap-6 px-4 py-4 md:px-8 md:py-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Agenda
           </p>
-          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+          <h1 className="tight mt-1 text-[22px] font-medium text-ink md:text-[28px]">
             {formatearMesAno(primerDiaMes)}{' '}
             <span className="font-serif-it text-stone/70">· {salon.nombre}</span>
           </h1>
@@ -549,7 +549,7 @@ async function VistaMes({
       </header>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav className="flex items-center gap-2">
+        <nav className="flex flex-wrap items-center gap-2">
           <Link
             href={buildHref(mesAnterior)}
             className="card-tight tight px-3 py-2 text-[13px] text-ink transition hover:bg-paper"
@@ -573,7 +573,7 @@ async function VistaMes({
         <form
           method="GET"
           action="/panel/agenda"
-          className="flex items-center gap-2"
+          className="flex flex-wrap items-center gap-2"
         >
           <input type="hidden" name="vista" value="mes" />
           <input type="hidden" name="fecha" value={toISODate(primerDiaMes)} />
@@ -607,7 +607,8 @@ async function VistaMes({
 
       {/* Calendario */}
       <section className="card overflow-hidden">
-        <div className="grid grid-cols-7 border-b border-line bg-cream/40">
+        <div className="overflow-x-auto">
+        <div className="grid min-w-[640px] grid-cols-7 border-b border-line bg-cream/40">
           {NOMBRES_DIAS_CORTOS.map((d) => (
             <div
               key={d}
@@ -617,7 +618,7 @@ async function VistaMes({
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7">
+        <div className="grid min-w-[640px] grid-cols-7">
           {semanas.flatMap((semana, sIdx) =>
             semana.map((dia, dIdx) => {
               const esDelMes =
@@ -695,6 +696,7 @@ async function VistaMes({
               );
             }),
           )}
+        </div>
         </div>
       </section>
 

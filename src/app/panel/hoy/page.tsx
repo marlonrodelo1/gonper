@@ -73,9 +73,9 @@ export default async function HoyPage() {
 
   if (!salon) {
     return (
-      <div className="px-8 py-12">
-        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
-          <h1 className="tight text-[28px] font-medium text-ink">
+      <div className="px-4 py-8 md:px-8 md:py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-6 text-center md:p-10">
+          <h1 className="tight text-[24px] font-medium text-ink md:text-[28px]">
             Configura tu salón
           </h1>
           <p className="max-w-md text-[14px] text-stone">
@@ -297,8 +297,8 @@ export default async function HoyPage() {
                 </p>
               </div>
             ) : (
-              <>
-                <div className="grid grid-cols-[80px_44px_1fr_140px_120px_92px_28px] gap-3 border-b border-line bg-cream/40 px-5 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
+              <div className="overflow-x-auto">
+                <div className="grid min-w-[760px] grid-cols-[80px_44px_1fr_140px_120px_92px_28px] gap-3 border-b border-line bg-cream/40 px-5 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
                   <div>Hora</div>
                   <div />
                   <div>Cliente</div>
@@ -307,7 +307,7 @@ export default async function HoyPage() {
                   <div>Estado</div>
                   <div className="text-right">€</div>
                 </div>
-                <div className="divide-y divide-line/70">
+                <div className="min-w-[760px] divide-y divide-line/70">
                   {filas.map(
                     ({ cita, cliente, servicio, profesional }) => (
                       <CitaRow
@@ -328,7 +328,7 @@ export default async function HoyPage() {
                     ),
                   )}
                 </div>
-              </>
+              </div>
             )}
           </div>
 

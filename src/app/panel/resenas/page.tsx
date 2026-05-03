@@ -67,9 +67,9 @@ export default async function ResenasPage({
 
   if (!salon) {
     return (
-      <div className="px-8 py-12">
-        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
-          <h1 className="tight text-[28px] font-medium text-ink">
+      <div className="px-4 py-8 md:px-8 md:py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-6 text-center md:p-10">
+          <h1 className="tight text-[24px] font-medium text-ink md:text-[28px]">
             Configura tu salón
           </h1>
           <p className="max-w-md text-[14px] text-stone">
@@ -97,7 +97,7 @@ export default async function ResenasPage({
           <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Web del salón
           </p>
-          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+          <h1 className="tight mt-1 text-[22px] font-medium text-ink md:text-[28px]">
             {filas.length} {filas.length === 1 ? 'reseña' : 'reseñas'}{' '}
             <span className="font-serif-it text-stone/70">
               {filas.length > 0 ? `· ${aprobadas} aprobadas` : 'en tu salón'}
@@ -143,7 +143,8 @@ export default async function ResenasPage({
         </div>
       ) : (
         <div className="card overflow-hidden">
-          <div className="grid grid-cols-[160px_120px_1fr_90px_100px_100px_120px_180px] items-center gap-3 border-b border-line bg-cream/40 px-5 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
+          <div className="overflow-x-auto">
+          <div className="grid min-w-[1100px] grid-cols-[160px_120px_1fr_90px_100px_100px_120px_180px] items-center gap-3 border-b border-line bg-cream/40 px-5 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
             <div>Autor</div>
             <div>Rating</div>
             <div>Texto</div>
@@ -153,7 +154,7 @@ export default async function ResenasPage({
             <div>Fecha</div>
             <div className="text-right">Acciones</div>
           </div>
-          <div className="divide-y divide-line/70">
+          <div className="min-w-[1100px] divide-y divide-line/70">
             {filas.map((r) => (
               <div
                 key={r.id}
@@ -256,6 +257,7 @@ export default async function ResenasPage({
                 </div>
               </div>
             ))}
+          </div>
           </div>
         </div>
       )}

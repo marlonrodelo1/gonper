@@ -48,8 +48,8 @@ export default async function EquipoPage({
         </div>
       ) : null}
 
-      <section className="card flex flex-col gap-5 p-6">
-        <header className="flex items-start justify-between gap-3">
+      <section className="card flex flex-col gap-5 p-5 md:p-6">
+        <header className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex flex-col gap-1.5">
             <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
               Equipo
@@ -86,8 +86,9 @@ export default async function EquipoPage({
             </Link>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <div className="flex flex-col divide-y divide-line/70">
-            <div className="grid grid-cols-[44px_1fr_120px_220px] gap-3 bg-cream/40 px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
+            <div className="grid min-w-[640px] grid-cols-[44px_1fr_120px_220px] gap-3 bg-cream/40 px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
               <div>Color</div>
               <div>Nombre</div>
               <div>Estado</div>
@@ -96,7 +97,7 @@ export default async function EquipoPage({
             {filas.map((p) => (
               <div
                 key={p.id}
-                className="grid grid-cols-[44px_1fr_120px_220px] items-center gap-3 px-4 py-3.5"
+                className="grid min-w-[640px] grid-cols-[44px_1fr_120px_220px] items-center gap-3 px-4 py-3.5"
               >
                 <div>
                   <span
@@ -169,6 +170,7 @@ export default async function EquipoPage({
                 </div>
               </div>
             ))}
+          </div>
           </div>
         )}
       </section>

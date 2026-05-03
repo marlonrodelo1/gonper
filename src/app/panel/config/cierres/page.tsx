@@ -61,7 +61,7 @@ export default async function CierresPage({
         </div>
       ) : null}
 
-      <section className="card flex flex-col gap-5 p-8">
+      <section className="card flex flex-col gap-5 p-5 md:p-8">
         <header className="flex flex-col gap-1.5">
           <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Cierres y vacaciones
@@ -84,8 +84,9 @@ export default async function CierresPage({
             </p>
           </div>
         ) : (
+          <div className="overflow-x-auto">
           <div className="flex flex-col divide-y divide-line/70">
-            <div className="grid grid-cols-[1fr_1fr_1.2fr_120px] gap-3 bg-cream/40 px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
+            <div className="grid min-w-[640px] grid-cols-[1fr_1fr_1.2fr_120px] gap-3 bg-cream/40 px-4 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
               <div>Desde</div>
               <div>Hasta</div>
               <div>Motivo</div>
@@ -97,7 +98,7 @@ export default async function CierresPage({
               return (
                 <div
                   key={c.id}
-                  className="grid grid-cols-[1fr_1fr_1.2fr_120px] items-center gap-3 px-4 py-3.5"
+                  className="grid min-w-[640px] grid-cols-[1fr_1fr_1.2fr_120px] items-center gap-3 px-4 py-3.5"
                 >
                   <div className="tabular font-mono text-[13px] text-ink">
                     {desde}
@@ -117,6 +118,7 @@ export default async function CierresPage({
                 </div>
               );
             })}
+          </div>
           </div>
         )}
 

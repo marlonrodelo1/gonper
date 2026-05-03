@@ -86,7 +86,7 @@ export default async function NuevaCitaPage({
           <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Citas
           </span>
-          <h1 className="tight text-[28px] font-medium text-ink">
+          <h1 className="tight text-[22px] font-medium text-ink md:text-[28px]">
             Nueva cita
           </h1>
           <p className="font-serif-it text-[15px] text-stone/70">
@@ -111,7 +111,7 @@ export default async function NuevaCitaPage({
           </div>
         ) : null}
 
-        <form action={crearCita} className="card flex flex-col gap-6 p-8">
+        <form action={crearCita} className="card flex flex-col gap-6 p-5 md:p-8">
           <section className="flex flex-col gap-4">
             <header className="flex flex-col gap-1">
               <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">

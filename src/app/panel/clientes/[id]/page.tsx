@@ -118,13 +118,13 @@ export default async function ClienteFichaPage({
         ← Clientes
       </Link>
 
-      <header className="card flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+      <header className="card flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between md:p-6">
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border border-line bg-cream-2 text-[18px] font-medium text-ink/80">
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-line bg-cream-2 text-[16px] font-medium text-ink/80 md:h-16 md:w-16 md:text-[18px]">
             {iniciales(cliente.nombre) || '·'}
           </div>
-          <div>
-            <h1 className="tight text-[28px] font-medium text-ink">
+          <div className="min-w-0">
+            <h1 className="tight truncate text-[22px] font-medium text-ink md:text-[28px]">
               {cliente.nombre}
             </h1>
             <p className="mt-1 text-[13.5px] text-stone">
@@ -169,7 +169,7 @@ export default async function ClienteFichaPage({
             </div>
           </div>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="flex flex-wrap shrink-0 gap-2">
           <Link
             href={`/panel/clientes/${id}/editar`}
             className="tight inline-flex items-center justify-center gap-1.5 rounded-full border border-line bg-paper px-4 py-2 text-[13px] font-medium text-ink hover:bg-cream"

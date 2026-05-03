@@ -19,9 +19,9 @@ export default async function GaleriaPage({
 
   if (!salon) {
     return (
-      <div className="px-8 py-12">
-        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
-          <h1 className="tight text-[28px] font-medium text-ink">
+      <div className="px-4 py-8 md:px-8 md:py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-6 text-center md:p-10">
+          <h1 className="tight text-[24px] font-medium text-ink md:text-[28px]">
             Configura tu salón
           </h1>
           <p className="max-w-md text-[14px] text-stone">
@@ -47,7 +47,7 @@ export default async function GaleriaPage({
           <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Web del salón
           </p>
-          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+          <h1 className="tight mt-1 text-[22px] font-medium text-ink md:text-[28px]">
             {filas.length} {filas.length === 1 ? 'imagen' : 'imágenes'}{' '}
             <span className="font-serif-it text-stone/70">
               {filas.length > 0 ? `· ${activas} visibles` : 'en tu galería'}

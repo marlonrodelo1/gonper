@@ -158,12 +158,12 @@ export default async function DetalleCitaPage({
 
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
         {/* Hero */}
-        <section className="card flex flex-col gap-4 p-8">
+        <section className="card flex flex-col gap-4 p-5 md:p-8">
           <div className="flex flex-col gap-2">
             <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
               Cita
             </span>
-            <h1 className="tight text-[32px] font-medium leading-tight text-ink">
+            <h1 className="tight text-[24px] font-medium leading-tight text-ink md:text-[32px]">
               {servicio.nombre}{' '}
               <span className="font-serif-it text-stone/70">
                 con {profesional.nombre}

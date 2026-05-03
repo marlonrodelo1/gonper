@@ -23,7 +23,7 @@ export default function ConfigLayout({
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
       <header className="flex flex-col gap-1.5">
-        <h1 className="tight text-[28px] font-medium text-ink">
+        <h1 className="tight text-[22px] font-medium text-ink md:text-[28px]">
           Configuración
         </h1>
         <p className="font-serif-it text-[15px] text-stone/70">
@@ -31,7 +31,7 @@ export default function ConfigLayout({
         </p>
       </header>
 
-      <nav className="inline-flex w-fit max-w-full flex-wrap items-center gap-1 rounded-full border border-line bg-paper p-1">
+      <nav className="-mx-1 flex flex-wrap items-center gap-1 rounded-full border border-line bg-paper p-1 md:inline-flex md:w-fit md:max-w-full md:mx-0">
         {tabs.map((t) => {
           const active = t.exact
             ? pathname === t.href

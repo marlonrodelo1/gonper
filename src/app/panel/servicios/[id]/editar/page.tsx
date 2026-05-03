@@ -52,7 +52,7 @@ export default async function EditarServicioPage({
         <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-stone/70">
           Editar servicio
         </p>
-        <h1 className="tight text-[28px] font-medium text-ink">
+        <h1 className="tight text-[22px] font-medium text-ink md:text-[28px]">
           {servicio.nombre}
         </h1>
       </div>

@@ -36,9 +36,9 @@ export default async function ConversacionDetallePage({
 
   if (!salon) {
     return (
-      <div className="px-8 py-12">
-        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
-          <h1 className="tight text-[28px] font-medium text-ink">
+      <div className="px-4 py-8 md:px-8 md:py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-6 text-center md:p-10">
+          <h1 className="tight text-[24px] font-medium text-ink md:text-[28px]">
             Configura tu salón
           </h1>
         </div>
@@ -158,12 +158,12 @@ export default async function ConversacionDetallePage({
         ← Volver a conversaciones
       </Link>
 
-      <header className="card flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
+      <header className="card flex flex-col gap-3 p-4 sm:flex-row sm:items-center md:p-5">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-line bg-cream-2 text-[20px] font-medium text-ink/80">
           {inicial(nombre)}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="tight truncate text-[20px] font-medium text-ink">
+          <div className="tight truncate text-[18px] font-medium text-ink md:text-[20px]">
             {nombre}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-[12.5px] text-stone">
@@ -196,7 +196,7 @@ export default async function ConversacionDetallePage({
         )}
       </header>
 
-      <div className="card flex flex-col gap-3 p-5">
+      <div className="card flex flex-col gap-3 p-3 md:p-5">
         {mensajesLista.map((m) => {
           const out = m.direccion === 'out';
           return (
@@ -205,7 +205,7 @@ export default async function ConversacionDetallePage({
               className={`flex flex-col ${out ? 'items-end' : 'items-start'}`}
             >
               <div
-                className={`max-w-[80%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[14px] ${
+                className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-[14px] md:max-w-[80%] ${
                   out
                     ? 'rounded-br-sm bg-ink text-cream'
                     : 'rounded-bl-sm border border-line bg-paper text-ink'

@@ -41,9 +41,9 @@ export default async function ClientesPage({
 
   if (!salon) {
     return (
-      <div className="px-8 py-12">
-        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
-          <h1 className="tight text-[28px] font-medium text-ink">
+      <div className="px-4 py-8 md:px-8 md:py-12">
+        <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-6 text-center md:p-10">
+          <h1 className="tight text-[24px] font-medium text-ink md:text-[28px]">
             Configura tu salón
           </h1>
           <p className="max-w-md text-[14px] text-stone">
@@ -81,7 +81,7 @@ export default async function ClientesPage({
           <p className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Clientes
           </p>
-          <h1 className="tight mt-1 text-[28px] font-medium text-ink">
+          <h1 className="tight mt-1 text-[22px] font-medium text-ink md:text-[28px]">
             {lista.length} {lista.length === 1 ? 'cliente' : 'clientes'}{' '}
             <span className="font-serif-it text-stone/70">
               {q ? `para "${q}"` : 'en tu salón'}
@@ -164,7 +164,8 @@ export default async function ClientesPage({
         </div>
       ) : (
         <div className="card overflow-hidden">
-          <div className="grid grid-cols-[44px_1fr_140px_140px_80px_80px_120px_64px] items-center gap-3 border-b border-line bg-cream/40 px-5 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
+          <div className="overflow-x-auto">
+          <div className="grid min-w-[920px] grid-cols-[44px_1fr_140px_140px_80px_80px_120px_64px] items-center gap-3 border-b border-line bg-cream/40 px-5 py-3 text-[10px] uppercase tracking-[0.2em] text-stone/70">
             <div />
             <div>Nombre</div>
             <div>Teléfono</div>
@@ -174,7 +175,7 @@ export default async function ClientesPage({
             <div>Última visita</div>
             <div className="text-right">·</div>
           </div>
-          <div className="divide-y divide-line/70">
+          <div className="min-w-[920px] divide-y divide-line/70">
             {lista.map((c) => (
               <div
                 key={c.id}
@@ -237,6 +238,7 @@ export default async function ClientesPage({
                 </div>
               </div>
             ))}
+          </div>
           </div>
         </div>
       )}

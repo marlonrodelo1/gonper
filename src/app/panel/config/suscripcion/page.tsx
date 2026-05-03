@@ -146,7 +146,7 @@ export default async function SuscripcionPage({
         </section>
       ) : null}
 
-      <section className="plan-reco relative flex flex-col gap-5 rounded-[20px] p-7">
+      <section className="plan-reco relative flex flex-col gap-5 rounded-[20px] p-5 md:p-7">
         {planActivo ? (
           <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-terracotta text-paper text-[11px] uppercase tracking-[0.18em]">
             Plan activo

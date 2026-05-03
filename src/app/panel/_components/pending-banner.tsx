@@ -15,7 +15,7 @@ export function PendingBanner({
 }: PendingBannerProps) {
   return (
     <div
-      className="flex items-center gap-4 rounded-2xl border bg-amber-soft px-5 py-4"
+      className="flex flex-wrap items-center gap-4 rounded-2xl border bg-amber-soft px-4 py-3 md:px-5 md:py-4"
       style={{ borderColor: 'rgba(197,142,44,0.4)' }}
     >
       <span
@@ -27,7 +27,7 @@ export function PendingBanner({
       >
         <Icon.Bell width="17" height="17" />
       </span>
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <div className="tight text-[14px] font-medium text-ink">
           {count} cita{count === 1 ? '' : 's'} sin confirmar en las próximas horas
         </div>

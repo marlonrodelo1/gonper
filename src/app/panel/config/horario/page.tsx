@@ -75,7 +75,7 @@ export default async function HorarioPage({
         </div>
       ) : null}
 
-      <section className="card flex flex-col gap-5 p-8">
+      <section className="card flex flex-col gap-5 p-5 md:p-8">
         <header className="flex flex-col gap-1.5">
           <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Horario semanal
