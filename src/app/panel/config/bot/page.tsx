@@ -7,14 +7,21 @@ import {
 } from './actions';
 import { CopyLinkButton } from './copy-link-button';
 
-type Salon = {
+/**
+ * Supabase devuelve la fila de `salones` con los nombres reales de las
+ * columnas (snake_case). Aceptamos ambos formatos por compatibilidad.
+ */
+type SalonRow = {
   id: string;
   slug: string;
   nombre: string;
-  telegramBotToken: string | null;
-  telegramBotUsername: string | null;
-  telegramChatIdDueno: string | null;
-} | null;
+  telegram_bot_token?: string | null;
+  telegramBotToken?: string | null;
+  telegram_bot_username?: string | null;
+  telegramBotUsername?: string | null;
+  telegram_chat_id_dueno?: string | null;
+  telegramChatIdDueno?: string | null;
+};
 
 const inputClass =
   'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2';
@@ -47,7 +54,7 @@ export default async function ConfigBotPage({
 }) {
   const params = await searchParams;
   const salonRaw = (await getCurrentSalon()) as unknown;
-  const salon = salonRaw as Salon;
+  const salon = salonRaw as SalonRow | null;
 
   if (!salon) {
     return (
@@ -64,9 +71,13 @@ export default async function ConfigBotPage({
 
   const codigoVinculacion = salon.id.replace(/-/g, '').slice(0, 8).toUpperCase();
   const comandoVinculacion = `/start ${codigoVinculacion}`;
-  const tieneBot = !!salon.telegramBotToken;
-  const usernameBot = salon.telegramBotUsername;
-  const duenoVinculado = !!salon.telegramChatIdDueno;
+  const tokenBot = salon.telegram_bot_token ?? salon.telegramBotToken ?? null;
+  const usernameBot =
+    salon.telegram_bot_username ?? salon.telegramBotUsername ?? null;
+  const chatIdDueno =
+    salon.telegram_chat_id_dueno ?? salon.telegramChatIdDueno ?? null;
+  const tieneBot = !!tokenBot;
+  const duenoVinculado = !!chatIdDueno;
   const botUrl = usernameBot ? `https://t.me/${usernameBot}` : null;
 
   const todoOk = tieneBot && duenoVinculado;
@@ -177,7 +188,7 @@ export default async function ConfigBotPage({
                 Abrir Juanita Pro en Telegram →
               </a>
               <p className="font-mono text-[11.5px] text-stone">
-                Chat ID {salon.telegramChatIdDueno}
+                Chat ID {chatIdDueno}
               </p>
               <p className="text-[12px] text-stone">
                 Pregúntale por tu agenda, KPIs o clientes.
@@ -321,7 +332,7 @@ export default async function ConfigBotPage({
             <div className="card-tight flex flex-col gap-2 px-4 py-4">
               <span className={labelClass}>Chat ID conectado</span>
               <code className="font-mono text-[13.5px] text-ink">
-                {salon.telegramChatIdDueno}
+                {chatIdDueno}
               </code>
             </div>
 
