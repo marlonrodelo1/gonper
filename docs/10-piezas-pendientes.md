@@ -1,164 +1,102 @@
-# Gomper · Piezas pendientes hasta producción
+# Gomper · Estado y piezas pendientes
 
-> Estado a **2026-05-02**. Tras completar el agente Juanita Pro y el rediseño de auth.
-
-## Accesos de prueba (ya operativos)
-
-### Cuenta dueño
-- **URL:** [https://gestori.es/login](https://gestori.es/login)
-- **Email:** `demo@gomper.es`
-- **Contraseña:** `GomperDemo2026!`
-- **Rol:** dueño del "Salón Demo de Marlon"
-- Tras login redirige a `/panel/hoy` con datos seed (4 servicios, 2 profesionales, 4 clientes, 7 citas históricas).
-- El chat de Juanita Pro funciona tirando del workflow n8n.
-
-### Cuenta super admin (acceso total a la plataforma)
-- **URL:** [https://gestori.es/admin](https://gestori.es/admin)
-- **Email:** `rodelomarlon1@gmail.com`
-- **Contraseña:** `GomperSuperAdmin2026!`
-- **Capacidades:**
-  - `/admin` — dashboard con KPIs (salones totales, en trial, pagando, leads sin convertir, etc.)
-  - `/admin/salones` — listado con filtros (todos/activos/trial/pagando/inactivos) + buscador
-  - `/admin/salones/[id]` — detalle: suspender, reactivar, forzar plan básico, cancelar suscripción, borrar
-  - `/admin/salones/nuevo` — alta manual de salón + dueño (sin entrar a Supabase)
-  - `/admin/usuarios` — todos los registrados, con su salón y rol
-  - `/admin/leads` — leads de la landing, con filtro "no convertidos"
-- **Tabla en BD:** `admin_users` (usuarios con permisos super admin de la plataforma).
+> **Última actualización:** 2026-05-03 (sesión cerrada con plataforma operativa al 100%).
 
 ---
 
-## ✅ Lo que ya está hecho
+## ✅ Lo que está hecho y operativo en producción
 
-| Pieza | Estado |
+### Frontend
+- [x] Landing pública responsive (`gestori.es`) con CTA "Empezar prueba gratis 7 días"
+- [x] Web pública de cada salón (`gestori.es/s/<slug>`) con chat IA, calendario reservas, galería, promociones, reseñas
+- [x] Login + Signup restilados con paleta cream
+- [x] Panel del dueño (`/panel/*`) con Hoy, Agenda, Citas, Conversaciones, Clientes, Servicios, Stats
+- [x] Configuración: Datos del salón, Agente, Bot Telegram (auto-setWebhook), Equipo, Horario, Cierres, Suscripción
+- [x] Chat Juanita Pro embebido en `/panel/hoy` con datos reales del salón
+- [x] CRUD completo: promociones, galería, reseñas, conversaciones
+- [x] Panel super admin separado (`admin.gestori.es`) con dashboard global, salones, usuarios, leads, alta manual
+
+### Backend
+- [x] Auth Supabase con sesiones SSR
+- [x] Tabla `admin_users` para super admins de plataforma
+- [x] Helper `requireSuperAdmin()` y `getCurrentSuperAdmin()`
+- [x] TrialBlocker overlay: bloquea panel cuando `plan='trial'` y `trial_until < now()`
+- [x] Onboarding signup automático: seeds (3 servicios + 11 horarios + 1 profesional) + email bienvenida (Resend)
+- [x] Endpoint `/api/v1/juanita-pro` (auth dueño, proxy a webhook n8n)
+- [x] Endpoint `/api/v1/cron/recordatorios` (bearer auth, marca + devuelve recordatorios)
+- [x] Endpoint `/api/v1/lookup-bot` (bearer auth, info completa del salón)
+- [x] Endpoint `/api/public/chat/[slug]` con DeepSeek real
+- [x] Endpoint `/api/stripe/webhook` con verificación de firma + 3 eventos
+- [x] Endpoint `/api/cron/email-trial-recordatorio` listo para enviar emails 2 días antes de expirar trial
+- [x] Helpers Resend: bienvenida, trial expira, confirmación suscripción
+- [x] Wrappers Sentry/PostHog (no-op si vars vacías)
+
+### n8n
+- [x] Workflow "Juanita Pro (agente del dueño)" — webhook → DeepSeek + 6 tools Supabase
+- [x] Workflow "Recordatorios (cron 5 min)" — anti-no-show con botones Confirmar/Cancelar
+- [x] Workflow "Bot Cliente Multi-tenant" — atiende a TODOS los bots de salón con `?slug=<slug>`. Distingue dueño/cliente por chat_id. Vincula con `/start CODIGO`.
+- [x] Credencial DeepSeek, Supabase REST, Internal API Token
+
+### Stripe (TEST)
+- [x] Producto + precio 30€/mes
+- [x] Webhook endpoint con 3 eventos
+- [x] Customer Portal configurado
+- [x] Suscripción real probada (tarjeta `4242 4242 4242 4242`)
+- [x] Webhook actualiza correctamente `salones.plan`, `stripe_customer_id`, `stripe_subscription_id`
+
+### Infraestructura
+- [x] Dos repos GitHub separados (gonper + admin.gestori) con autodeploy on push
+- [x] Dos apps Dokploy (Fronted + Fronted super admin) con dominios SSL
+- [x] Variables de entorno completas en Dokploy
+
+---
+
+## 🟠 Pendientes para producción real
+
+### 1. Pasar Stripe de TEST a LIVE
+Cuando captes el primer cliente real:
+- Crear webhook endpoint LIVE en https://dashboard.stripe.com/webhooks (URL: `https://gestori.es/api/stripe/webhook`, mismos 3 eventos).
+- Sustituir 4 vars en Dokploy:
+  - `STRIPE_SECRET_KEY=sk_live_...`
+  - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...`
+  - `STRIPE_WEBHOOK_SECRET=whsec_...` (del webhook LIVE)
+  - `STRIPE_PRICE_BASIC=price_1TSEhIDs4xG7QRPIFK4fZRE8` (ya creado en LIVE)
+- Redeploy.
+
+### 2. Bot global de fallback (opcional)
+Crear `@gomper_bot` en BotFather si quieres que haya un bot de la marca para casos de fallback / soporte. Pero el flujo actual ya funciona sin él (cada salón con su propio bot).
+
+---
+
+## 🟡 Recomendable antes de lanzar al mundo
+
+### 3. Observabilidad
+- **Sentry** — crear proyecto en sentry.io, copiar DSN, añadir como `SENTRY_DSN` en Dokploy. Los errores se reportan automáticamente vía `src/lib/observability/sentry.ts`.
+- **PostHog** — crear proyecto en eu.posthog.com, copiar key, añadir como `NEXT_PUBLIC_POSTHOG_KEY` en Dokploy. Pageviews y eventos se trackean vía `src/components/posthog-pageview.tsx`.
+
+### 4. Email transaccional verificado
+Resend funcionando con `re_PoPZDH9q...`. Si quieres enviar desde `@gestori.es` (en vez del dominio de Resend), hay que verificar el dominio en https://resend.com/domains.
+
+---
+
+## 🟢 Post-lanzamiento
+
+- WhatsApp Cloud API (cuando Meta verifique cuenta business)
+- Vista agenda semanal estilo calendar
+- Stats avanzadas en panel
+- Multi-local (cadenas con varios sitios)
+- Bizum para depósitos
+- Programa de referidos (1 mes gratis por cliente que traes)
+- Modo "incognito" para ver el chat público como cliente sin desloguearse del panel
+
+---
+
+## Tiempos estimados pendientes
+
+| Pieza | Tiempo |
 |---|---|
-| Esquema BD (Supabase, Drizzle) | ✅ |
-| Web pública del salón `/[slug]` | ✅ |
-| Panel del dueño (Hoy, Agenda, Servicios, Clientes, etc.) | ✅ |
-| Chat web del agente (cara cliente) `/api/public/chat/[slug]` | ✅ |
-| Conversaciones en panel | ✅ |
-| Promociones, galería, reseñas (CRUDs) | ✅ |
-| Plan único 30 €/mes (modelo de negocio acordado) | ✅ |
-| Trial 7 días al registrarse | ✅ |
-| Workflow n8n "Juanita Pro" + tools Supabase | ✅ |
-| Endpoint `/api/v1/juanita-pro` + UI conectada | ✅ |
-| Auth login/signup restilados (paleta cream) | ✅ |
-| Variable `N8N_JUANITA_WEBHOOK_URL` en local + Dokploy | ✅ |
+| Pasar Stripe a LIVE | 5 min (yo lo hago vía API si me das `sk_live_`) |
+| Sentry + PostHog | 10 min (tú creas proyectos, yo añado las keys) |
+| Test E2E completo signup nuevo dueño | 5 min (lo haces tú probando registro) |
 
----
-
-## 🔴 Bloqueantes para captar primer cliente real
-
-### Pieza A · Stripe end-to-end
-- [ ] Crear producto/precio espejo en Stripe TEST (mismo 30 €/mes).
-- [ ] Rellenar 4 vars en `.env.local` y Dokploy:
-  - `STRIPE_SECRET_KEY` (sk_test_…)
-  - `STRIPE_WEBHOOK_SECRET` (whsec_…)
-  - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` (pk_test_…)
-  - `STRIPE_PRICE_BASIC` (price_…)
-- [ ] Configurar webhook LIVE en Stripe Dashboard apuntando a `https://gestori.es/api/stripe/webhook`.
-- [ ] Activar Customer Portal (Settings → Billing → Customer portal).
-- [ ] Probar flujo completo con tarjeta `4242 4242 4242 4242`.
-- [ ] Bloquear `/panel/*` cuando trial expira y `plan != 'basico'`.
-
-### Pieza B · Super Admin (`/admin/*`) ✅ COMPLETADA
-- [x] Migración: tabla `admin_users` creada en Supabase.
-- [x] Marcar a `rodelomarlon1@gmail.com` como super_admin.
-- [x] Helper `requireSuperAdmin()` y `getCurrentSuperAdmin()` en `src/lib/auth/super-admin.ts`.
-- [x] Layout `/admin/layout.tsx` con sidebar separado del panel del dueño.
-- [x] `/admin/salones` — lista, buscador, filtros (todos/activos/trial/pagando/inactivos).
-- [x] `/admin/salones/[id]` — detalle con plan, dueños, stats; suspender/reactivar/forzar básico/cancelar/borrar.
-- [x] `/admin/salones/nuevo` — alta manual: nombre + slug + tipo + email del dueño + password.
-- [x] `/admin/usuarios` — listado de auth.users con su salón, búsqueda por email.
-- [x] `/admin/leads` — leads de la landing con filtro "no convertidos" + paginación.
-- [ ] Acción "Iniciar sesión como" para soporte (impersonate). *Pendiente — opcional.*
-
-### Pieza C · Onboarding self-service desde landing
-- [ ] CTA "Empezar prueba gratuita 7 días" en landing → `/signup`.
-- [ ] Pulir flow `signup` actual (validaciones, email confirmation, slug único).
-- [ ] Email transaccional de bienvenida (vía SMTP de Supabase o Resend).
-- [ ] Crear servicios/profesionales/horarios por defecto al registrarse — para que el panel no aparezca vacío.
-
-### Pieza D · Bot Telegram global de Gomper
-- [ ] Crear `@gomper_bot` (o el nombre que decidas) en BotFather.
-- [ ] Añadir trigger Telegram al workflow Juanita Pro (mismo agente, distinto canal).
-- [ ] Lookup del salón por `telegram_chat_id_dueno` en tabla `salones`.
-- [ ] UI en panel (`/panel/config/notificaciones`) para que el dueño "vincule" su Telegram escaneando un QR — el bot captura el `chat_id` al primer mensaje.
-
----
-
-## 🟠 Necesarios antes de captar volumen
-
-### Pieza E · Bot Telegram clientes finales (multi-tenant)
-- [ ] Importar workflow `docs/n8n-workflow-bot-cliente.json` (cliente final reserva por Telegram).
-- [ ] Sistema de provisión: cada salón conecta su propio bot Telegram → guardar `telegram_bot_token` en `salones`.
-- [ ] El workflow hace lookup del salón por slug en la URL `/gomper-bot/:slug`.
-
-### Pieza F · Recordatorios automáticos (cron)
-- [ ] Importar workflow `docs/n8n-workflow-recordatorios.json` (cron 5 min).
-- [ ] Generar `INTERNAL_API_TOKEN` (48 chars random) en local + Dokploy + n8n.
-- [ ] Validar que `/api/v1/cron/recordatorios` devuelve citas a 1h vista.
-- [ ] Mensaje de confirmación con botones (callbackQuery).
-
-### Pieza G · Gemini API (fallback IA en chat público)
-- [ ] Generar `GOOGLE_GENERATIVE_AI_API_KEY` en Google AI Studio.
-- [ ] Sustituir mock de `/api/public/chat/[slug]` por llamada real a Gemini.
-- [ ] Prompt según `agente_nombre`/`agente_tono`/`agente_genero` del salón.
-- [ ] Rate limiting agresivo por `session_id`.
-
----
-
-## 🟡 Recomendable antes de lanzar
-
-### Pieza H · Observabilidad
-- [ ] `SENTRY_DSN` configurado (errores en tiempo real).
-- [ ] `NEXT_PUBLIC_POSTHOG_KEY` configurado (conversión trial → pago, embudo onboarding).
-- [ ] Dashboard básico con KPIs: signups/día, conversión, churn, MRR.
-
-### Pieza I · Emails transaccionales
-- [ ] Email confirmación tras signup.
-- [ ] Email recordatorio "tu trial acaba en 2 días".
-- [ ] Email post-suscripción con bienvenida + guía rápida.
-- [ ] Email cuando el dueño tiene 0 servicios después de 24h (guía de setup).
-
----
-
-## 🟢 Mejoras post-lanzamiento
-
-- [ ] WhatsApp Cloud API (cuando Meta verifique).
-- [ ] Vista agenda semanal completa (tipo calendar).
-- [ ] Estadísticas avanzadas en `/panel/stats`.
-- [ ] Multi-local (cadenas con varios sitios).
-- [ ] Bizum para depósitos.
-- [ ] Programa de referidos (1 mes gratis por cada cliente que traes).
-
----
-
-## Variables de entorno completas (referencia)
-
-| Variable | Ámbito | Valor / origen |
-|---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | local + Dokploy | ✅ ya está |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | local + Dokploy | ✅ ya está |
-| `DATABASE_URL` | local + Dokploy | ✅ ya está |
-| `SUPABASE_SERVICE_ROLE_KEY` | local + Dokploy | ✅ ya está |
-| `N8N_JUANITA_WEBHOOK_URL` | local + Dokploy | ✅ ya está |
-| `INTERNAL_API_TOKEN` | local + Dokploy + n8n | ❌ **falta** — generar con PowerShell `-join ((48..57)+(65..90)+(97..122) \| Get-Random -Count 48 \| % {[char]$_})` |
-| `STRIPE_SECRET_KEY` | local + Dokploy | ❌ **falta** — Stripe Dashboard |
-| `STRIPE_WEBHOOK_SECRET` | local + Dokploy | ❌ **falta** — Stripe Webhooks |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | local + Dokploy | ❌ **falta** — Stripe Dashboard |
-| `STRIPE_PRICE_BASIC` | local + Dokploy | ❌ **falta** — Stripe → Producto |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | local + Dokploy | ❌ **falta** — AI Studio |
-| `SENTRY_DSN` | Dokploy | ⚠️ recomendable |
-| `NEXT_PUBLIC_POSTHOG_KEY` | local + Dokploy | ⚠️ recomendable |
-
----
-
-## Orden sugerido de ataque
-
-1. **Pieza B (super admin)** — desbloquea gestión sin entrar a Supabase. Próxima sesión.
-2. **Pieza A (Stripe)** — necesario para cobrar. Tú generas claves, yo conecto.
-3. **Pieza C (signup landing)** — desbloquea registro self-service.
-4. **Pieza D (bot Telegram global)** — cuando me pases el token de BotFather.
-5. **Pieza F (cron recordatorios)** — el valor real del producto, anti no-show.
-6. **Pieza G (Gemini)** — chat público con IA real.
-7. **Piezas E + H + I** — al cerrar primer cliente real.
+**Total para 100% production-ready:** ~20 minutos repartidos en cuando lo necesites.
