@@ -57,6 +57,9 @@ export async function crearCheckout(planId: 'basico') {
 
   let customerId =
     pick<string>(salonRaw, 'stripe_customer_id', 'stripeCustomerId') ?? null;
+  const subscriptionId =
+    pick<string>(salonRaw, 'stripe_subscription_id', 'stripeSubscriptionId') ??
+    null;
 
   if (!customerId) {
     const customer = await stripe.customers.create({
@@ -71,14 +74,24 @@ export async function crearCheckout(planId: 'basico') {
       .where(eq(salones.id, salonId));
   }
 
+  // Si el salón aún no tuvo nunca suscripción (primer pago), incluimos trial
+  // 7 días con tarjeta obligatoria. Si ya la tuvo, no se reaplica.
+  const aplicarTrial = !subscriptionId;
+
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
     line_items: [{ price: plan.priceId, quantity: 1 }],
-    success_url: `${baseUrl}/panel/config/suscripcion?success=1`,
+    success_url: `${baseUrl}/api/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${baseUrl}/panel/config/suscripcion?canceled=1`,
     metadata: { salon_id: salonId, plan: planId },
-    subscription_data: { metadata: { salon_id: salonId, plan: planId } },
+    payment_method_collection: 'always',
+    subscription_data: {
+      ...(aplicarTrial ? { trial_period_days: 7 } : {}),
+      metadata: { salon_id: salonId, plan: planId },
+    },
+    allow_promotion_codes: true,
+    locale: 'es',
   });
 
   if (!session.url) {

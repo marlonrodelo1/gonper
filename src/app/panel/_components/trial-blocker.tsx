@@ -4,23 +4,45 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export type TrialBlockerProps = {
+  /**
+   * El salón aún no tiene suscripción Stripe (no completó Checkout en signup).
+   * Esto bloquea siempre, salvo en /panel/config/suscripcion.
+   */
+  sinSuscripcion: boolean;
+  /** Trial Stripe terminado y suscripción cancelada / impaga. */
   trialExpirado: boolean;
   planActivo: boolean;
 };
 
 /**
- * Overlay full-screen que bloquea el panel cuando el trial ha expirado y el
- * salón no tiene un plan de pago activo. Sólo se oculta en
- * /panel/config/suscripcion para que el dueño pueda completar el checkout.
+ * Overlay full-screen que bloquea el panel cuando:
+ *  a) el salón aún no ha pasado por Stripe Checkout (sinSuscripcion), o
+ *  b) el plan ya no está activo (cancelado, impagado, etc.).
+ *
+ * Sólo se oculta en /panel/config/suscripcion para que el dueño pueda
+ * completar el flujo.
  */
-export function TrialBlocker({ trialExpirado, planActivo }: TrialBlockerProps) {
+export function TrialBlocker({
+  sinSuscripcion,
+  trialExpirado,
+  planActivo,
+}: TrialBlockerProps) {
   const pathname = usePathname();
+
   const debeBloquear =
-    trialExpirado &&
     !planActivo &&
+    (sinSuscripcion || trialExpirado) &&
     !pathname.startsWith('/panel/config/suscripcion');
 
   if (!debeBloquear) return null;
+
+  const titulo = sinSuscripcion
+    ? 'Activa tu cuenta'
+    : 'Tu prueba gratuita ha terminado';
+  const descripcion = sinSuscripcion
+    ? 'Para empezar a usar Gomper necesitas añadir tu tarjeta. Tienes 7 días gratis y no se te cobra nada hoy. Cancelas cuando quieras.'
+    : 'Para seguir usando Gomper, suscríbete al plan Básico (30 €/mes, sin permanencia, cancelas cuando quieras).';
+  const cta = sinSuscripcion ? 'Añadir tarjeta y activar' : 'Suscribirme ahora';
 
   return (
     <div
@@ -39,17 +61,14 @@ export function TrialBlocker({ trialExpirado, planActivo }: TrialBlockerProps) {
           Atención
         </div>
         <h2 className="tight mt-2 text-[22px] font-medium text-[#7C2E2E]">
-          Tu prueba gratuita ha terminado
+          {titulo}
         </h2>
-        <p className="mt-2 text-[13.5px] text-[#7C2E2E]">
-          Para seguir usando Gomper, suscríbete al plan Básico (30 €/mes,
-          sin permanencia, cancelas cuando quieras).
-        </p>
+        <p className="mt-2 text-[13.5px] text-[#7C2E2E]">{descripcion}</p>
         <Link
           href="/panel/config/suscripcion"
           className="gloss-btn tight mt-5 inline-flex h-11 w-full items-center justify-center rounded-full text-[14px] font-medium"
         >
-          Suscribirme ahora
+          {cta}
         </Link>
         <form action="/auth/sign-out" method="POST" className="mt-3">
           <button

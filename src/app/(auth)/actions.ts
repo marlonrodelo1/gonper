@@ -4,7 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { enviarEmailBienvenida } from '@/lib/email/resend';
+import { getStripe, PLANES } from '@/lib/stripe/client';
 
 export async function login(formData: FormData) {
   const email = String(formData.get('email') || '');
@@ -72,6 +74,13 @@ const HORARIOS_DEFAULT: HorarioSeed[] = [
   { dia_semana: 6, inicio: '09:00', fin: '14:00' },
 ];
 
+async function buildBaseUrl() {
+  const h = await headers();
+  const host = h.get('host') ?? '';
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  return `${proto}://${host}`;
+}
+
 export async function signup(formData: FormData) {
   const email = String(formData.get('email') || '');
   const password = String(formData.get('password') || '');
@@ -118,15 +127,17 @@ export async function signup(formData: FormData) {
     redirect('/signup?error=' + encodeURIComponent(`El slug "${salonSlug}" ya está en uso. Prueba con otro.`));
   }
 
-  // 3. Crear el salón.
+  // 3. Crear el salón. plan='trial' y trial_until null hasta que pase Checkout
+  // (ahora el trial real lo gestiona Stripe, no el campo trial_until).
   const { data: salon, error: salonError } = await admin
     .from('salones')
     .insert({
       slug: salonSlug,
       nombre: salonNombre,
       tipo_negocio: tipoNegocio,
+      email,
       plan: 'trial',
-      trial_until: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      trial_until: null,
     })
     .select()
     .single();
@@ -145,19 +156,18 @@ export async function signup(formData: FormData) {
     redirect('/signup?error=' + encodeURIComponent('Error vinculando user: ' + linkError.message));
   }
 
-  // 5. Iniciar sesión inmediatamente para que /panel/hoy funcione.
+  // 5. Iniciar sesión inmediatamente para que la cookie esté lista cuando vuelva
+  // de Stripe Checkout.
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
   if (signInError) {
-    // El user existe, salón creado, pero no pudimos firmar. Le mandamos a login con email pre-rellenado.
     redirect('/login?error=' + encodeURIComponent('Cuenta creada. Inicia sesión.'));
   }
 
-  // ----- Seed: servicios, horarios, profesional -----
-  // Errores aquí no abortan: el salón ya existe, sólo logueamos.
+  // ----- Seeds: servicios, horarios, profesional (no abortan si fallan) -----
   try {
     const servicios = SERVICIOS_POR_TIPO[tipoNegocio] ?? SERVICIOS_POR_TIPO.otro;
-    const { error: serviciosError } = await admin.from('servicios').insert(
+    await admin.from('servicios').insert(
       servicios.map((s) => ({
         salon_id: salon.id,
         nombre: s.nombre,
@@ -166,15 +176,12 @@ export async function signup(formData: FormData) {
         orden: s.orden,
       })),
     );
-    if (serviciosError) {
-      console.warn('[signup:seed] servicios error:', serviciosError.message);
-    }
   } catch (err) {
-    console.warn('[signup:seed] servicios throw:', err);
+    console.warn('[signup:seed] servicios:', err);
   }
 
   try {
-    const { error: horariosError } = await admin.from('horarios').insert(
+    await admin.from('horarios').insert(
       HORARIOS_DEFAULT.map((h) => ({
         salon_id: salon.id,
         dia_semana: h.dia_semana,
@@ -182,36 +189,84 @@ export async function signup(formData: FormData) {
         fin: h.fin,
       })),
     );
-    if (horariosError) {
-      console.warn('[signup:seed] horarios error:', horariosError.message);
-    }
   } catch (err) {
-    console.warn('[signup:seed] horarios throw:', err);
+    console.warn('[signup:seed] horarios:', err);
   }
 
   try {
-    const { error: profError } = await admin.from('profesionales').insert({
+    await admin.from('profesionales').insert({
       salon_id: salon.id,
       nombre: salonNombre,
       color_hex: '#8B9D7A',
       orden: 0,
     });
-    if (profError) {
-      console.warn('[signup:seed] profesional error:', profError.message);
-    }
   } catch (err) {
-    console.warn('[signup:seed] profesional throw:', err);
+    console.warn('[signup:seed] profesional:', err);
   }
 
   // ----- Email de bienvenida (no bloquea redirect) -----
   try {
     await enviarEmailBienvenida({ to: email, salonNombre, salonSlug });
   } catch (err) {
-    console.warn('[signup:email] enviarEmailBienvenida throw:', err);
+    console.warn('[signup:email]:', err);
+  }
+
+  // ----- Crear Stripe Customer + Checkout Session con trial 7d -----
+  // Si algo falla aquí, NO abortamos: dejamos al user en /panel/config/suscripcion
+  // con un mensaje para que reintente. El salón ya existe.
+  const plan = PLANES.basico;
+  if (!plan.priceId) {
+    redirect('/panel/config/suscripcion?error=' +
+      encodeURIComponent('Plan no configurado en Stripe. Configúralo desde aquí.'));
+  }
+
+  let checkoutUrl: string | null = null;
+  try {
+    const stripe = getStripe();
+    const baseUrl = await buildBaseUrl();
+
+    const customer = await stripe.customers.create({
+      email,
+      name: salonNombre,
+      metadata: { salon_id: salon.id },
+    });
+
+    await admin
+      .from('salones')
+      .update({ stripe_customer_id: customer.id })
+      .eq('id', salon.id);
+
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer: customer.id,
+      line_items: [{ price: plan.priceId, quantity: 1 }],
+      // trial_period_days fuerza 7 días gratis con cobro 0 €.
+      // payment_method_collection: 'always' obliga a guardar tarjeta aunque haya trial.
+      subscription_data: {
+        trial_period_days: 7,
+        metadata: { salon_id: salon.id, plan: 'basico' },
+      },
+      payment_method_collection: 'always',
+      success_url: `${baseUrl}/api/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/panel/config/suscripcion?canceled=1`,
+      metadata: { salon_id: salon.id, plan: 'basico' },
+      allow_promotion_codes: true,
+      locale: 'es',
+    });
+
+    checkoutUrl = session.url;
+  } catch (err) {
+    console.error('[signup:stripe] error creando checkout:', err);
+    redirect('/panel/config/suscripcion?error=' +
+      encodeURIComponent('No se pudo abrir el pago. Pulsa "Suscribirme" para reintentar.'));
   }
 
   revalidatePath('/', 'layout');
-  redirect('/panel/hoy');
+  if (!checkoutUrl) {
+    redirect('/panel/config/suscripcion?error=' +
+      encodeURIComponent('Stripe no devolvió URL'));
+  }
+  redirect(checkoutUrl);
 }
 
 export async function signOut() {
