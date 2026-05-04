@@ -1,7 +1,7 @@
 import { Resend } from 'resend';
 
 const apiKey = process.env.RESEND_API_KEY;
-const fromAddress = process.env.RESEND_FROM_EMAIL || 'Gomper <hola@gestori.es>';
+const fromAddress = process.env.RESEND_FROM_EMAIL || 'Gonper <hola@gestori.es>';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gestori.es';
 
 let _resend: Resend | null = null;
@@ -85,7 +85,7 @@ function layout(opts: { titulo: string; cuerpoHtml: string }): string {
     <tr><td align="center">
       <table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0" style="background:${COLOR_PAPER};border:1px solid ${COLOR_LINE};border-radius:16px;overflow:hidden">
         <tr><td style="padding:32px 32px 8px">
-          <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:${COLOR_STONE}">Gomper</div>
+          <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:${COLOR_STONE}">Gonper</div>
         </td></tr>
         ${opts.cuerpoHtml}
         <tr><td style="padding:24px 32px 28px;border-top:1px solid ${COLOR_LINE}">
@@ -146,13 +146,13 @@ export async function enviarEmailBienvenida(params: {
   salonNombre: string;
   salonSlug: string;
 }): Promise<EmailResult> {
-  const subject = `Bienvenido a Gomper, ${params.salonNombre}`;
+  const subject = `Bienvenido a Gonper, ${params.salonNombre}`;
   const panelUrl = `${siteUrl}/panel/hoy`;
   const publicUrl = `${siteUrl}/s/${params.salonSlug}`;
   const cuerpoHtml = `
     <tr><td style="padding:8px 32px 16px">
       <h1 style="margin:0 0 12px;font-size:26px;font-weight:500;line-height:1.2;color:${COLOR_INK}">
-        Bienvenido a Gomper
+        Bienvenido a Gonper
       </h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
         Acabas de crear el salón <strong>${escapeHtml(params.salonNombre)}</strong>.
@@ -190,8 +190,8 @@ export async function enviarRecordatorioTrialAcaba(params: {
   const dias = Math.max(0, Math.floor(params.diasRestantes));
   const subject =
     dias <= 0
-      ? `Tu prueba en Gomper acaba hoy`
-      : `Quedan ${dias} día${dias === 1 ? '' : 's'} de prueba en Gomper`;
+      ? `Tu prueba en Gonper acaba hoy`
+      : `Quedan ${dias} día${dias === 1 ? '' : 's'} de prueba en Gonper`;
   const panelUrl = `${siteUrl}/panel/configuracion`;
   const cuerpoHtml = `
     <tr><td style="padding:8px 32px 16px">
@@ -200,7 +200,7 @@ export async function enviarRecordatorioTrialAcaba(params: {
       </h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
         Hola, ${escapeHtml(params.salonNombre)}.
-        Tu periodo de prueba en Gomper está a punto de terminar.
+        Tu periodo de prueba en Gonper está a punto de terminar.
       </p>
       <p style="margin:0 0 24px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">
         Activa el plan por 30€/mes para no perder las reservas, los clientes
@@ -276,7 +276,7 @@ export async function enviarConfirmacionSuscripcion(params: {
   to: string;
   salonNombre: string;
 }): Promise<EmailResult> {
-  const subject = `Suscripción activa en Gomper`;
+  const subject = `Suscripción activa en Gonper`;
   const panelUrl = `${siteUrl}/panel/hoy`;
   const cuerpoHtml = `
     <tr><td style="padding:8px 32px 16px">
@@ -284,7 +284,7 @@ export async function enviarConfirmacionSuscripcion(params: {
         Suscripción confirmada
       </h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
-        Gracias por confiar en Gomper, ${escapeHtml(params.salonNombre)}.
+        Gracias por confiar en Gonper, ${escapeHtml(params.salonNombre)}.
         Tu plan de 30€/mes está activo y no perderás ningún dato.
       </p>
       <p style="margin:0 0 24px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">

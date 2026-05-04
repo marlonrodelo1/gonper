@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { Icon } from './icons';
+import { GonperLogo } from '@/components/brand/gonper-logo';
 
 export type PanelSidebarProps = {
   userEmail: string | null;
@@ -108,12 +109,9 @@ export function PanelSidebar({
           <Link
             href="/panel/hoy"
             onClick={cerrar}
-            className="flex items-center gap-2.5"
+            className="flex items-center"
           >
-            <Icon.Logo width="22" height="22" className="text-ink" />
-            <span className="tight text-[17px] font-medium text-ink">
-              Gomper
-            </span>
+            <GonperLogo size={22} tag={null} color="#1A1815" />
           </Link>
           <span className="ml-auto text-[10px] uppercase tracking-[0.18em] text-stone/70">
             Beta

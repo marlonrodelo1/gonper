@@ -112,7 +112,7 @@ export default async function SuscripcionPage({
             Tu prueba gratuita ha terminado
           </h2>
           <p className="text-[13.5px] text-[#7C2E2E]">
-            Suscríbete al plan Básico para seguir usando Gomper.
+            Suscríbete al plan Básico para seguir usando Gonper.
           </p>
         </section>
       ) : null}

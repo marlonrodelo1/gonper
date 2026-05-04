@@ -81,7 +81,7 @@ export function Hero() {
               maxWidth: "554px",
             }}
           >
-            Gomper atiende reservas por Telegram 24/7, confirma cada cita una
+            Gonper atiende reservas por Telegram 24/7, confirma cada cita una
             hora antes y libera el hueco si no hay respuesta. Para barberías,
             peluquerías y centros de estética en España. Tú sigues cortando.
           </p>

@@ -63,7 +63,7 @@ export function renderReservaConfirmadaEmail(p: ReservaConfirmadaParams): {
         </td></tr>
         <tr><td style="padding:16px 32px 32px;background:#fafafa">
           <p style="margin:0;font-size:11px;color:#a1a1aa;text-align:center">
-            Enviado por Gomper · ${escapeHtml(p.salonNombre)}
+            Enviado por Gonper · ${escapeHtml(p.salonNombre)}
           </p>
         </td></tr>
       </table>

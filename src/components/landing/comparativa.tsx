@@ -32,7 +32,7 @@ export function Comparativa() {
       <div className="mx-auto max-w-[1100px]">
         <div className="reveal text-center mb-12">
           <div className="text-[12px] uppercase tracking-[0.22em] text-stone/80 mb-4">
-            Por qué Gomper
+            Por qué Gonper
           </div>
           <h2
             className="tight font-medium text-ink"
@@ -49,7 +49,7 @@ export function Comparativa() {
               Característica
             </div>
             <div className="px-4 py-5 text-center bg-ink text-cream tight font-medium border-b border-line">
-              Gomper
+              Gonper
             </div>
             <div className="px-4 py-5 text-center text-stone uppercase tracking-[0.18em] text-[11px] border-b border-line">
               Fresha

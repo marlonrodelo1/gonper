@@ -3,7 +3,7 @@ import { Icon } from "@/components/landing/icons";
 const cols: Array<[string, string[]]> = [
   ["Producto", ["Cómo funciona", "Juanita", "Planes", "Panel demo"]],
   ["Recursos", ["Guía setup", "API docs", "Soporte", "Blog"]],
-  ["Empresa", ["Sobre Gomper", "Privacidad", "Términos", "Contacto"]],
+  ["Empresa", ["Sobre Gonper", "Privacidad", "Términos", "Contacto"]],
 ];
 
 export function Footer() {
@@ -14,7 +14,7 @@ export function Footer() {
           <div className="col-span-2">
             <div className="flex items-center gap-2 text-ink mb-4">
               <Icon.Logo width="22" height="22" />
-              <span className="text-[18px] tight font-medium">Gomper</span>
+              <span className="text-[18px] tight font-medium">Gonper</span>
             </div>
             <p className="text-stone text-[14px] max-w-[280px] leading-relaxed">
               Una recepcionista que no descansa nunca. Para barberías, peluquerías y centros de estética en España.
@@ -42,7 +42,7 @@ export function Footer() {
         </div>
         <div className="rule my-12"></div>
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-[13px] text-stone">
-          <p>© 2026 Gomper · Tenerife, España · Hecho con cariño en Canarias 🌊</p>
+          <p>© 2026 Gonper · Tenerife, España · Hecho con cariño en Canarias 🌊</p>
           <div className="flex items-center gap-5">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-sage"></span>Sistemas operativos

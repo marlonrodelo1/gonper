@@ -57,7 +57,7 @@ export function ComoFunciona() {
             </h2>
           </div>
           <p className="text-stone max-w-[360px] text-[15px] leading-relaxed">
-            Conecta una vez, configura tus servicios y horarios. Gomper hace el
+            Conecta una vez, configura tus servicios y horarios. Gonper hace el
             resto. La media de un salón Studio: 12 minutos de setup.
           </p>
         </div>

@@ -31,7 +31,7 @@ export function Footer({ salon }: Props) {
               href="/"
               className="text-ink font-medium hover:text-gomper-accent transition flex items-center gap-1"
             >
-              <Icon.Logo width="13" height="13" /> Gomper
+              <Icon.Logo width="13" height="13" /> Gonper
             </Link>
           </span>
         </div>

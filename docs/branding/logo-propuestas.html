@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gonper · Propuestas de logo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink: #1A1815;
+    --cream: #F7F3EC;
+    --paper: #FBF8F2;
+    --stone: #6B6356;
+    --line: #E5DFD3;
+    --terracotta: #C5562C;
+    --terracotta-2: #A8451F;
+    --sage: #8B9D7A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 64px 24px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 40px;
+    margin: 0 0 8px;
+  }
+  .subtitle {
+    color: var(--stone);
+    font-size: 14px;
+    margin: 0 0 48px;
+  }
+  .card {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 56px 40px 40px;
+    margin-bottom: 28px;
+  }
+  .card .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .card h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    font-size: 22px;
+    margin: 0;
+  }
+  .card .why {
+    color: var(--stone);
+    font-size: 13px;
+    max-width: 60%;
+    text-align: right;
+    line-height: 1.5;
+  }
+  .preview-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+  .preview {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 40px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 160px;
+  }
+  .preview.cream { background: var(--cream); }
+  .preview.ink { background: var(--ink); }
+  .preview.terra { background: var(--terracotta); }
+
+  /* === Logo A: wordmark serif italic puro === */
+  .logo-a {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 64px;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .logo-a .dot { color: var(--terracotta); }
+  .ink .logo-a { color: #FBF8F2; }
+  .terra .logo-a { color: #FBF8F2; }
+  .terra .logo-a .dot { color: var(--ink); }
+
+  /* === Logo B: G monograma + wordmark === */
+  .logo-b {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-b .mark {
+    width: 56px; height: 56px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    display: grid; place-items: center;
+    background: var(--cream);
+  }
+  .logo-b .mark span {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 36px;
+    color: var(--ink);
+    line-height: 1;
+    transform: translateY(-2px);
+  }
+  .logo-b .word {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .ink .logo-b .mark {
+    background: var(--ink); border-color: var(--cream);
+  }
+  .ink .logo-b .mark span { color: var(--cream); }
+  .ink .logo-b .word { color: var(--cream); }
+  .terra .logo-b .mark { background: var(--terracotta); border-color: var(--cream); }
+  .terra .logo-b .mark span { color: var(--cream); }
+  .terra .logo-b .word { color: var(--cream); }
+
+  /* === Logo C: wordmark con G personalizada (Playfair + dot terracotta) === */
+  .logo-c {
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+    font-size: 56px;
+    letter-spacing: -0.015em;
+    line-height: 1;
+    color: var(--ink);
+    position: relative;
+  }
+  .logo-c .small {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin-top: 6px;
+  }
+  .logo-c::after {
+    content: '';
+    position: absolute;
+    bottom: 36px; right: -12px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--terracotta);
+  }
+  .ink .logo-c { color: var(--cream); }
+  .ink .logo-c .small { color: rgba(247,243,236,0.55); }
+  .terra .logo-c { color: var(--cream); }
+  .terra .logo-c .small { color: rgba(247,243,236,0.7); }
+  .terra .logo-c::after { background: var(--ink); }
+
+  /* === Versión avatar/favicon (32px) === */
+  .favicon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 30px;
+    color: var(--ink);
+    background: var(--cream);
+    border: 1.5px solid var(--ink);
+    line-height: 1;
+  }
+  .ink .favicon { background: var(--ink); color: var(--cream); border-color: var(--cream); }
+  .terra .favicon { background: var(--terracotta); color: var(--cream); border-color: var(--cream); }
+
+  /* Lado de ejemplo en navegación */
+  .nav-demo {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 24px;
+  }
+  .nav-demo .small-mark {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--cream);
+    border: 1px solid var(--ink);
+    display: grid; place-items: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 500;
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .nav-demo .nav-name {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  .footer-note {
+    margin-top: 64px;
+    padding: 20px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    font-size: 13px;
+    color: var(--stone);
+    line-height: 1.6;
+  }
+  .footer-note strong { color: var(--ink); }
+
+  /* Print friendly */
+  @media print {
+    body { padding: 24px; background: white; }
+    .card { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Gonper · propuestas de logo</h1>
+  <p class="subtitle">González + Pertuz. Tres direcciones — paleta cream + ink + terracotta. Mira en cream, oscuro y terracota cómo se comporta cada una.</p>
+
+  <!-- ===== A ===== -->
+  <section class="card">
+    <div class="meta">
+      <h2>A · Wordmark serif italic puro</h2>
+      <p class="why">Boutique editorial. Atemporal. Tipo magazine de moda. Sin símbolo: la tipografía es el logo. <em>Punto terracotta sutil</em> que ancla la marca.</p>
+    </div>
+    <div class="preview-row">
+      <div class="preview cream">
+        <span class="logo-a">Gonper<span class="dot">.</span></span>
+      </div>
+      <div class="preview ink">
+        <span class="logo-a">Gonper<span class="dot">.</span></span>
+      </div>
+      <div class="preview terra">
+        <span class="logo-a">Gonper<span class="dot">.</span></span>
+      </div>
+    </div>
+    <div class="preview-row" style="margin-top: 16px; grid-template-columns: 1fr 1fr 1fr;">
+      <div class="preview cream"><div class="favicon">G</div></div>
+      <div class="preview ink"><div class="favicon">G</div></div>
+      <div class="preview terra"><div class="favicon">G</div></div>
+    </div>
+  </section>
+
+  <!-- ===== B ===== -->
+  <section class="card">
+    <div class="meta">
+      <h2>B · Monograma "G" + wordmark sans</h2>
+      <p class="why">Más estructurado. La "G" en serif italic dentro de círculo funciona perfecto como avatar de Telegram, favicon y header. El wordmark al lado en sans (la fuente del panel).</p>
+    </div>
+    <div class="preview-row">
+      <div class="preview cream">
+        <div class="logo-b">
+          <div class="mark"><span>G</span></div>
+          <div class="word">Gonper</div>
+        </div>
+      </div>
+      <div class="preview ink">
+        <div class="logo-b">
+          <div class="mark"><span>G</span></div>
+          <div class="word">Gonper</div>
+        </div>
+      </div>
+      <div class="preview terra">
+        <div class="logo-b">
+          <div class="mark"><span>G</span></div>
+          <div class="word">Gonper</div>
+        </div>
+      </div>
+    </div>
+    <p style="font-size: 12px; color: var(--stone); margin-top: 18px;">En la barra superior del panel se vería así:</p>
+    <div class="nav-demo">
+      <div class="small-mark">G</div>
+      <div class="nav-name">Gonper</div>
+    </div>
+  </section>
+
+  <!-- ===== C ===== -->
+  <section class="card">
+    <div class="meta">
+      <h2>C · Wordmark Playfair + tag</h2>
+      <p class="why">El más versátil. Serif Playfair (no italic) más sólida + tag "STUDIO" o "SALONES" debajo. Punto terracotta como sello. Tipo marca premium con personalidad propia.</p>
+    </div>
+    <div class="preview-row">
+      <div class="preview cream">
+        <span class="logo-c">Gonper<span class="small">Studio</span></span>
+      </div>
+      <div class="preview ink">
+        <span class="logo-c">Gonper<span class="small">Studio</span></span>
+      </div>
+      <div class="preview terra">
+        <span class="logo-c">Gonper<span class="small">Studio</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Nota sobre el rename del código -->
+  <div class="footer-note">
+    <strong>Nota técnica:</strong> en todo el código y BD aparece "Gomper" (con M). El dominio es <strong>gestori.es</strong> (porque gonper.es está cogido). Si te quedas con la marca <strong>Gonper</strong>, conviene cambiar todas las referencias del código de "Gomper" → "Gonper" para que el panel, los emails y la web pública digan lo mismo. Es ~30 min de find&amp;replace + push. Cuando elijas el logo lo hago.
+  </div>
+
+</div>
+</body>
+</html>

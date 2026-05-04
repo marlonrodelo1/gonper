@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "./icons";
+import { GonperLogo } from "@/components/brand/gonper-logo";
 
 export function TopNav() {
   const [open, setOpen] = useState(false);
@@ -33,8 +34,7 @@ export function TopNav() {
           }}
         >
           <a href="#" className="flex items-center gap-2 text-ink shrink-0 pr-2">
-            <Icon.Logo width="20" height="20" />
-            <span className="text-[16px] tight font-medium">Gomper</span>
+            <GonperLogo size={20} tag={null} color="#1A1815" />
             <span className="hidden sm:inline ml-1 text-[10px] uppercase tracking-[0.2em] text-stone/70 font-medium">
               Beta
             </span>

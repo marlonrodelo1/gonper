@@ -12,7 +12,7 @@ import { FinalCTA } from "./final-cta";
 import { Footer } from "./footer";
 
 /**
- * Landing pública de Gomper.
+ * Landing pública de Gonper.
  *
  * Este wrapper es un Client Component porque tiene que llamar `useReveal()`
  * para que IntersectionObserver active las animaciones de cada `.reveal`.

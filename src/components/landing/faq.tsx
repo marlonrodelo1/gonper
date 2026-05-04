@@ -10,7 +10,7 @@ const items = [
   },
   {
     q: "¿Y si un cliente no responde al recordatorio?",
-    a: "A los 30 minutos sin respuesta, Gomper libera el hueco automáticamente y se lo ofrece a la lista de espera. Tú no haces nada.",
+    a: "A los 30 minutos sin respuesta, Gonper libera el hueco automáticamente y se lo ofrece a la lista de espera. Tú no haces nada.",
   },
   {
     q: '¿Puedo cambiar el nombre de "Juanita"?',

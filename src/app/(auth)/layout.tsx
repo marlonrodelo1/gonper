@@ -18,7 +18,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           aria-label="Volver a inicio"
         >
           <span className="tight font-serif-it text-[34px] leading-none text-ink">
-            Gomper
+            Gonper
           </span>
         </Link>
 

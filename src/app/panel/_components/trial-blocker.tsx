@@ -40,8 +40,8 @@ export function TrialBlocker({
     ? 'Activa tu cuenta'
     : 'Tu prueba gratuita ha terminado';
   const descripcion = sinSuscripcion
-    ? 'Para empezar a usar Gomper necesitas añadir tu tarjeta. Tienes 7 días gratis y no se te cobra nada hoy. Cancelas cuando quieras.'
-    : 'Para seguir usando Gomper, suscríbete al plan Básico (30 €/mes, sin permanencia, cancelas cuando quieras).';
+    ? 'Para empezar a usar Gonper necesitas añadir tu tarjeta. Tienes 7 días gratis y no se te cobra nada hoy. Cancelas cuando quieras.'
+    : 'Para seguir usando Gonper, suscríbete al plan Básico (30 €/mes, sin permanencia, cancelas cuando quieras).';
   const cta = sinSuscripcion ? 'Añadir tarjeta y activar' : 'Suscribirme ahora';
 
   return (

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 80" width="280" height="80" role="img" aria-label="Gonper Studio">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&amp;display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500&amp;display=swap');
+    .word { font-family: 'Playfair Display', 'Times New Roman', serif; font-weight: 500; font-size: 48px; fill: #1A1815; letter-spacing: -0.72px; }
+    .tag  { font-family: 'Inter', -apple-system, sans-serif; font-weight: 500; font-size: 10px; fill: #6B6356; letter-spacing: 3.2px; text-transform: uppercase; }
+  </style>
+  <text x="0" y="48" class="word">Gonper</text>
+  <circle cx="218" cy="38" r="4" fill="#C5562C" />
+  <text x="0" y="68" class="tag">STUDIO</text>
+</svg>

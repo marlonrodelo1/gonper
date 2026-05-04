@@ -137,7 +137,7 @@
 }
 
 /* =====================================================================
-   Gomper · Brand palette (Landing + Salon-Publico)
+   Gonper · Brand palette (Landing + Salon-Publico)
    Convive en paralelo con tokens shadcn — no los toca.
 ===================================================================== */
 
@@ -211,6 +211,9 @@
   font-family: var(--font-instrument-serif), 'Instrument Serif', serif;
   font-style: italic;
   font-weight: 400;
+}
+.font-playfair {
+  font-family: var(--font-playfair), 'Playfair Display', 'Times New Roman', serif;
 }
 .tight { letter-spacing: -0.04em; }
 .tighter { letter-spacing: -0.05em; }

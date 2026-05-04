@@ -269,7 +269,7 @@ export default async function ConfigAgentePage({
             No negociables
           </h2>
           <p className="text-[13px] text-stone">
-            Independientemente del tono, todos los agentes Gomper siguen estas
+            Independientemente del tono, todos los agentes Gonper siguen estas
             reglas.
           </p>
         </header>

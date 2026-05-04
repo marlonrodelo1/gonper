@@ -113,7 +113,7 @@ export async function generateMetadata({
     .limit(1);
 
   if (!salon) {
-    return { title: 'Salón no encontrado · Gomper' };
+    return { title: 'Salón no encontrado · Gonper' };
   }
 
   const titulo = `${salon.nombre} · Reserva con Juanita`;
@@ -130,7 +130,7 @@ export async function generateMetadata({
       url,
       title: titulo,
       description: descripcion,
-      siteName: 'Gomper · gestori.es',
+      siteName: 'Gonper · gestori.es',
       locale: 'es_ES',
       images: imagen
         ? [

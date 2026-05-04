@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { PosthogPageview } from "@/components/posthog-pageview";
 
@@ -21,10 +21,17 @@ const instrumentSerif = Instrument_Serif({
   display: "swap",
 });
 
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Gomper · Una recepcionista que no descansa nunca",
+  title: "Gonper · Una recepcionista que no descansa nunca",
   description:
-    "Gomper atiende reservas por Telegram 24/7, confirma cada cita una hora antes y libera el hueco si no hay respuesta. Para barberías, peluquerías y centros de estética en España.",
+    "Gonper atiende reservas por Telegram 24/7, confirma cada cita una hora antes y libera el hueco si no hay respuesta. Para barberías, peluquerías y centros de estética en España.",
 };
 
 export default function RootLayout({
@@ -35,7 +42,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${playfair.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         {children}
