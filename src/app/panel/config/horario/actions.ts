@@ -7,11 +7,11 @@ import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-type CurrentSalon = { id: string } | null;
+type CurrentSalon = { id: string; slug?: string } | null;
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
-async function requireSalon(): Promise<{ id: string }> {
+async function requireSalon(): Promise<{ id: string; slug: string | null }> {
   const salon = (await getCurrentSalon()) as CurrentSalon;
   if (!salon || !salon.id) {
     redirect(
@@ -19,7 +19,11 @@ async function requireSalon(): Promise<{ id: string }> {
         encodeURIComponent('No se pudo identificar el salón'),
     );
   }
-  return salon;
+  return { id: salon.id, slug: salon.slug ?? null };
+}
+
+function revalidarWebPublica(slug: string | null) {
+  if (slug) revalidatePath(`/s/${slug}`);
 }
 
 function redirectError(msg: string): never {
@@ -56,6 +60,8 @@ export async function agregarTramo(formData: FormData) {
   });
 
   revalidatePath('/panel/config/horario');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/config/horario');
 }
 
@@ -80,4 +86,6 @@ export async function eliminarTramo(formData: FormData) {
     .where(and(eq(horarios.id, id), eq(horarios.salonId, salon.id)));
 
   revalidatePath('/panel/config/horario');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
 }

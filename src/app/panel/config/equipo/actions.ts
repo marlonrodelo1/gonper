@@ -7,7 +7,7 @@ import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-type CurrentSalon = { id: string } | null;
+type CurrentSalon = { id: string; slug?: string } | null;
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
@@ -36,7 +36,7 @@ function validar(data: ReturnType<typeof parseFormData>): string | null {
   return null;
 }
 
-async function requireSalon(): Promise<{ id: string }> {
+async function requireSalon(): Promise<{ id: string; slug: string | null }> {
   const salon = (await getCurrentSalon()) as CurrentSalon;
   if (!salon || !salon.id) {
     redirect(
@@ -44,7 +44,11 @@ async function requireSalon(): Promise<{ id: string }> {
         encodeURIComponent('No se pudo identificar el salón'),
     );
   }
-  return salon;
+  return { id: salon.id, slug: salon.slug ?? null };
+}
+
+function revalidarWebPublica(slug: string | null) {
+  if (slug) revalidatePath(`/s/${slug}`);
 }
 
 export async function crearProfesional(formData: FormData) {
@@ -63,6 +67,8 @@ export async function crearProfesional(formData: FormData) {
   });
 
   revalidatePath('/panel/config/equipo');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/config/equipo');
 }
 
@@ -98,6 +104,8 @@ export async function actualizarProfesional(id: string, formData: FormData) {
     );
 
   revalidatePath('/panel/config/equipo');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/config/equipo');
 }
 
@@ -135,6 +143,8 @@ export async function toggleProfesionalActivo(formData: FormData) {
     );
 
   revalidatePath('/panel/config/equipo');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
 }
 
 export async function eliminarProfesional(formData: FormData) {
@@ -175,4 +185,6 @@ export async function eliminarProfesional(formData: FormData) {
   }
 
   revalidatePath('/panel/config/equipo');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
 }

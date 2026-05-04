@@ -7,7 +7,7 @@ import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-type CurrentSalon = { id: string } | null;
+type CurrentSalon = { id: string; slug?: string } | null;
 
 function errorRedirect(id: string | null, msg: string): never {
   const url = `/panel/servicios/${id ? id + '/editar' : 'nuevo'}?error=${encodeURIComponent(msg)}`;
@@ -43,12 +43,16 @@ function validar(
   return null;
 }
 
-async function requireSalon(): Promise<{ id: string }> {
+async function requireSalon(): Promise<{ id: string; slug: string | null }> {
   const salon = (await getCurrentSalon()) as CurrentSalon;
   if (!salon || !salon.id) {
     redirect('/panel/servicios?error=' + encodeURIComponent('No se pudo identificar el salón'));
   }
-  return salon;
+  return { id: salon.id, slug: salon.slug ?? null };
+}
+
+function revalidarWebPublica(slug: string | null) {
+  if (slug) revalidatePath(`/s/${slug}`);
 }
 
 export async function crearServicio(formData: FormData) {
@@ -67,6 +71,8 @@ export async function crearServicio(formData: FormData) {
   });
 
   revalidatePath('/panel/servicios');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/servicios');
 }
 
@@ -99,6 +105,8 @@ export async function actualizarServicio(id: string, formData: FormData) {
     .where(and(eq(servicios.id, id), eq(servicios.salonId, salon.id)));
 
   revalidatePath('/panel/servicios');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/servicios');
 }
 
@@ -126,6 +134,8 @@ export async function toggleServicioActivo(formData: FormData) {
     .where(and(eq(servicios.id, id), eq(servicios.salonId, salon.id)));
 
   revalidatePath('/panel/servicios');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
 }
 
 export async function eliminarServicio(formData: FormData) {
@@ -151,4 +161,6 @@ export async function eliminarServicio(formData: FormData) {
     .where(and(eq(servicios.id, id), eq(servicios.salonId, salon.id)));
 
   revalidatePath('/panel/servicios');
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
 }

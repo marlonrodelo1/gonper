@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-type CurrentSalon = { id: string } | null;
+type CurrentSalon = { id: string; slug?: string } | null;
 
 const TIPOS_NEGOCIO = ['barberia', 'peluqueria', 'estetica', 'manicura', 'otro'] as const;
 const TIMEZONES = [
@@ -23,14 +23,18 @@ const TIMEZONES = [
 const GENEROS = ['femenino', 'masculino', 'neutro'] as const;
 const TONOS = ['profesional', 'cercano', 'desenfadado'] as const;
 
-async function requireSalon(): Promise<{ id: string }> {
+async function requireSalon(): Promise<{ id: string; slug: string | null }> {
   const salon = (await getCurrentSalon()) as CurrentSalon;
   if (!salon || !salon.id) {
     redirect(
       '/panel/config?error=' + encodeURIComponent('No se pudo identificar el salón'),
     );
   }
-  return salon;
+  return { id: salon.id, slug: salon.slug ?? null };
+}
+
+function revalidarWebPublica(slug: string | null) {
+  if (slug) revalidatePath(`/s/${slug}`);
 }
 
 function redirectError(path: string, msg: string): never {
@@ -82,7 +86,9 @@ export async function actualizarDatosSalon(formData: FormData) {
   }
 
   revalidatePath('/panel/config');
+  revalidatePath('/panel/config/reservas');
   revalidatePath('/panel', 'layout');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/config?ok=1');
 }
 
@@ -136,5 +142,6 @@ export async function actualizarAgente(formData: FormData) {
 
   revalidatePath('/panel/config/agente');
   revalidatePath('/panel', 'layout');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/config/agente?ok=1');
 }
