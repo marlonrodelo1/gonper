@@ -20,6 +20,12 @@ type NavItem = {
   icon: (p: React.SVGProps<SVGSVGElement>) => React.ReactNode;
   /** Identificador opcional para anclar pasos del tour (data-tour). */
   tour?: string;
+  /**
+   * Prefijo alternativo para considerar el item activo. Útil cuando el
+   * link lleva a una sub-ruta (p.ej. /panel/config/reservas) pero quieres
+   * que aparezca activo en cualquier /panel/config/*.
+   */
+  activeMatch?: string;
 };
 
 const navOperacion: NavItem[] = [
@@ -38,14 +44,17 @@ const navWeb: NavItem[] = [
   { href: '/panel/resenas', label: 'Reseñas', icon: Icon.Sparkle },
 ];
 
+// Una sola entrada en sidebar — el detalle (Datos, Agente, Bot, Equipo,
+// Horario, Cierres, Suscripción) vive en las tabs horizontales del
+// layout de /panel/config para no duplicar.
 const navConfig: NavItem[] = [
-  { href: '/panel/config/reservas', label: 'Reservas', icon: Icon.Sett, tour: 'nav-reservas' },
-  { href: '/panel/config', label: 'Perfil del salón', icon: Icon.Sett },
-  { href: '/panel/config/equipo', label: 'Equipo', icon: Icon.Sett },
-  { href: '/panel/config/agente', label: 'Agente · Juanita', icon: Icon.Sett },
-  { href: '/panel/config/horario', label: 'Horario', icon: Icon.Sett },
-  { href: '/panel/config/bot', label: 'Bot Telegram', icon: Icon.Sett, tour: 'nav-bot' },
-  { href: '/panel/config/suscripcion', label: 'Suscripción', icon: Icon.Sett, tour: 'nav-suscripcion' },
+  {
+    href: '/panel/config/reservas',
+    label: 'Configuración',
+    icon: Icon.Sett,
+    tour: 'nav-config',
+    activeMatch: '/panel/config',
+  },
 ];
 
 export function PanelSidebar({
@@ -60,9 +69,10 @@ export function PanelSidebar({
 
   const initial = (salonNombre ?? 'G').trim().charAt(0).toUpperCase() || 'G';
 
-  const isActive = (href: string) => {
-    if (href === '/panel/hoy') return pathname === '/panel/hoy';
-    return pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (item: NavItem) => {
+    const match = item.activeMatch ?? item.href;
+    if (match === '/panel/hoy') return pathname === '/panel/hoy';
+    return pathname === match || pathname.startsWith(`${match}/`);
   };
 
   return (
@@ -134,7 +144,7 @@ export function PanelSidebar({
               Operación
             </div>
             {navOperacion.map((it) => {
-              const active = isActive(it.href);
+              const active = isActive(it);
               const IconCmp = it.icon;
               return (
                 <Link
@@ -164,7 +174,7 @@ export function PanelSidebar({
               Web del salón
             </div>
             {navWeb.map((it) => {
-              const active = isActive(it.href);
+              const active = isActive(it);
               const IconCmp = it.icon;
               return (
                 <Link
@@ -191,7 +201,7 @@ export function PanelSidebar({
               Configuración
             </div>
             {navConfig.map((it) => {
-              const active = isActive(it.href);
+              const active = isActive(it);
               return (
                 <Link
                   key={it.href}

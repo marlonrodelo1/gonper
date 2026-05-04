@@ -3,13 +3,15 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+// Orden por prioridad de uso. "Reservas" es el hub unificado; el resto
+// son las pantallas detalladas accesibles desde aquí.
 const tabs = [
   { href: '/panel/config/reservas', label: 'Reservas' },
   { href: '/panel/config', label: 'Datos del salón', exact: true },
+  { href: '/panel/config/horario', label: 'Horario' },
+  { href: '/panel/config/equipo', label: 'Equipo' },
   { href: '/panel/config/agente', label: 'Agente' },
   { href: '/panel/config/bot', label: 'Bot' },
-  { href: '/panel/config/equipo', label: 'Equipo' },
-  { href: '/panel/config/horario', label: 'Horario' },
   { href: '/panel/config/cierres', label: 'Cierres' },
   { href: '/panel/config/suscripcion', label: 'Suscripción' },
 ];

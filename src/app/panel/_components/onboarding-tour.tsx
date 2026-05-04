@@ -69,21 +69,13 @@ const STEPS: Step[] = [
       'Promociones, galería y reseñas se muestran en gestori.es/tu-slug. Edita aquí y verás los cambios en tiempo real.',
   },
   {
-    target: '[data-tour="nav-bot"]',
+    target: '[data-tour="nav-config"]',
     side: 'right',
-    badge: 'Bot Telegram',
-    titulo: 'Configura tu bot — paso clave',
+    badge: 'Configuración',
+    titulo: 'Tu hub de configuración',
     cuerpo:
-      'Crea un bot en BotFather, pega el token y queda operativo. Tus clientes reservarán por Telegram 24/7 hablando con Juanita. También puedes hablar tú con tu propio bot como dueño.',
-    cta: { label: 'Ir a Bot Telegram', href: '/panel/config/bot' },
-  },
-  {
-    target: '[data-tour="nav-suscripcion"]',
-    side: 'right',
-    badge: 'Suscripción',
-    titulo: 'Tu plan y facturación',
-    cuerpo:
-      'Aquí gestionas la suscripción: cambias tarjeta, descargas facturas o cancelas cuando quieras.',
+      'Dentro tienes todo: datos del salón, disponibilidad, equipo, agente Juanita, bot de Telegram, cierres y suscripción. Empieza por "Bot Telegram" y "Horario" — son los más importantes.',
+    cta: { label: 'Ir a Configuración', href: '/panel/config/reservas' },
   },
   {
     target: null,
