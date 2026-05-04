@@ -21,14 +21,30 @@ export interface CalcularSlotsOptions {
   duracionMin: number;
   profesionalId: string; // requerido — los slots son por profesional
   timezone?: string; // 'Europe/Madrid' por defecto
-  granularidadMin?: number; // default 5
+  /**
+   * Granularidad explícita en minutos. Si no se pasa, se calcula en
+   * función de la duración del servicio:
+   *   - duración ≤ 15  → cada 15 min
+   *   - duración ≤ 30  → cada 30 min
+   *   - duración 31–60 → cada 30 min
+   *   - duración > 60  → cada 60 min
+   * Así no se ofrecen 200 huecos cada 5 min para una "Limpieza facial · 60 min".
+   */
+  granularidadMin?: number;
+}
+
+function granularidadPorDefecto(duracionMin: number): number {
+  if (duracionMin <= 15) return 15;
+  if (duracionMin <= 60) return 30;
+  return 60;
 }
 
 /**
  * Devuelve un array de Date (instantes UTC) representando inicios de slot disponibles.
  */
 export async function calcularSlots(opts: CalcularSlotsOptions): Promise<Date[]> {
-  const granularidad = opts.granularidadMin ?? 5;
+  const granularidad =
+    opts.granularidadMin ?? granularidadPorDefecto(opts.duracionMin);
   const tz = opts.timezone ?? 'Europe/Madrid';
 
   // 1. Día calendario en zona horaria del salón → diaSemana 0-6 (0=domingo)
@@ -99,6 +115,11 @@ export async function calcularSlots(opts: CalcularSlotsOptions): Promise<Date[]>
     );
 
   // 6. Para cada tramo del horario, generar candidatos cada `granularidad` min
+  // Excluir slots cuyo inicio sea anterior a "ahora + 5 min" (no permitir
+  // reservar para el pasado ni para los próximos 5 min — el bot/cliente
+  // necesita tiempo para confirmar).
+  const minimoUtc = Date.now() + 5 * 60_000;
+
   const slots: Date[] = [];
   for (const tramo of tramos) {
     // tramo.inicio y tramo.fin son strings 'HH:MM:SS' (postgres time)
@@ -110,6 +131,10 @@ export async function calcularSlots(opts: CalcularSlotsOptions): Promise<Date[]>
       t + opts.duracionMin * 60_000 <= tramoFinUtc.getTime();
       t += granularidad * 60_000
     ) {
+      // Saltar slots ya pasados (incluye los del mismo día anteriores a
+      // ahora). Los días futuros pasan filtro porque t > minimoUtc.
+      if (t < minimoUtc) continue;
+
       const slotInicio = new Date(t);
       const slotFin = new Date(t + opts.duracionMin * 60_000);
 
