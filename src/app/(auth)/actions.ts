@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { enviarEmailBienvenida } from '@/lib/email/resend';
 import { getStripe, PLANES } from '@/lib/stripe/client';
+import { checkRateLimit } from '@/lib/api/rate-limit';
 
 export async function login(formData: FormData) {
   const email = String(formData.get('email') || '');
@@ -96,6 +97,23 @@ export async function signup(formData: FormData) {
   }
   if (!/^[a-z0-9-]+$/.test(salonSlug)) {
     redirect('/signup?error=' + encodeURIComponent('Slug solo puede contener a-z, 0-9 y guiones'));
+  }
+
+  // Rate limit por IP: máximo 5 signups/día/IP. Bloquea creación masiva
+  // de cuentas falsas (alguien intentando saturar Supabase auth o crear
+  // miles de salones).
+  const hForRl = await headers();
+  const ipForRl = (hForRl.get('x-forwarded-for') || '')
+    .split(',')[0]
+    ?.trim() || hForRl.get('x-real-ip') || 'unknown';
+  const rl = await checkRateLimit('ip', `signup:${ipForRl}`, 5);
+  if (!rl.ok) {
+    redirect(
+      '/signup?error=' +
+        encodeURIComponent(
+          'Demasiados intentos hoy desde tu conexión. Vuelve mañana.',
+        ),
+    );
   }
 
   const admin = createAdminClient();

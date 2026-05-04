@@ -9,6 +9,7 @@ import {
   calcularCosteEur,
   type ChatMessage,
 } from '@/lib/llm/deepseek';
+import { checkRateLimit, getClientIp } from '@/lib/api/rate-limit';
 
 const bodySchema = z.object({
   session_id: z.string().uuid(),
@@ -129,6 +130,20 @@ export async function POST(
     }
     const { session_id, message, visitor_nombre, visitor_telefono } =
       parsed.data;
+
+    // Rate limit por IP (anti-abuso): 100 mensajes/día/IP es generoso
+    // para uso real y bloquea ataques de spam contra DeepSeek.
+    const ip = getClientIp(request);
+    const limit = await checkRateLimit('ip', ip, 100);
+    if (!limit.ok) {
+      return NextResponse.json(
+        {
+          error: 'Has alcanzado el límite diario de mensajes. Vuelve mañana.',
+          code: 'RATE_LIMIT',
+        },
+        { status: 429 },
+      );
+    }
 
     // Carga salón + servicios + horarios en paralelo
     const [salonRows, listaServicios, listaHorarios] = await Promise.all([

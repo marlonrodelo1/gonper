@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 import { getStripe } from '@/lib/stripe/client';
 import { db } from '@/lib/db';
-import { salones } from '@/lib/db/schema';
+import { salones, stripeEventsProcessed } from '@/lib/db/schema';
 import { eq } from 'drizzle-orm';
 import type Stripe from 'stripe';
 
@@ -10,6 +10,14 @@ import type Stripe from 'stripe';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/**
+ * Webhook de Stripe.
+ *
+ * Idempotencia: registramos cada event.id en `stripe_events_processed`
+ * antes de procesarlo. Si Stripe reintenta (timeout/5xx en intento previo),
+ * insert con PRIMARY KEY duplicada falla y devolvemos 200 sin tocar BD —
+ * evitamos updates duplicados de plan/customer/subscription.
+ */
 export async function POST(req: Request) {
   const stripe = getStripe();
   const sig = (await headers()).get('stripe-signature');
@@ -26,6 +34,30 @@ export async function POST(req: Request) {
     return NextResponse.json(
       { error: `Webhook Error: ${(err as Error).message}` },
       { status: 400 },
+    );
+  }
+
+  // Idempotencia: intentamos insertar event_id; si ya existe, salimos.
+  try {
+    await db
+      .insert(stripeEventsProcessed)
+      .values({
+        eventId: event.id,
+        eventType: event.type,
+      });
+  } catch (err) {
+    // 23505 = unique_violation → evento ya procesado, no es un error real.
+    const code =
+      err && typeof err === 'object' && 'code' in err
+        ? (err as { code?: string }).code
+        : undefined;
+    if (code === '23505') {
+      return NextResponse.json({ received: true, duplicate: true });
+    }
+    console.error('[stripe webhook] error guardando event_id', err);
+    return NextResponse.json(
+      { error: 'Internal error' },
+      { status: 500 },
     );
   }
 

@@ -704,6 +704,23 @@ export const adminUsers = pgTable(
 );
 
 // ============================================
+// TABLA: stripe_events_processed (idempotencia webhooks)
+// ============================================
+export const stripeEventsProcessed = pgTable(
+  'stripe_events_processed',
+  {
+    eventId: text('event_id').primaryKey(),
+    eventType: text('event_type').notNull(),
+    processedAt: timestamp('processed_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxProcessedAt: index('idx_stripe_events_processed_at').on(t.processedAt),
+  }),
+);
+
+// ============================================
 // TIPOS INFERIDOS
 // ============================================
 export type Salon = typeof salones.$inferSelect;
