@@ -216,6 +216,62 @@ export async function enviarRecordatorioTrialAcaba(params: {
   });
 }
 
+export async function enviarRecordatorioCita(params: {
+  to: string;
+  clienteNombre: string;
+  salonNombre: string;
+  salonSlug: string;
+  inicioIso: string;
+  servicioNombre: string;
+  duracionMin: number;
+  profesionalNombre: string;
+  timezone?: string;
+}): Promise<EmailResult> {
+  const tz = params.timezone || 'Europe/Madrid';
+  const fecha = new Date(params.inicioIso);
+  const fechaFmt = new Intl.DateTimeFormat('es-ES', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: tz,
+  }).format(fecha);
+  const horaFmt = new Intl.DateTimeFormat('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: tz,
+  }).format(fecha);
+
+  const subject = `Recordatorio de tu cita en ${params.salonNombre}`;
+  const reservarUrl = `${siteUrl}/s/${params.salonSlug}`;
+  const cuerpoHtml = `
+    <tr><td style="padding:8px 32px 16px">
+      <h1 style="margin:0 0 12px;font-size:24px;font-weight:500;line-height:1.2;color:${COLOR_INK}">
+        Recordatorio de tu cita
+      </h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
+        Hola ${escapeHtml(params.clienteNombre.split(' ')[0] ?? params.clienteNombre)}, te recordamos tu cita en
+        <strong>${escapeHtml(params.salonNombre)}</strong>:
+      </p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;font-size:14px;color:${COLOR_INK}">
+        <tr><td style="padding:4px 0;color:${COLOR_STONE};width:120px">📅 Fecha</td><td style="padding:4px 0"><strong>${escapeHtml(fechaFmt)}</strong></td></tr>
+        <tr><td style="padding:4px 0;color:${COLOR_STONE}">⏰ Hora</td><td style="padding:4px 0"><strong>${escapeHtml(horaFmt)}</strong></td></tr>
+        <tr><td style="padding:4px 0;color:${COLOR_STONE}">✂️ Servicio</td><td style="padding:4px 0">${escapeHtml(params.servicioNombre)} (${params.duracionMin} min)</td></tr>
+        <tr><td style="padding:4px 0;color:${COLOR_STONE}">👤 Con</td><td style="padding:4px 0">${escapeHtml(params.profesionalNombre)}</td></tr>
+      </table>
+      <p style="margin:0 0 20px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">
+        Si no puedes asistir, avísanos cuanto antes para liberar el hueco.
+      </p>
+      <div>${botonHtml('Ver salón', reservarUrl)}</div>
+    </td></tr>
+  `;
+  return sendTemplate({
+    to: params.to,
+    subject,
+    html: layout({ titulo: subject, cuerpoHtml }),
+  });
+}
+
 export async function enviarConfirmacionSuscripcion(params: {
   to: string;
   salonNombre: string;

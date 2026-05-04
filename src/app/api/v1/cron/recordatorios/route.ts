@@ -56,6 +56,7 @@ export async function POST(request: Request) {
         cli.id          as cliente_id,
         cli.nombre      as cliente_nombre,
         cli.telefono    as cliente_telefono,
+        cli.email       as cliente_email,
         cli.telegram_id as cliente_telegram_id
       from marcadas m
       join salones s        on s.id = m.salon_id
@@ -85,6 +86,7 @@ export async function POST(request: Request) {
       cliente_id: string;
       cliente_nombre: string;
       cliente_telefono: string | null;
+      cliente_email: string | null;
       cliente_telegram_id: string | bigint | null;
     };
 
@@ -124,6 +126,7 @@ export async function POST(request: Request) {
           id: r.cliente_id,
           nombre: r.cliente_nombre,
           telefono: r.cliente_telefono,
+          email: r.cliente_email,
           telegramId:
             tg === null || tg === undefined
               ? null
