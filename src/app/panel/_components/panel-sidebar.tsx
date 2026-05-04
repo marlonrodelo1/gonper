@@ -39,6 +39,7 @@ const navWeb: NavItem[] = [
 ];
 
 const navConfig: NavItem[] = [
+  { href: '/panel/config/reservas', label: 'Reservas', icon: Icon.Sett, tour: 'nav-reservas' },
   { href: '/panel/config', label: 'Perfil del salón', icon: Icon.Sett },
   { href: '/panel/config/equipo', label: 'Equipo', icon: Icon.Sett },
   { href: '/panel/config/agente', label: 'Agente · Juanita', icon: Icon.Sett },

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const tabs = [
+  { href: '/panel/config/reservas', label: 'Reservas' },
   { href: '/panel/config', label: 'Datos del salón', exact: true },
   { href: '/panel/config/agente', label: 'Agente' },
   { href: '/panel/config/bot', label: 'Bot' },
