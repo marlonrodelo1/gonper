@@ -79,19 +79,25 @@ export default async function EditarImagenPage({
         />
       </div>
 
-      <form action={action} className="card flex flex-col gap-5 p-6">
+      <form
+        action={action}
+        encType="multipart/form-data"
+        className="card flex flex-col gap-5 p-6"
+      >
         <div className="space-y-2">
-          <Label htmlFor="url" className="text-[12.5px] text-stone">
-            URL de la imagen
+          <Label htmlFor="archivo" className="text-[12.5px] text-stone">
+            Reemplazar imagen (opcional)
           </Label>
           <input
-            id="url"
-            name="url"
-            type="url"
-            required
-            defaultValue={imagen.url}
-            className={inputClass}
+            id="archivo"
+            name="archivo"
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+            className="block w-full cursor-pointer rounded-2xl border border-line bg-paper px-4 py-3 text-[13.5px] text-ink file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-1.5 file:text-[12px] file:font-medium file:text-cream hover:file:opacity-90"
           />
+          <p className="text-[11.5px] text-stone/80">
+            Si dejas este campo vacío, se conserva la imagen actual.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

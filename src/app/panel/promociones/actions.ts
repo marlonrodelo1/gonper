@@ -7,7 +7,7 @@ import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-type CurrentSalon = { id: string } | null;
+type CurrentSalon = { id: string; slug?: string } | null;
 
 function errorRedirect(id: string | null, msg: string): never {
   const url = `/panel/promociones/${id ? id + '/editar' : 'nuevo'}?error=${encodeURIComponent(msg)}`;
@@ -58,12 +58,16 @@ function validar(data: ReturnType<typeof parseFormData>): string | null {
   return null;
 }
 
-async function requireSalon(): Promise<{ id: string }> {
+async function requireSalon(): Promise<{ id: string; slug: string | null }> {
   const salon = (await getCurrentSalon()) as CurrentSalon;
   if (!salon || !salon.id) {
     redirect('/panel/promociones?error=' + encodeURIComponent('No se pudo identificar el salón'));
   }
-  return salon;
+  return { id: salon.id, slug: salon.slug ?? null };
+}
+
+function revalidarWebPublica(slug: string | null) {
+  if (slug) revalidatePath(`/s/${slug}`);
 }
 
 export async function crearPromocion(formData: FormData) {
@@ -88,6 +92,7 @@ export async function crearPromocion(formData: FormData) {
   });
 
   revalidatePath('/panel/promociones');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/promociones');
 }
 
@@ -126,6 +131,7 @@ export async function actualizarPromocion(id: string, formData: FormData) {
     .where(and(eq(promociones.id, id), eq(promociones.salonId, salon.id)));
 
   revalidatePath('/panel/promociones');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/promociones');
 }
 
@@ -157,6 +163,7 @@ export async function togglePromocionActiva(formData: FormData) {
     .where(and(eq(promociones.id, id), eq(promociones.salonId, salon.id)));
 
   revalidatePath('/panel/promociones');
+  revalidarWebPublica(salon.slug);
 }
 
 export async function eliminarPromocion(formData: FormData) {
@@ -182,4 +189,5 @@ export async function eliminarPromocion(formData: FormData) {
     .where(and(eq(promociones.id, id), eq(promociones.salonId, salon.id)));
 
   revalidatePath('/panel/promociones');
+  revalidarWebPublica(salon.slug);
 }

@@ -7,7 +7,7 @@ import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-type CurrentSalon = { id: string } | null;
+type CurrentSalon = { id: string; slug?: string } | null;
 
 const FUENTES_VALIDAS = ['manual', 'google', 'telegram', 'web'] as const;
 type Fuente = (typeof FUENTES_VALIDAS)[number];
@@ -54,12 +54,16 @@ function validar(data: ReturnType<typeof parseFormData>): string | null {
   return null;
 }
 
-async function requireSalon(): Promise<{ id: string }> {
+async function requireSalon(): Promise<{ id: string; slug: string | null }> {
   const salon = (await getCurrentSalon()) as CurrentSalon;
   if (!salon || !salon.id) {
     redirect('/panel/resenas?error=' + encodeURIComponent('No se pudo identificar el salón'));
   }
-  return salon;
+  return { id: salon.id, slug: salon.slug ?? null };
+}
+
+function revalidarWebPublica(slug: string | null) {
+  if (slug) revalidatePath(`/s/${slug}`);
 }
 
 export async function crearResena(formData: FormData) {
@@ -81,6 +85,7 @@ export async function crearResena(formData: FormData) {
   });
 
   revalidatePath('/panel/resenas');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/resenas');
 }
 
@@ -115,6 +120,7 @@ export async function actualizarResena(id: string, formData: FormData) {
     .where(and(eq(resenas.id, id), eq(resenas.salonId, salon.id)));
 
   revalidatePath('/panel/resenas');
+  revalidarWebPublica(salon.slug);
   redirect('/panel/resenas');
 }
 
@@ -146,6 +152,7 @@ export async function toggleResenaAprobada(formData: FormData) {
     .where(and(eq(resenas.id, id), eq(resenas.salonId, salon.id)));
 
   revalidatePath('/panel/resenas');
+  revalidarWebPublica(salon.slug);
 }
 
 export async function toggleResenaDestacada(formData: FormData) {
@@ -176,6 +183,7 @@ export async function toggleResenaDestacada(formData: FormData) {
     .where(and(eq(resenas.id, id), eq(resenas.salonId, salon.id)));
 
   revalidatePath('/panel/resenas');
+  revalidarWebPublica(salon.slug);
 }
 
 export async function eliminarResena(formData: FormData) {
@@ -201,4 +209,5 @@ export async function eliminarResena(formData: FormData) {
     .where(and(eq(resenas.id, id), eq(resenas.salonId, salon.id)));
 
   revalidatePath('/panel/resenas');
+  revalidarWebPublica(salon.slug);
 }

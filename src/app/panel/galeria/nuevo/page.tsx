@@ -30,8 +30,8 @@ export default async function NuevaImagenPage({
           <span className="font-serif-it text-stone/70">a tu galería</span>
         </h1>
         <p className="mt-1 text-[13.5px] text-stone">
-          Por ahora se añaden por URL externa (Imgur, Cloudinary…). Próximamente
-          subida directa.
+          Sube fotos del local, servicios o trabajos terminados. Máx. 5 MB por
+          imagen. JPG, PNG, WEBP o AVIF.
         </p>
       </div>
 
@@ -48,18 +48,22 @@ export default async function NuevaImagenPage({
         </div>
       ) : null}
 
-      <form action={crearImagen} className="card flex flex-col gap-5 p-6">
+      <form
+        action={crearImagen}
+        encType="multipart/form-data"
+        className="card flex flex-col gap-5 p-6"
+      >
         <div className="space-y-2">
-          <Label htmlFor="url" className="text-[12.5px] text-stone">
-            URL de la imagen
+          <Label htmlFor="archivo" className="text-[12.5px] text-stone">
+            Imagen
           </Label>
           <input
-            id="url"
-            name="url"
-            type="url"
+            id="archivo"
+            name="archivo"
+            type="file"
+            accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
             required
-            placeholder="https://i.imgur.com/foo.jpg"
-            className={inputClass}
+            className="block w-full cursor-pointer rounded-2xl border border-line bg-paper px-4 py-3 text-[13.5px] text-ink file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-1.5 file:text-[12px] file:font-medium file:text-cream hover:file:opacity-90"
           />
         </div>
 
