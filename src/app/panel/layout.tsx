@@ -74,6 +74,11 @@ export default async function PanelLayout({
     salon && typeof salon.slug === "string" && salon.slug.length > 0
       ? salon.slug
       : null;
+  const salonLogoUrl = salon
+    ? (typeof salon.logo_url === "string" && salon.logo_url) ||
+      (typeof salon.logoUrl === "string" && salon.logoUrl) ||
+      null
+    : null;
 
   const { trialExpirado, planActivo, sinSuscripcion } =
     leerEstadoSuscripcion(salon);
@@ -85,6 +90,7 @@ export default async function PanelLayout({
         salonNombre={salonNombre}
         salonPlan={salonPlan}
         salonSlug={salonSlug}
+        salonLogoUrl={salonLogoUrl}
         isSuperAdmin={superAdmin !== null}
       />
       <main className="min-w-0 flex-1 pt-12 md:pt-0">{children}</main>

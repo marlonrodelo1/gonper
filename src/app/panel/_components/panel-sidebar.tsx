@@ -12,6 +12,7 @@ export type PanelSidebarProps = {
   salonNombre: string | null;
   salonPlan: string | null;
   salonSlug: string | null;
+  salonLogoUrl?: string | null;
   isSuperAdmin?: boolean;
 };
 
@@ -62,6 +63,7 @@ export function PanelSidebar({
   userEmail,
   salonNombre,
   salonSlug,
+  salonLogoUrl,
   isSuperAdmin = false,
 }: PanelSidebarProps) {
   const pathname = usePathname();
@@ -119,17 +121,26 @@ export function PanelSidebar({
           </span>
         </div>
 
-        {/* Salón switcher (placeholder visual) */}
+        {/* Salón switcher: logo del salón si existe, inicial como fallback */}
         <div className="mx-3 flex cursor-pointer items-center gap-3 rounded-xl border border-line bg-paper px-3 py-2.5 hover:border-line-2">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-terracotta to-[#A8451F] text-[12px] font-medium text-paper">
-            {initial}
-          </div>
+          {salonLogoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={salonLogoUrl}
+              alt={salonNombre ?? 'logo del salón'}
+              className="h-8 w-8 shrink-0 rounded-lg border border-line object-cover"
+            />
+          ) : (
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-terracotta to-[#A8451F] text-[12px] font-medium text-paper">
+              {initial}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <div className="tight truncate text-[13px] font-medium text-ink">
               {salonNombre ?? 'Tu salón'}
             </div>
             <div className="truncate text-[11px] text-stone">
-              gomper.es/{salonSlug ?? '—'}
+              gestori.es/{salonSlug ?? '—'}
             </div>
           </div>
           <Icon.Caret width="14" height="14" className="text-stone" />
