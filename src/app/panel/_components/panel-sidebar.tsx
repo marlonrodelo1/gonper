@@ -18,15 +18,17 @@ type NavItem = {
   href: string;
   label: string;
   icon: (p: React.SVGProps<SVGSVGElement>) => React.ReactNode;
+  /** Identificador opcional para anclar pasos del tour (data-tour). */
+  tour?: string;
 };
 
 const navOperacion: NavItem[] = [
-  { href: '/panel/hoy', label: 'Hoy', icon: Icon.Home },
-  { href: '/panel/agenda', label: 'Agenda', icon: Icon.Cal },
-  { href: '/panel/citas/nueva', label: 'Citas', icon: Icon.Cal },
+  { href: '/panel/hoy', label: 'Hoy', icon: Icon.Home, tour: 'nav-hoy' },
+  { href: '/panel/agenda', label: 'Agenda', icon: Icon.Cal, tour: 'nav-agenda' },
+  { href: '/panel/citas/nueva', label: 'Nueva cita', icon: Icon.Cal },
   { href: '/panel/conversaciones', label: 'Conversaciones', icon: Icon.Chat },
-  { href: '/panel/clientes', label: 'Clientes', icon: Icon.Users },
-  { href: '/panel/servicios', label: 'Servicios', icon: Icon.Scissors },
+  { href: '/panel/clientes', label: 'Clientes', icon: Icon.Users, tour: 'nav-clientes' },
+  { href: '/panel/servicios', label: 'Servicios', icon: Icon.Scissors, tour: 'nav-servicios' },
   { href: '/panel/stats', label: 'Métricas', icon: Icon.Chart },
 ];
 
@@ -41,7 +43,8 @@ const navConfig: NavItem[] = [
   { href: '/panel/config/equipo', label: 'Equipo', icon: Icon.Sett },
   { href: '/panel/config/agente', label: 'Agente · Juanita', icon: Icon.Sett },
   { href: '/panel/config/horario', label: 'Horario', icon: Icon.Sett },
-  { href: '/panel/config/bot', label: 'Bot Telegram', icon: Icon.Sett },
+  { href: '/panel/config/bot', label: 'Bot Telegram', icon: Icon.Sett, tour: 'nav-bot' },
+  { href: '/panel/config/suscripcion', label: 'Suscripción', icon: Icon.Sett, tour: 'nav-suscripcion' },
 ];
 
 export function PanelSidebar({
@@ -137,6 +140,7 @@ export function PanelSidebar({
                   key={it.href}
                   href={it.href}
                   onClick={cerrar}
+                  data-tour={it.tour}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition ${
                     active
                       ? 'bg-ink text-cream'
@@ -152,7 +156,10 @@ export function PanelSidebar({
             })}
 
             {/* Web del salón */}
-            <div className="mt-4 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-stone/60">
+            <div
+              data-tour="nav-web"
+              className="mt-4 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-stone/60"
+            >
               Web del salón
             </div>
             {navWeb.map((it) => {
@@ -163,6 +170,7 @@ export function PanelSidebar({
                   key={it.href}
                   href={it.href}
                   onClick={cerrar}
+                  data-tour={it.tour}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition ${
                     active
                       ? 'bg-ink text-cream'
@@ -188,6 +196,7 @@ export function PanelSidebar({
                   key={it.href}
                   href={it.href}
                   onClick={cerrar}
+                  data-tour={it.tour}
                   className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[13.5px] transition ${
                     active
                       ? 'bg-ink text-cream'
