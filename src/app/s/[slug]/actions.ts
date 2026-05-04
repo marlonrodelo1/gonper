@@ -12,6 +12,7 @@ import {
   servicios,
 } from '@/lib/db/schema';
 import { calcularSlots } from '@/lib/agenda/slots';
+import { notificarDuenoNuevaCita } from '@/lib/telegram/notify';
 
 function fail(slug: string, msg: string): never {
   redirect(`/s/${slug}/reservar?error=${encodeURIComponent(msg)}`);
@@ -204,6 +205,20 @@ export async function crearReservaWeb(formData: FormData) {
     console.error('[crearReservaWeb] Error insertando cita:', err);
     fail(slug, 'No se pudo crear la reserva. Inténtalo de nuevo.');
   }
+
+  // Notificar al dueño por Telegram (best-effort, no bloquea la reserva)
+  await notificarDuenoNuevaCita({
+    botToken: salon.telegramBotToken,
+    duenoChatId: salon.telegramChatIdDueno,
+    salonNombre: salon.nombre,
+    clienteNombre: nombre,
+    servicioNombre: servicio.nombre,
+    profesionalNombre: profesional.nombre,
+    inicioIso: slotDate.toISOString(),
+    precioEur: servicio.precioEur,
+    origen: 'web',
+    timezone: tz,
+  });
 
   // Enviar email si procede (best-effort, ignorar fallo)
   let emailEnviado = false;

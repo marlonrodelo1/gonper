@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { db } from '@/lib/db';
 import { citas, clientes, profesionales, servicios } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
+import { notificarDuenoNuevaCita } from '@/lib/telegram/notify';
 
 function s(formData: FormData, key: string): string | null {
   const v = formData.get(key);
@@ -15,12 +16,35 @@ function s(formData: FormData, key: string): string | null {
   return trimmed.length === 0 ? null : trimmed;
 }
 
-async function requireSalon(): Promise<{ id: string; timezone: string }> {
+type SalonNotif = {
+  id: string;
+  nombre: string;
+  timezone: string;
+  botToken: string | null;
+  duenoChatId: string | null;
+};
+
+async function requireSalon(): Promise<SalonNotif> {
   const salon = (await getCurrentSalon()) as
-    | { id: string; timezone?: string | null }
+    | {
+        id: string;
+        nombre?: string;
+        timezone?: string | null;
+        telegram_bot_token?: string | null;
+        telegramBotToken?: string | null;
+        telegram_chat_id_dueno?: string | null;
+        telegramChatIdDueno?: string | null;
+      }
     | null;
   if (!salon) throw new Error('Sin salón asociado');
-  return { id: salon.id, timezone: salon.timezone ?? 'Europe/Madrid' };
+  return {
+    id: salon.id,
+    nombre: salon.nombre ?? 'tu salón',
+    timezone: salon.timezone ?? 'Europe/Madrid',
+    botToken: salon.telegram_bot_token ?? salon.telegramBotToken ?? null,
+    duenoChatId:
+      salon.telegram_chat_id_dueno ?? salon.telegramChatIdDueno ?? null,
+  };
 }
 
 /**
@@ -78,7 +102,8 @@ function parseInicioInput(
 }
 
 export async function crearCita(formData: FormData) {
-  const { id: salonId, timezone } = await requireSalon();
+  const salon = await requireSalon();
+  const { id: salonId, timezone } = salon;
 
   const servicioId = s(formData, 'servicio_id');
   const profesionalId = s(formData, 'profesional_id');
@@ -99,14 +124,16 @@ export async function crearCita(formData: FormData) {
 
   // Resolver cliente: prioridad al cliente_id existente; si no, crear al vuelo.
   let clienteId: string;
+  let clienteNombreFinal = clienteNombre ?? '';
   if (clienteIdRaw) {
     const [c] = await db
-      .select({ id: clientes.id })
+      .select({ id: clientes.id, nombre: clientes.nombre })
       .from(clientes)
       .where(and(eq(clientes.id, clienteIdRaw), eq(clientes.salonId, salonId)))
       .limit(1);
     if (!c) fail('Cliente no encontrado en este salón');
     clienteId = c!.id;
+    clienteNombreFinal = c!.nombre;
   } else if (clienteNombre) {
     try {
       const [c] = await db
@@ -215,6 +242,21 @@ export async function crearCita(formData: FormData) {
     }
     fail(msg);
   }
+
+  // Notificar al dueño por Telegram (si tiene bot vinculado).
+  // Tolerante a fallos: si no hay token o falla el envío, NO afecta al alta.
+  await notificarDuenoNuevaCita({
+    botToken: salon.botToken,
+    duenoChatId: salon.duenoChatId,
+    salonNombre: salon.nombre,
+    clienteNombre: clienteNombreFinal || 'Cliente sin nombre',
+    servicioNombre: serv!.nombre ?? 'servicio',
+    profesionalNombre: prof!.nombre,
+    inicioIso: inicio!.toISOString(),
+    precioEur: serv!.precioEur,
+    origen: 'manual',
+    timezone,
+  });
 
   revalidatePath('/panel/hoy');
   revalidatePath('/panel/agenda');

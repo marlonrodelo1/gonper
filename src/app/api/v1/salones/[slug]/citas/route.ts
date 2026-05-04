@@ -11,6 +11,7 @@ import {
   citas,
 } from '@/lib/db/schema';
 import { requireApiToken } from '@/lib/api/auth';
+import { notificarDuenoNuevaCita } from '@/lib/telegram/notify';
 
 // ============================================================
 // POST /api/v1/salones/[slug]/citas — crea una cita
@@ -49,7 +50,14 @@ export async function POST(
 
     // Salón
     const [salon] = await db
-      .select({ id: salones.id, activo: salones.activo })
+      .select({
+        id: salones.id,
+        activo: salones.activo,
+        nombre: salones.nombre,
+        timezone: salones.timezone,
+        telegramBotToken: salones.telegramBotToken,
+        telegramChatIdDueno: salones.telegramChatIdDueno,
+      })
       .from(salones)
       .where(eq(salones.slug, slug))
       .limit(1);
@@ -261,6 +269,25 @@ export async function POST(
       .innerJoin(clientes, eq(clientes.id, citas.clienteId))
       .where(and(eq(citas.id, citaId), eq(citas.salonId, salon.id)))
       .limit(1);
+
+    // Notificar al dueño por Telegram (best-effort, no bloquea la respuesta).
+    if (creada) {
+      await notificarDuenoNuevaCita({
+        botToken: salon.telegramBotToken,
+        duenoChatId: salon.telegramChatIdDueno,
+        salonNombre: salon.nombre,
+        clienteNombre: creada.cliente?.nombre ?? 'Cliente sin nombre',
+        servicioNombre: creada.servicio?.nombre ?? 'servicio',
+        profesionalNombre: creada.profesional?.nombre ?? '—',
+        inicioIso:
+          creada.inicio instanceof Date
+            ? creada.inicio.toISOString()
+            : String(creada.inicio),
+        precioEur: creada.precioEur,
+        origen: data.origen,
+        timezone: salon.timezone,
+      });
+    }
 
     return NextResponse.json(
       {
