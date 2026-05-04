@@ -24,41 +24,39 @@ export default function ConfigLayout({
   const pathname = usePathname() ?? '';
 
   return (
-    <div className="px-4 py-6 md:px-8">
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-        <header className="flex flex-col gap-1.5">
-          <h1 className="tight text-[22px] font-medium text-ink md:text-[28px]">
-            Configuración
-          </h1>
-          <p className="font-serif-it text-[15px] text-stone/70">
-            ajustes del salón
-          </p>
-        </header>
+    <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
+      <header className="flex flex-col gap-1.5">
+        <h1 className="tight text-[22px] font-medium text-ink md:text-[28px]">
+          Configuración
+        </h1>
+        <p className="font-serif-it text-[15px] text-stone/70">
+          ajustes del salón
+        </p>
+      </header>
 
-        <nav className="-mx-1 flex flex-wrap items-center gap-1 rounded-full border border-line bg-paper p-1 md:mx-0">
-          {tabs.map((t) => {
-            const active = t.exact
-              ? pathname === t.href
-              : pathname === t.href || pathname.startsWith(t.href + '/');
-            return (
-              <Link
-                key={t.href}
-                href={t.href}
-                className={
-                  'tight rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition ' +
-                  (active
-                    ? 'bg-ink text-cream'
-                    : 'text-stone hover:text-ink')
-                }
-              >
-                {t.label}
-              </Link>
-            );
-          })}
-        </nav>
+      <nav className="-mx-1 flex flex-wrap items-center gap-1 rounded-full border border-line bg-paper p-1 md:mx-0 md:inline-flex md:w-fit md:max-w-full">
+        {tabs.map((t) => {
+          const active = t.exact
+            ? pathname === t.href
+            : pathname === t.href || pathname.startsWith(t.href + '/');
+          return (
+            <Link
+              key={t.href}
+              href={t.href}
+              className={
+                'tight rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition ' +
+                (active
+                  ? 'bg-ink text-cream'
+                  : 'text-stone hover:text-ink')
+              }
+            >
+              {t.label}
+            </Link>
+          );
+        })}
+      </nav>
 
-        <div>{children}</div>
-      </div>
+      <div>{children}</div>
     </div>
   );
 }

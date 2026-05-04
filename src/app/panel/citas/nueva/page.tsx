@@ -81,7 +81,7 @@ export default async function NuevaCitaPage({
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
-      <header className="mx-auto flex w-full max-w-2xl items-start justify-between gap-4">
+      <header className="flex w-full items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
             Citas
@@ -101,7 +101,7 @@ export default async function NuevaCitaPage({
         </Link>
       </header>
 
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
+      <div className="flex w-full flex-col gap-5">
         {params.error ? (
           <div
             className="rounded-xl border bg-[#F1D6D6] px-4 py-3 text-[13px] text-[#7C2E2E]"

@@ -86,7 +86,7 @@ export default async function ConfigPage({
   const trialFormatted = formatTrialUntil(salon.trialUntil);
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+    <div className="flex w-full flex-col gap-5">
       {params.ok ? (
         <div className="flex items-center gap-2 rounded-xl border border-sage/40 bg-sage-soft px-4 py-3 text-[13px] text-sage-deep">
           <Icon.Check width="14" height="14" />
