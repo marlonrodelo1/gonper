@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { Icon } from './icons';
 
-type Props = { salonNombre: string };
+type Props = { salonNombre: string; logoUrl?: string | null };
 
-export function TopNav({ salonNombre }: Props) {
+export function TopNav({ salonNombre, logoUrl }: Props) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -31,12 +31,21 @@ export function TopNav({ salonNombre }: Props) {
           style={{ padding: '8px 8px 8px 18px', borderRadius: '999px' }}
         >
           <a href="#" className="flex items-center gap-2.5 text-ink shrink-0 pr-2">
-            <span
-              className="w-7 h-7 rounded-full grid place-items-center"
-              style={{ background: 'var(--gomper-accent-soft)' }}
-            >
-              <Icon.Sparkle width="14" height="14" className="text-gomper-accent" />
-            </span>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={logoUrl}
+                alt={salonNombre}
+                className="h-8 w-8 rounded-full object-cover border border-line"
+              />
+            ) : (
+              <span
+                className="w-7 h-7 rounded-full grid place-items-center"
+                style={{ background: 'var(--gomper-accent-soft)' }}
+              >
+                <Icon.Sparkle width="14" height="14" className="text-gomper-accent" />
+              </span>
+            )}
             <span className="text-[16px] tight font-medium">{salonNombre}</span>
           </a>
           <nav className="hidden lg:flex items-center gap-1 text-[13.5px] text-stone">

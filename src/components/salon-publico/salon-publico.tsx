@@ -60,7 +60,7 @@ export function SalonPublico({
 
   return (
     <>
-      <TopNav salonNombre={salon.nombre} />
+      <TopNav salonNombre={salon.nombre} logoUrl={salon.logoUrl} />
       <Hero
         salon={salon}
         abierto={abierto}

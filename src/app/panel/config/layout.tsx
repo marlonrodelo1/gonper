@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 const tabs = [
   { href: '/panel/config/reservas', label: 'Reservas' },
   { href: '/panel/config', label: 'Datos del salón', exact: true },
+  { href: '/panel/config/web', label: 'Web (logo y banner)' },
   { href: '/panel/config/horario', label: 'Horario' },
   { href: '/panel/config/equipo', label: 'Equipo' },
   { href: '/panel/config/agente', label: 'Agente' },

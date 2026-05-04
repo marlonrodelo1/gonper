@@ -130,6 +130,10 @@ export const salones = pgTable(
     telegramChatIdDueno: text('telegram_chat_id_dueno'),
     whatsappPhoneId: text('whatsapp_phone_id'),
 
+    // Branding (web pública + Open Graph al compartir)
+    logoUrl: text('logo_url'),
+    bannerUrl: text('banner_url'),
+
     // Plan
     plan: text('plan').notNull().default('trial'),
     trialUntil: timestamp('trial_until', { withTimezone: true }),

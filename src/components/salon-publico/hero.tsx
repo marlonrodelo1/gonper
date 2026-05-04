@@ -44,7 +44,7 @@ export function Hero({
   horarioHoyTexto,
   servicios,
 }: Props) {
-  const cover = COVER_DEFAULT;
+  const cover = salon.bannerUrl ?? COVER_DEFAULT;
   const { primary, serif, rest } = splitName(salon.nombre);
   const lugar = lugarFromDireccion(salon.direccion);
   const calle = calleFromDireccion(salon.direccion);

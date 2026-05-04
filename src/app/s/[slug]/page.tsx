@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { and, asc, avg, count, desc, eq, gte, isNull, or, sql } from 'drizzle-orm';
 import type { CSSProperties } from 'react';
+import type { Metadata } from 'next';
 
 import { db } from '@/lib/db';
 import {
@@ -92,6 +93,63 @@ function hhmmToMin(hhmmss: string): number {
 
 function nombreDiaCorto(d: number): string {
   return ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'][d];
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const [salon] = await db
+    .select({
+      nombre: salones.nombre,
+      direccion: salones.direccion,
+      tipoNegocio: salones.tipoNegocio,
+      bannerUrl: salones.bannerUrl,
+    })
+    .from(salones)
+    .where(eq(salones.slug, slug))
+    .limit(1);
+
+  if (!salon) {
+    return { title: 'Salón no encontrado · Gomper' };
+  }
+
+  const titulo = `${salon.nombre} · Reserva con Juanita`;
+  const descripcion = `Te comparto mi negocio. Reserva en ${salon.nombre} 24/7 con Juanita${salon.direccion ? ' · ' + salon.direccion : ''}.`;
+  const imagen = salon.bannerUrl ?? null;
+  const url = `https://gestori.es/s/${slug}`;
+
+  return {
+    title: titulo,
+    description: descripcion,
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      url,
+      title: titulo,
+      description: descripcion,
+      siteName: 'Gomper · gestori.es',
+      locale: 'es_ES',
+      images: imagen
+        ? [
+            {
+              url: imagen,
+              width: 1200,
+              height: 630,
+              alt: salon.nombre,
+            },
+          ]
+        : [],
+    },
+    twitter: {
+      card: imagen ? 'summary_large_image' : 'summary',
+      title: titulo,
+      description: descripcion,
+      images: imagen ? [imagen] : [],
+    },
+  };
 }
 
 export default async function SalonPublicPage({
