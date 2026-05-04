@@ -5,6 +5,13 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname),
   },
+  // Permitir uploads de hasta 6 MB en server actions (logo: 2 MB, banner: 5 MB,
+  // galería: 5 MB, foto profesional: 3 MB). Default Next es 1 MB → fallaba.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '6mb',
+    },
+  },
   images: {
     remotePatterns: [
       // Imágenes públicas servidas por Supabase Storage
