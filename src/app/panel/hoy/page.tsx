@@ -261,16 +261,41 @@ export default async function HoyPage() {
             foot={noShowFoot}
             sparkPath={SPARK_PATHS.noshows}
           />
-          {/* TODO: calcular con confirmadas / (confirmadas + sinConfirmar) cuando haya datos suficientes. */}
-          <StatCard
-            id="spark-confirmadas"
-            label="Confirmadas por Juanita"
-            value="92"
-            suffix="%"
-            delta="↑ esta semana"
-            foot="vs 76% sin Juanita"
-            sparkPath={SPARK_PATHS.confirmadas}
-          />
+          {(() => {
+            // Tasa de confirmación real: confirmadas / (confirmadas + sin confirmar).
+            // Si todavía no hay base estadística (muy pocas citas), mostramos "—"
+            // en vez de inventar un porcentaje.
+            const baseEstadistica = confirmadas + sinConfirmar;
+            const ratio =
+              baseEstadistica > 0
+                ? Math.round((confirmadas / baseEstadistica) * 100)
+                : null;
+            const valor = ratio !== null ? String(ratio) : '—';
+            const delta =
+              ratio !== null
+                ? ratio >= 80
+                  ? '↑ excelente'
+                  : ratio >= 60
+                    ? 'estable'
+                    : '↓ baja'
+                : 'sin datos';
+            const foot =
+              baseEstadistica > 0
+                ? `${confirmadas}/${baseEstadistica} hoy`
+                : 'aún sin citas';
+            return (
+              <StatCard
+                id="spark-confirmadas"
+                label="Confirmadas por Juanita"
+                value={valor}
+                suffix={ratio !== null ? '%' : ''}
+                delta={delta}
+                deltaPositive={ratio !== null ? ratio >= 60 : true}
+                foot={foot}
+                sparkPath={SPARK_PATHS.confirmadas}
+              />
+            );
+          })()}
         </section>
 
         {/* Two-col main */}

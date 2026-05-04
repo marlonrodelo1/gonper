@@ -14,6 +14,8 @@ export type PanelSidebarProps = {
   salonSlug: string | null;
   salonLogoUrl?: string | null;
   isSuperAdmin?: boolean;
+  /** Conversaciones únicas (chat web/Telegram) iniciadas hoy. */
+  conversacionesHoy?: number;
 };
 
 type NavItem = {
@@ -65,6 +67,7 @@ export function PanelSidebar({
   salonSlug,
   salonLogoUrl,
   isSuperAdmin = false,
+  conversacionesHoy = 0,
 }: PanelSidebarProps) {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
@@ -270,9 +273,10 @@ export function PanelSidebar({
             <div className="tight text-[13px] font-medium text-ink">
               Atendiendo en Telegram
             </div>
-            {/* TODO: leer estos números de tabla mensajes (conversaciones hoy / errores) */}
             <div className="mt-0.5 text-[11px] text-stone">
-              12 conversaciones hoy · 0 errores
+              {conversacionesHoy === 0
+                ? 'Sin conversaciones hoy'
+                : `${conversacionesHoy} conversación${conversacionesHoy === 1 ? '' : 'es'} hoy`}
             </div>
             <Link
               href="/panel/config/agente"

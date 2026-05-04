@@ -3,6 +3,9 @@ import { getCurrentSalon } from "@/lib/supabase/get-current-salon";
 import { getCurrentSuperAdmin } from "@/lib/auth/super-admin";
 import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
+import { countDistinct, and, eq, gte } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { mensajes } from "@/lib/db/schema";
 import { PanelSidebar } from "./_components/panel-sidebar";
 import { TrialBlocker } from "./_components/trial-blocker";
 import { OnboardingTour } from "./_components/onboarding-tour";
@@ -83,6 +86,30 @@ export default async function PanelLayout({
   const { trialExpirado, planActivo, sinSuscripcion } =
     leerEstadoSuscripcion(salon);
 
+  // Conversaciones únicas iniciadas hoy (cuenta sesiones distintas en `mensajes`).
+  // Si algo falla, default 0 — no debe romper el layout.
+  const salonId =
+    salon && typeof salon.id === "string" ? salon.id : null;
+  let conversacionesHoy = 0;
+  if (salonId) {
+    try {
+      const inicioDia = new Date();
+      inicioDia.setHours(0, 0, 0, 0);
+      const [row] = await db
+        .select({ value: countDistinct(mensajes.sessionId) })
+        .from(mensajes)
+        .where(
+          and(
+            eq(mensajes.salonId, salonId),
+            gte(mensajes.createdAt, inicioDia),
+          ),
+        );
+      conversacionesHoy = Number(row?.value ?? 0);
+    } catch (err) {
+      console.warn("[panel/layout] conversaciones hoy:", err);
+    }
+  }
+
   return (
     <div className="flex min-h-screen w-full bg-cream text-ink">
       <PanelSidebar
@@ -92,6 +119,7 @@ export default async function PanelLayout({
         salonSlug={salonSlug}
         salonLogoUrl={salonLogoUrl}
         isSuperAdmin={superAdmin !== null}
+        conversacionesHoy={conversacionesHoy}
       />
       <main className="min-w-0 flex-1 pt-12 md:pt-0">{children}</main>
       <TrialBlocker
