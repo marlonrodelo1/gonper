@@ -30,9 +30,20 @@ export default async function NuevaImagenPage({
           <span className="font-serif-it text-stone/70">a tu galería</span>
         </h1>
         <p className="mt-1 text-[13.5px] text-stone">
-          Sube fotos del local, servicios o trabajos terminados. Máx. 5 MB por
-          imagen. JPG, PNG, WEBP o AVIF.
+          Sube fotos del local, servicios o trabajos terminados.
         </p>
+        <div
+          className="mt-3 rounded-xl border px-4 py-3 text-[12.5px]"
+          style={{
+            borderColor: 'rgba(197,142,44,0.4)',
+            background: 'rgba(197,142,44,0.10)',
+            color: '#7A5A1B',
+          }}
+        >
+          <strong>Tamaño recomendado:</strong> vertical o cuadrada — ideal
+          1080×1350 px (4:5) o 1200×1200 px. Mín. 800×1000 px. Máx. 5 MB.
+          Formatos JPG, PNG, WEBP o AVIF. Las fotos del móvil sirven directamente.
+        </div>
       </div>
 
       {params.error ? (
