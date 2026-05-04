@@ -11,6 +11,8 @@ type CurrentSalon = { id: string } | null;
 
 const inputClass =
   'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2';
+const fileInputClass =
+  'block w-full cursor-pointer rounded-2xl border border-line bg-paper px-4 py-3 text-[13.5px] text-ink file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-1.5 file:text-[12px] file:font-medium file:text-cream hover:file:opacity-90';
 const labelClass =
   'text-[11px] uppercase tracking-[0.2em] text-stone/80';
 
@@ -40,7 +42,7 @@ export default async function EditarProfesionalPage({
   const accion = actualizarProfesional.bind(null, pro.id);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5">
+    <div className="flex w-full flex-col gap-5">
       {sp.error ? (
         <div
           className="rounded-xl border bg-[#F1D6D6] px-4 py-3 text-[13px] text-[#7C2E2E]"
@@ -63,7 +65,11 @@ export default async function EditarProfesionalPage({
           </p>
         </header>
 
-        <form action={accion} className="flex flex-col gap-5">
+        <form
+          action={accion}
+          encType="multipart/form-data"
+          className="flex flex-col gap-5"
+        >
           <div className="flex flex-col gap-1.5">
             <label htmlFor="nombre" className={labelClass}>
               Nombre
@@ -111,18 +117,45 @@ export default async function EditarProfesionalPage({
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="foto_url" className={labelClass}>
-              Foto (URL, opcional)
-            </label>
+          <div className="flex flex-col gap-2.5">
+            <label className={labelClass}>Foto del profesional</label>
+            {pro.fotoUrl ? (
+              <div className="flex flex-wrap items-center gap-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={pro.fotoUrl}
+                  alt={pro.nombre}
+                  className="h-20 w-20 rounded-full border border-line object-cover"
+                />
+                <label className="flex items-center gap-2 text-[13px] text-stone">
+                  <input
+                    type="checkbox"
+                    name="quitar_foto"
+                    className="h-4 w-4 rounded border-line"
+                  />
+                  Quitar foto actual
+                </label>
+              </div>
+            ) : null}
             <input
-              id="foto_url"
-              name="foto_url"
-              type="url"
-              defaultValue={pro.fotoUrl ?? ''}
-              placeholder="https://…"
-              className={inputClass}
+              id="foto"
+              name="foto"
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+              className={fileInputClass}
             />
+            <div
+              className="rounded-xl border px-4 py-2.5 text-[12px]"
+              style={{
+                borderColor: 'rgba(197,142,44,0.4)',
+                background: 'rgba(197,142,44,0.10)',
+                color: '#7A5A1B',
+              }}
+            >
+              <strong>Tamaño recomendado:</strong> cuadrada, 600×600 px o
+              superior. Máx. 3 MB. Si no subes nada, se conserva la actual.
+              Se mostrará circular en la web pública.
+            </div>
           </div>
 
           <div className="flex items-center justify-end gap-2 pt-2">
