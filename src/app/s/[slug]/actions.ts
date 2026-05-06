@@ -219,37 +219,29 @@ export async function crearReservaWeb(formData: FormData) {
     timezone: tz,
   });
 
-  // Enviar email si procede (best-effort, ignorar fallo)
+  // Enviar email de confirmación (best-effort, ignorar fallo)
   let emailEnviado = false;
   if (email && enviarEmail) {
     try {
-      const mod = (await import('@/lib/email/resend').catch(() => null)) as
-        | {
-            sendEmail?: (args: {
-              to: string;
-              template: string;
-              data: Record<string, unknown>;
-            }) => Promise<unknown>;
-          }
-        | null;
-      if (mod?.sendEmail) {
-        await mod.sendEmail({
-          to: email,
-          template: 'reservaConfirmada',
-          data: {
-            salonNombre: salon.nombre,
-            salonDireccion: salon.direccion,
-            salonTelefono: salon.telefono,
-            clienteNombre: nombre,
-            servicioNombre: servicio.nombre,
-            profesionalNombre: profesional.nombre,
-            inicio: slotDate.toISOString(),
-            timezone: tz,
-            precioEur: servicio.precioEur,
-            slug,
-          },
-        });
-        emailEnviado = true;
+      const { enviarConfirmacionReserva } = await import('@/lib/email/resend');
+      const result = await enviarConfirmacionReserva({
+        to: email,
+        citaId,
+        clienteNombre: nombre,
+        salonNombre: salon.nombre,
+        salonSlug: slug,
+        salonDireccion: salon.direccion ?? null,
+        salonTelefono: salon.telefono ?? null,
+        inicioIso: slotDate.toISOString(),
+        servicioNombre: servicio.nombre,
+        duracionMin: servicio.duracionMin,
+        profesionalNombre: profesional.nombre,
+        precioEur: servicio.precioEur,
+        timezone: tz,
+      });
+      emailEnviado = result.ok;
+      if (!result.ok) {
+        console.error('[crearReservaWeb] Email confirmación falló:', result.error);
       }
     } catch (err) {
       console.error('[crearReservaWeb] Email no enviado:', err);
