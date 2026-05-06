@@ -128,7 +128,7 @@
     @apply font-sans;
     /* Tamaño base mayor para mejor legibilidad: rem-based (text-sm, text-base,
        inputs shadcn, panel, etc) escala proporcionalmente. */
-    font-size: 17px;
+    font-size: 18px;
     /* Reservar espacio para el header flotante al hacer scroll a anchors */
     scroll-padding-top: 110px;
     scroll-behavior: smooth;

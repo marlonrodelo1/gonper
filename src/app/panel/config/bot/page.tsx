@@ -6,6 +6,7 @@ import {
   desconectarBotSalon,
 } from './actions';
 import { CopyLinkButton } from './copy-link-button';
+import { VincularDuenoButton } from './vincular-dueno-button';
 
 /**
  * Supabase devuelve la fila de `salones` con los nombres reales de las
@@ -69,8 +70,6 @@ export default async function ConfigBotPage({
     );
   }
 
-  const codigoVinculacion = salon.id.replace(/-/g, '').slice(0, 8).toUpperCase();
-  const comandoVinculacion = `/start ${codigoVinculacion}`;
   const tokenBot = salon.telegram_bot_token ?? salon.telegramBotToken ?? null;
   const usernameBot =
     salon.telegram_bot_username ?? salon.telegramBotUsername ?? null;
@@ -351,51 +350,7 @@ export default async function ConfigBotPage({
             </form>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            <ol className="flex flex-col gap-3 pl-5 text-[13.5px] text-ink/85 list-decimal">
-              <li>
-                Abre{' '}
-                {botUrl ? (
-                  <a
-                    href={botUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-medium text-terracotta hover:text-terracotta-2"
-                  >
-                    @{usernameBot} en Telegram
-                  </a>
-                ) : (
-                  <strong className="text-ink">tu bot en Telegram</strong>
-                )}
-                .
-              </li>
-              <li>
-                Envíale este comando exactamente:
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <code className="rounded-lg bg-cream-2 px-2.5 py-1.5 font-mono text-[13px] text-ink">
-                    {comandoVinculacion}
-                  </code>
-                  <CopyLinkButton
-                    link={comandoVinculacion}
-                    label="Copiar comando"
-                    copiedLabel="Copiado"
-                  />
-                </div>
-              </li>
-              <li>
-                El bot te confirmará la vinculación. Recarga esta página y verás tu chat ID.
-              </li>
-            </ol>
-
-            <div className="rule" />
-
-            <p className="text-[12.5px] text-stone">
-              Tu código de vinculación es{' '}
-              <code className="font-mono text-ink">{codigoVinculacion}</code>. Son los primeros 8
-              caracteres de tu salón. <strong className="text-ink">No lo compartas con clientes</strong> —
-              quien lo tenga puede vincularse como dueño.
-            </p>
-          </div>
+          <VincularDuenoButton />
         )}
       </section>
     </div>
