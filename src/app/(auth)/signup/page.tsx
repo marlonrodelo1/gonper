@@ -19,7 +19,7 @@ export default async function SignupPage({
           Crea tu cuenta
         </h1>
         <p className="mt-1 text-[13.5px] text-stone">
-          Configura tu salón en menos de un minuto. Trial gratis 7 días.
+          Configura tu salón en menos de un minuto. Trial gratis 30 días.
         </p>
       </div>
 

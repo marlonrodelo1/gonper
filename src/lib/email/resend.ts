@@ -160,7 +160,7 @@ export async function enviarEmailBienvenida(params: {
       </h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
         Acabas de crear el salón <strong>${escapeHtml(params.salonNombre)}</strong>.
-        Tienes 7 días de prueba gratis para configurarlo todo y dejar que Juanita
+        Tienes 30 días de prueba gratis para configurarlo todo y dejar que Juanita
         atienda tus reservas 24/7.
       </p>
       <p style="margin:0 0 24px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">

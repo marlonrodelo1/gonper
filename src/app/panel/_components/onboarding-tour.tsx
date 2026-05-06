@@ -25,7 +25,7 @@ const STEPS: Step[] = [
     badge: 'Bienvenido',
     titulo: '¡Tu cuenta está activa!',
     cuerpo:
-      '7 días gratis. Hoy 0 € y puedes cancelar antes del día 8 sin coste. Vamos a darte un tour rápido por el panel.',
+      '30 días gratis. Hoy 0 € y puedes cancelar antes del día 31 sin coste. Vamos a darte un tour rápido por el panel.',
   },
   {
     target: '[data-tour="nav-hoy"]',
@@ -82,7 +82,7 @@ const STEPS: Step[] = [
     badge: 'Listo',
     titulo: 'A trabajar 💪',
     cuerpo:
-      'Si necesitas ayuda escríbenos a hola@gestori.es. Cuando termine tu prueba de 7 días pasarás automáticamente al plan Básico (30 €/mes), salvo que canceles antes.',
+      'Si necesitas ayuda escríbenos a hola@gestori.es. Cuando termine tu prueba de 30 días pasarás automáticamente al plan Básico (30 €/mes), salvo que canceles antes.',
   },
 ];
 

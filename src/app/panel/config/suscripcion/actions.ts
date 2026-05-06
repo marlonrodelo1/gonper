@@ -75,7 +75,7 @@ export async function crearCheckout(planId: 'basico') {
   }
 
   // Si el salón aún no tuvo nunca suscripción (primer pago), incluimos trial
-  // 7 días con tarjeta obligatoria. Si ya la tuvo, no se reaplica.
+  // 30 días con tarjeta obligatoria. Si ya la tuvo, no se reaplica.
   const aplicarTrial = !subscriptionId;
 
   const session = await stripe.checkout.sessions.create({
@@ -87,7 +87,7 @@ export async function crearCheckout(planId: 'basico') {
     metadata: { salon_id: salonId, plan: planId },
     payment_method_collection: 'always',
     subscription_data: {
-      ...(aplicarTrial ? { trial_period_days: 7 } : {}),
+      ...(aplicarTrial ? { trial_period_days: 30 } : {}),
       metadata: { salon_id: salonId, plan: planId },
     },
     allow_promotion_codes: true,

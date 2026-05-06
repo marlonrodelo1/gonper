@@ -121,7 +121,7 @@ export function Hero() {
                 type="submit"
                 className="gloss-btn px-5 py-3 rounded-full text-[14px] font-medium tracking-tight whitespace-nowrap shrink-0"
               >
-                {submitted ? "¡Listo! ✓" : "Empezar prueba gratis 7 días"}
+                {submitted ? "¡Listo! ✓" : "Empezar prueba gratis 30 días"}
               </button>
             </form>
 
