@@ -105,7 +105,7 @@ function buildSystemPrompt(args: {
   const bloqueInstrucciones = args.instruccionesDueno && args.instruccionesDueno.trim()
     ? `\n## Instrucciones del dueño del salón (prioritarias)\n${args.instruccionesDueno.trim()}\n`
     : '';
-  return `Eres ${args.agenteNombre}, la recepcionista virtual de ${args.salonNombre}, un ${tipo} en ${lugar}.
+  return `Eres ${args.agenteNombre}, la asistente virtual de ${args.salonNombre}, un ${tipo} en ${lugar}.
 Tono: ${args.agenteTono}. Habla SIEMPRE en español, con frases cortas y útiles.
 
 ## Tu rol
@@ -327,7 +327,7 @@ export async function POST(
     }
 
     if (esPrimerMensaje) {
-      const saludo = `¡Hola! 👋 Soy ${salon.agenteNombre}, la recepcionista de ${salon.nombre}. ¿Cómo te llamas?`;
+      const saludo = `¡Hola! 👋 Soy ${salon.agenteNombre}, la asistente de ${salon.nombre}. ¿Cómo te llamas?`;
       reply = `${saludo}\n\n${reply}`;
     }
 

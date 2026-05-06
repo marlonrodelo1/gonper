@@ -141,8 +141,8 @@ export function Hero({
               className="bg-paper border border-line rounded-2xl px-4 py-3.5 flex items-start gap-3"
             >
               <span
-                className="w-8 h-8 rounded-full grid place-items-center text-gomper-accent shrink-0"
-                style={{ background: 'var(--gomper-accent-soft)' }}
+                className="w-8 h-8 rounded-full grid place-items-center text-gestori-accent shrink-0"
+                style={{ background: 'var(--gestori-accent-soft)' }}
               >
                 {it.icon}
               </span>

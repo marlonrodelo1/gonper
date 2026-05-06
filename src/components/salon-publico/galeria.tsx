@@ -96,7 +96,7 @@ export function Galeria({ galeria, comparativas = [] }: Props) {
                 </div>
                 <div
                   className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-paper text-[11px] uppercase tracking-[0.2em]"
-                  style={{ background: 'var(--gomper-accent-2)' }}
+                  style={{ background: 'var(--gestori-accent-2)' }}
                 >
                   Después
                 </div>

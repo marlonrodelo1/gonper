@@ -151,7 +151,7 @@ export function ImageSwiper({ images }: { images: SwiperImage[] }) {
           <Icon.ArrowL width="16" height="16" />
         </button>
         <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-paper border border-line">
-          <Icon.Drag width="14" height="14" className="text-gomper-accent" />
+          <Icon.Drag width="14" height="14" className="text-gestori-accent" />
           <span>Arrastra o pulsa para ver más</span>
         </div>
         <button

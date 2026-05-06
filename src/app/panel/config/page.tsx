@@ -241,7 +241,7 @@ export default async function ConfigPage({
         <div className="flex flex-col gap-1.5">
           <span className={labelClass}>URL pública</span>
           <div className="card-tight px-4 py-2.5 font-mono text-[13.5px] text-ink">
-            gomper.es/{salon.slug}
+            gestori.es/{salon.slug}
           </div>
         </div>
         <p className="text-[12px] text-stone">

@@ -98,7 +98,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
               {salon.telefono && (
                 <a
                   href={`tel:${salon.telefono}`}
-                  className="flex items-center gap-3 text-[15px] text-ink hover:text-gomper-accent transition"
+                  className="flex items-center gap-3 text-[15px] text-ink hover:text-gestori-accent transition"
                 >
                   <span className="w-9 h-9 rounded-full bg-cream-2 grid place-items-center">
                     <Icon.Phone width="14" height="14" />
@@ -111,7 +111,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
                   href={`https://wa.me/${salon.telefono.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-3 text-[15px] text-ink hover:text-gomper-accent transition"
+                  className="flex items-center gap-3 text-[15px] text-ink hover:text-gestori-accent transition"
                 >
                   <span className="w-9 h-9 rounded-full bg-cream-2 grid place-items-center">
                     <Icon.Whatsapp width="14" height="14" />
@@ -122,7 +122,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
               {salon.email && (
                 <a
                   href={`mailto:${salon.email}`}
-                  className="flex items-center gap-3 text-[15px] text-ink hover:text-gomper-accent transition"
+                  className="flex items-center gap-3 text-[15px] text-ink hover:text-gestori-accent transition"
                 >
                   <span className="w-9 h-9 rounded-full bg-cream-2 grid place-items-center">
                     <Icon.Instagram width="14" height="14" />
@@ -170,17 +170,17 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
               <div className="relative">
                 <div
                   className="w-14 h-14 rounded-full grid place-items-center"
-                  style={{ background: 'var(--gomper-accent-2)' }}
+                  style={{ background: 'var(--gestori-accent-2)' }}
                 >
                   <Icon.Sparkle width="22" height="22" className="text-paper" />
                 </div>
                 <div
                   className="absolute top-full left-1/2 -translate-x-1/2 -translate-y-1 w-3 h-3 rotate-45"
-                  style={{ background: 'var(--gomper-accent-2)' }}
+                  style={{ background: 'var(--gestori-accent-2)' }}
                 ></div>
                 <div
                   className="absolute inset-0 rounded-full live-dot"
-                  style={{ background: 'var(--gomper-accent-2)', opacity: 0.4 }}
+                  style={{ background: 'var(--gestori-accent-2)', opacity: 0.4 }}
                 ></div>
               </div>
               <div className="mt-5 px-3 py-2 rounded-xl bg-paper border border-line shadow-lg text-[13px] tight text-ink whitespace-nowrap absolute left-1/2 -translate-x-1/2">
@@ -198,7 +198,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
               rel="noreferrer"
               className="absolute bottom-5 right-5 px-4 py-2.5 rounded-full bg-paper border border-line text-[14px] tight text-ink hover:bg-cream transition flex items-center gap-2 shadow-md"
             >
-              <Icon.Pin width="13" height="13" className="text-gomper-accent" /> Cómo llegar
+              <Icon.Pin width="13" height="13" className="text-gestori-accent" /> Cómo llegar
             </a>
           </div>
         </div>

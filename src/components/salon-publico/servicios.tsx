@@ -149,7 +149,7 @@ export function Servicios({ servicios, agenteNombre, onPick }: Props) {
                 </div>
                 <div className="flex items-center gap-5 shrink-0">
                   <div
-                    className="text-gomper-accent tight font-medium"
+                    className="text-gestori-accent tight font-medium"
                     style={{ fontSize: '22px' }}
                   >
                     {formatPrecio(s.precioEur)}

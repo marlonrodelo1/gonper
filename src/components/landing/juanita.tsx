@@ -6,7 +6,7 @@ type Tono = "profesional" | "cercano" | "desenfadado";
 
 const saludos: Record<Tono, string> = {
   profesional: "Buenos días, soy Juanita, asistente de Revolution Barbershop.",
-  cercano: "¡Hola! 👋 Soy Juanita, la recepcionista de Revolution Barbershop.",
+  cercano: "¡Hola! 👋 Soy Juanita, la asistente de Revolution Barbershop.",
   desenfadado: "¡Buenas! 💈 Soy Juanita. ¿En qué te ayudo, crack?",
 };
 
@@ -102,7 +102,7 @@ export function Juanita() {
               >
                 No es un chatbot.
                 <br />
-                Es <span className="font-serif-it text-terracotta">tu</span> recepcionista.
+                Es <span className="font-serif-it text-terracotta">tu</span> asistente.
               </h2>
               <p className="text-stone text-[16px] leading-relaxed max-w-[480px]">
                 Le pones nombre. Le pones género. Le pones tono. Y desde ese momento &quot;vive&quot;

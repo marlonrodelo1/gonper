@@ -71,12 +71,12 @@ export default async function ExitoPage({
         <div className="flex flex-col items-center gap-4 text-center">
           <span
             className="grid h-16 w-16 place-items-center rounded-full"
-            style={{ background: 'var(--gomper-accent-soft)' }}
+            style={{ background: 'var(--gestori-accent-soft)' }}
           >
             <Icon.Check
               width="28"
               height="28"
-              style={{ color: 'var(--gomper-accent-2)' }}
+              style={{ color: 'var(--gestori-accent-2)' }}
             />
           </span>
           <h1

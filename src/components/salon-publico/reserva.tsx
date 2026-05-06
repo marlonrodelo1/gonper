@@ -158,7 +158,7 @@ export function Reserva({
                 <select
                   value={servicioId}
                   onChange={(e) => setServicioId(e.target.value)}
-                  className="w-full appearance-none bg-cream border border-line rounded-2xl px-5 py-4 text-[15px] tight text-ink focus:outline-none focus:border-gomper-accent pr-10 cursor-pointer"
+                  className="w-full appearance-none bg-cream border border-line rounded-2xl px-5 py-4 text-[15px] tight text-ink focus:outline-none focus:border-gestori-accent pr-10 cursor-pointer"
                 >
                   {servicios.map((s) => (
                     <option key={s.id} value={s.id}>
@@ -227,7 +227,7 @@ export function Reserva({
                 const isSelected = selectedDay === d;
                 const disabled = status === 'past' || status === 'closed';
                 let cls = 'bg-cream/60 text-stone/40 cursor-not-allowed';
-                if (status === 'open') cls = 'bg-cream text-ink hover:bg-gomper-accent-blush';
+                if (status === 'open') cls = 'bg-cream text-ink hover:bg-gestori-accent-blush';
                 if (isSelected) cls = 'bg-ink text-paper hover:bg-ink';
                 return (
                   <button
@@ -328,7 +328,7 @@ export function Reserva({
                         className={`py-2.5 rounded-xl text-[14px] tight transition border ${
                           sel
                             ? 'bg-ink text-paper border-ink'
-                            : 'bg-cream text-ink border-line hover:bg-gomper-accent-blush hover:border-gomper-accent'
+                            : 'bg-cream text-ink border-line hover:bg-gestori-accent-blush hover:border-gestori-accent'
                         }`}
                       >
                         {label}
@@ -361,27 +361,27 @@ export function Reserva({
                   name="nombre"
                   required
                   placeholder="Nombre"
-                  className="bg-cream border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink focus:outline-none focus:border-gomper-accent placeholder:text-stone/50"
+                  className="bg-cream border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink focus:outline-none focus:border-gestori-accent placeholder:text-stone/50"
                 />
                 <input
                   type="tel"
                   name="telefono"
                   required
                   placeholder="Móvil (te recordamos antes de la cita)"
-                  className="bg-cream border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink focus:outline-none focus:border-gomper-accent placeholder:text-stone/50"
+                  className="bg-cream border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink focus:outline-none focus:border-gestori-accent placeholder:text-stone/50"
                 />
                 <input
                   type="email"
                   name="email"
                   placeholder="Email (opcional)"
-                  className="bg-cream border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink focus:outline-none focus:border-gomper-accent placeholder:text-stone/50"
+                  className="bg-cream border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink focus:outline-none focus:border-gestori-accent placeholder:text-stone/50"
                 />
                 <label className="flex items-center gap-2 text-[12.5px] text-stone mt-1">
                   <input
                     type="checkbox"
                     name="enviar_email"
                     defaultChecked
-                    className="accent-[var(--gomper-accent)]"
+                    className="accent-[var(--gestori-accent)]"
                   />
                   Enviarme la confirmación por email
                 </label>

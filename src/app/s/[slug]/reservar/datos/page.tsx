@@ -116,8 +116,8 @@ export default async function DatosReservaPage({
         <div
           className="rounded-3xl p-5 border"
           style={{
-            background: 'var(--gomper-accent-blush)',
-            borderColor: 'var(--gomper-accent-soft)',
+            background: 'var(--gestori-accent-blush)',
+            borderColor: 'var(--gestori-accent-soft)',
           }}
         >
           <p className="text-[15px] font-medium text-ink">
@@ -149,7 +149,7 @@ export default async function DatosReservaPage({
               htmlFor="nombre"
               className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
-              Nombre <span style={{ color: 'var(--gomper-accent-2)' }}>*</span>
+              Nombre <span style={{ color: 'var(--gestori-accent-2)' }}>*</span>
             </label>
             <input
               id="nombre"
@@ -158,7 +158,7 @@ export default async function DatosReservaPage({
               required
               maxLength={120}
               autoComplete="name"
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gestori-accent-soft)]"
             />
           </div>
 
@@ -167,7 +167,7 @@ export default async function DatosReservaPage({
               htmlFor="telefono"
               className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
-              Teléfono <span style={{ color: 'var(--gomper-accent-2)' }}>*</span>
+              Teléfono <span style={{ color: 'var(--gestori-accent-2)' }}>*</span>
             </label>
             <input
               id="telefono"
@@ -176,7 +176,7 @@ export default async function DatosReservaPage({
               required
               maxLength={30}
               autoComplete="tel"
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gestori-accent-soft)]"
             />
           </div>
 
@@ -185,7 +185,7 @@ export default async function DatosReservaPage({
               htmlFor="email"
               className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
-              Email <span style={{ color: 'var(--gomper-accent-2)' }}>*</span>
+              Email <span style={{ color: 'var(--gestori-accent-2)' }}>*</span>
             </label>
             <input
               id="email"
@@ -194,7 +194,7 @@ export default async function DatosReservaPage({
               required
               maxLength={200}
               autoComplete="email"
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gestori-accent-soft)]"
             />
             <p className="text-[13px] text-stone/80">
               Usaremos tu email para enviarte la confirmación y el recordatorio de la cita.
@@ -216,7 +216,7 @@ export default async function DatosReservaPage({
               name="notas"
               rows={3}
               maxLength={500}
-              className="rounded-xl border border-line bg-paper px-3 py-2.5 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="rounded-xl border border-line bg-paper px-3 py-2.5 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gestori-accent-soft)]"
             />
           </div>
 

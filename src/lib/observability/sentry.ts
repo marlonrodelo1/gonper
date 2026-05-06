@@ -37,7 +37,7 @@ function buildAuthHeader(publicKey: string): string {
     'Sentry sentry_version=7',
     `sentry_timestamp=${ts}`,
     `sentry_key=${publicKey}`,
-    'sentry_client=gonper-mini/0.1',
+    'sentry_client=gestori-mini/0.1',
   ].join(', ');
 }
 

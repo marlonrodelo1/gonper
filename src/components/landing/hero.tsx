@@ -55,7 +55,7 @@ export function Hero() {
             data-delay="120"
             style={{ fontSize: "clamp(48px, 7vw, 80px)", lineHeight: 0.98 }}
           >
-            Una{" "}
+            Un{" "}
             <span
               className="font-serif-it"
               style={{
@@ -64,10 +64,10 @@ export function Hero() {
                 letterSpacing: "-0.02em",
               }}
             >
-              recepcionista
+              asistente
             </span>
             <br />
-            que no descansa nunca.
+            que nunca descansa.
           </h1>
 
           <p
@@ -81,7 +81,7 @@ export function Hero() {
               maxWidth: "554px",
             }}
           >
-            Gonper atiende reservas por Telegram 24/7, confirma cada cita una
+            Gestori atiende reservas por Telegram 24/7, confirma cada cita una
             hora antes y libera el hueco si no hay respuesta. Para barberías,
             peluquerías y centros de estética en España. Tú sigues cortando.
           </p>

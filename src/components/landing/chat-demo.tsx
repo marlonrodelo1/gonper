@@ -15,7 +15,7 @@ export function ChatDemo() {
   const messages: ChatMessage[] = [
     {
       from: "bot",
-      text: "¡Hola! 👋 Soy Juanita, la recepcionista de Revolution Barbershop. ¿Cómo te llamas?",
+      text: "¡Hola! 👋 Soy Juanita, la asistente de Revolution Barbershop. ¿Cómo te llamas?",
     },
     { from: "user", text: "Marlon" },
     {

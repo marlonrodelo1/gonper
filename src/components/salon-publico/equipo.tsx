@@ -84,7 +84,7 @@ export function Equipo({ profesionales }: Props) {
                     </span>
                     <a
                       href="#reservar"
-                      className="flex items-center gap-1 text-[13px] font-medium text-gomper-accent hover:text-ink transition"
+                      className="flex items-center gap-1 text-[13px] font-medium text-gestori-accent hover:text-ink transition"
                     >
                       Reservar <Icon.Arrow width="11" height="11" />
                     </a>

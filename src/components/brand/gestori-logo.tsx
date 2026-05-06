@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 
-export type GonperLogoProps = {
-  /** Tamaño del wordmark "Gonper" en px (default 32). El resto escala proporcionalmente. */
+export type GestoriLogoProps = {
+  /** Tamaño del wordmark "Gestori" en px (default 32). El resto escala proporcionalmente. */
   size?: number;
   /** Texto bajo el wordmark. Por defecto "Studio". null = sin tag (versión wordmark puro). */
   tag?: string | null;
@@ -18,16 +18,16 @@ export type GonperLogoProps = {
 };
 
 /**
- * Logo principal de Gonper.
- *  Diseño: Wordmark "Gonper" en Playfair Display (peso 500) + punto sello
+ * Logo principal de Gestori.
+ *  Diseño: Wordmark "Gestori" en Playfair Display (peso 500) + punto sello
  *  terracotta + tag opcional debajo en sans con tracking ancho.
  *
  *  Uso típico:
- *    <GonperLogo size={32} />              // Header del panel
- *    <GonperLogo size={56} tag="Salones" /> // Hero de la web pública
- *    <GonperLogo size={20} tag={null} />   // Inline en footers
+ *    <GestoriLogo size={32} />              // Header del panel
+ *    <GestoriLogo size={56} tag="Salones" /> // Hero de la web pública
+ *    <GestoriLogo size={20} tag={null} />   // Inline en footers
  */
-export function GonperLogo({
+export function GestoriLogo({
   size = 32,
   tag = 'Studio',
   color,
@@ -36,7 +36,7 @@ export function GonperLogo({
   className,
   style,
   ariaHidden,
-}: GonperLogoProps) {
+}: GestoriLogoProps) {
   // Tag bajo el wordmark: tamaño 18% del wordmark, mínimo 9px.
   const tagSize = Math.max(9, Math.round(size * 0.18));
   const dotSize = Math.max(3, Math.round(size * 0.1));
@@ -53,7 +53,7 @@ export function GonperLogo({
         ...style,
       }}
       aria-hidden={ariaHidden}
-      aria-label={ariaHidden ? undefined : 'Gonper'}
+      aria-label={ariaHidden ? undefined : 'Gestori'}
     >
       <span
         className="font-playfair"
@@ -66,7 +66,7 @@ export function GonperLogo({
           color: 'inherit',
         }}
       >
-        Gonper
+        Gestori
         <span
           aria-hidden="true"
           style={{
@@ -101,24 +101,29 @@ export function GonperLogo({
 }
 
 /**
- * Marca compacta: sólo la "G" en círculo. Para favicons, avatares de bot,
- * brand mark pequeño.
+ * Marca compacta: "G" en círculo con gradiente terracota. Para favicons,
+ * avatares de bot, brand mark pequeño en sidebars y headers.
  */
-export function GonperMark({
+export function GestoriMark({
   size = 32,
-  color,
+  color = '#FBF8F2',
   background,
   borderColor,
   className,
   style,
 }: {
   size?: number;
+  /** Color de la 'G'. Default: cream. */
   color?: string;
+  /** Fondo. Default: gradiente terracota. */
   background?: string;
   borderColor?: string;
   className?: string;
   style?: CSSProperties;
 }) {
+  const bg =
+    background ??
+    'linear-gradient(135deg, #C5562C 0%, #A8451F 100%)';
   return (
     <span
       className={className}
@@ -128,9 +133,11 @@ export function GonperMark({
         width: size,
         height: size,
         borderRadius: '50%',
-        background: background ?? '#F7F3EC',
-        border: `1.5px solid ${borderColor ?? '#1A1815'}`,
-        color: color ?? '#1A1815',
+        background: bg,
+        border: borderColor ? `1.5px solid ${borderColor}` : 'none',
+        color,
+        boxShadow:
+          'inset 0 1px 0 rgba(255,255,255,0.25), 0 4px 12px -4px rgba(168,69,31,0.4)',
         ...style,
       }}
       aria-hidden="true"
@@ -138,10 +145,11 @@ export function GonperMark({
       <span
         className="font-playfair"
         style={{
-          fontSize: Math.round(size * 0.6),
-          fontWeight: 500,
+          fontSize: Math.round(size * 0.62),
+          fontWeight: 600,
           lineHeight: 1,
-          transform: `translateY(-${Math.round(size * 0.04)}px)`,
+          transform: `translateY(-${Math.round(size * 0.03)}px)`,
+          letterSpacing: '-0.02em',
         }}
       >
         G

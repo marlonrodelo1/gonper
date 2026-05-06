@@ -48,8 +48,8 @@ export function Resenas({ resenas, resumen }: Props) {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-10 h-10 rounded-full grid place-items-center text-gomper-accent tight font-medium"
-                    style={{ background: 'var(--gomper-accent-soft)' }}
+                    className="w-10 h-10 rounded-full grid place-items-center text-gestori-accent tight font-medium"
+                    style={{ background: 'var(--gestori-accent-soft)' }}
                   >
                     {iniciales(r.autorNombre)}
                   </div>
@@ -62,7 +62,7 @@ export function Resenas({ resenas, resumen }: Props) {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-0.5 text-gomper-accent">
+                <div className="flex items-center gap-0.5 text-gestori-accent">
                   {Array.from({ length: r.rating }).map((_, k) => (
                     <Icon.Star key={k} width="13" height="13" />
                   ))}

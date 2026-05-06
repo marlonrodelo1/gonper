@@ -29,9 +29,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Gonper · Una recepcionista que no descansa nunca",
+  title: "Gestori · Un asistente que nunca descansa",
   description:
-    "Gonper atiende reservas por Telegram 24/7, confirma cada cita una hora antes y libera el hueco si no hay respuesta. Para barberías, peluquerías y centros de estética en España.",
+    "Gestori atiende reservas por Telegram 24/7, confirma cada cita una hora antes y libera el hueco si no hay respuesta. Para barberías, peluquerías y centros de estética en España.",
 };
 
 export default function RootLayout({

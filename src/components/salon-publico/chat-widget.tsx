@@ -15,7 +15,7 @@ type Props = {
   agenteAvatar?: string;
 };
 
-const STORAGE_KEY = 'gomper_chat_session';
+const STORAGE_KEY = 'gestori_chat_session';
 
 function genUUID(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -157,14 +157,14 @@ export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
         <span
           aria-hidden
           className="juanita-ping pointer-events-none absolute inset-0 rounded-full"
-          style={{ backgroundColor: 'var(--gomper-accent)' }}
+          style={{ backgroundColor: 'var(--gestori-accent)' }}
         />
         <button
           type="button"
           aria-label={`Abrir chat con ${agenteNombre}`}
           onClick={() => setOpen(true)}
           className="juanita-bubble relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full text-white shadow-2xl transition-transform hover:scale-105 active:scale-95"
-          style={{ backgroundColor: 'var(--gomper-accent)' }}
+          style={{ backgroundColor: 'var(--gestori-accent)' }}
         >
           {agenteAvatar ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -195,13 +195,13 @@ export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
       {/* Header */}
       <div
         className="flex items-center gap-3 border-b border-black/5 px-4 py-3"
-        style={{ backgroundColor: 'var(--gomper-accent-blush, #FAEFEA)' }}
+        style={{ backgroundColor: 'var(--gestori-accent-blush, #FAEFEA)' }}
       >
         <div
           className="flex h-9 w-9 items-center justify-center rounded-full font-semibold"
           style={{
-            backgroundColor: 'var(--gomper-accent-soft)',
-            color: 'var(--gomper-accent)',
+            backgroundColor: 'var(--gestori-accent-soft)',
+            color: 'var(--gestori-accent)',
           }}
         >
           {agenteAvatar ? (
@@ -262,7 +262,7 @@ export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
               }`}
               style={
                 m.direccion === 'in'
-                  ? { backgroundColor: 'var(--gomper-accent)' }
+                  ? { backgroundColor: 'var(--gestori-accent)' }
                   : undefined
               }
             >
@@ -302,7 +302,7 @@ export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
           aria-label="Enviar"
           disabled={!draft.trim() || isLoading || !sessionId}
           className="flex h-9 w-9 items-center justify-center rounded-full text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ backgroundColor: 'var(--gomper-accent)' }}
+          style={{ backgroundColor: 'var(--gestori-accent)' }}
         >
           <Icon.Arrow className="h-4 w-4" />
         </button>

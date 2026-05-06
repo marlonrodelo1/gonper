@@ -95,7 +95,7 @@ export function Promos({ agenteNombre, promociones }: Props) {
                   <div className="flex items-baseline gap-2">
                     {precio ? (
                       <span
-                        className="text-gomper-accent tight font-medium"
+                        className="text-gestori-accent tight font-medium"
                         style={{ fontSize: '32px' }}
                       >
                         {precio}
@@ -113,7 +113,7 @@ export function Promos({ agenteNombre, promociones }: Props) {
                 ) : null}
                 <a
                   href="#reservar"
-                  className="mt-2 self-start text-[14px] font-medium text-ink hover:text-gomper-accent flex items-center gap-1.5 transition"
+                  className="mt-2 self-start text-[14px] font-medium text-ink hover:text-gestori-accent flex items-center gap-1.5 transition"
                 >
                   Aprovechar <Icon.Arrow width="13" height="13" />
                 </a>
@@ -121,7 +121,7 @@ export function Promos({ agenteNombre, promociones }: Props) {
                   className="absolute -bottom-12 -right-12 w-40 h-40 rounded-full opacity-30"
                   style={{
                     background:
-                      'radial-gradient(circle, var(--gomper-accent-soft) 0%, transparent 70%)',
+                      'radial-gradient(circle, var(--gestori-accent-soft) 0%, transparent 70%)',
                   }}
                 ></div>
               </div>

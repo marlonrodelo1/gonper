@@ -135,9 +135,9 @@ export default async function ReservarPage({
           <div
             className="rounded-2xl px-4 py-3 text-[14px] border"
             style={{
-              background: 'var(--gomper-accent-blush)',
-              borderColor: 'var(--gomper-accent-soft)',
-              color: 'var(--gomper-accent-2)',
+              background: 'var(--gestori-accent-blush)',
+              borderColor: 'var(--gestori-accent-soft)',
+              color: 'var(--gestori-accent-2)',
             }}
           >
             {sp.error}
@@ -161,7 +161,7 @@ export default async function ReservarPage({
               name="servicio"
               required
               defaultValue={sp.servicio ?? ''}
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gestori-accent-soft)]"
             >
               <option value="" disabled>
                 Selecciona un servicio
@@ -187,7 +187,7 @@ export default async function ReservarPage({
               name="profesional"
               required
               defaultValue={sp.profesional ?? ''}
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gestori-accent-soft)]"
             >
               <option value="" disabled>
                 Selecciona un profesional
@@ -215,7 +215,7 @@ export default async function ReservarPage({
               min={hoyISO}
               max={maxISO}
               defaultValue={sp.fecha ?? hoyISO}
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gestori-accent-soft)]"
             />
           </div>
 
@@ -264,7 +264,7 @@ export default async function ReservarPage({
                     <Link
                       key={iso}
                       href={`/s/${salon.slug}/reservar/datos?${qs.toString()}`}
-                      className="inline-flex items-center justify-center rounded-xl border border-line bg-paper px-3 py-2.5 text-[15px] font-medium tabular-nums text-ink transition hover:border-[color:var(--gomper-accent)] hover:text-[color:var(--gomper-accent-2)]"
+                      className="inline-flex items-center justify-center rounded-xl border border-line bg-paper px-3 py-2.5 text-[15px] font-medium tabular-nums text-ink transition hover:border-[color:var(--gestori-accent)] hover:text-[color:var(--gestori-accent-2)]"
                     >
                       {horaTxt}
                     </Link>

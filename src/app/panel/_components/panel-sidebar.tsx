@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { Icon } from './icons';
-import { GonperLogo, GonperMark } from '@/components/brand/gonper-logo';
+import { GestoriLogo, GestoriMark } from '@/components/brand/gestori-logo';
 
 export type PanelSidebarProps = {
   userEmail: string | null;
@@ -116,8 +116,8 @@ export function PanelSidebar({
             onClick={cerrar}
             className="flex items-center gap-2.5"
           >
-            <GonperMark size={26} />
-            <GonperLogo size={20} tag={null} color="#1A1815" />
+            <GestoriMark size={26} />
+            <GestoriLogo size={20} tag={null} color="#1A1815" />
           </Link>
           <span className="ml-auto text-[10px] uppercase tracking-[0.18em] text-stone/70">
             Beta

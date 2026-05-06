@@ -76,14 +76,14 @@ export async function RespuestaCitaPage({ token, esperada }: Props) {
           <span
             className="grid h-16 w-16 place-items-center rounded-full"
             style={{
-              background: esConfirmar ? 'var(--gomper-accent-soft)' : '#F0EDE6',
+              background: esConfirmar ? 'var(--gestori-accent-soft)' : '#F0EDE6',
             }}
           >
             {esConfirmar ? (
               <Icon.Check
                 width="28"
                 height="28"
-                style={{ color: 'var(--gomper-accent-2)' }}
+                style={{ color: 'var(--gestori-accent-2)' }}
               />
             ) : (
               <span className="text-2xl text-stone">×</span>

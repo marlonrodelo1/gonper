@@ -114,7 +114,7 @@ export async function generateMetadata({
     .limit(1);
 
   if (!salon) {
-    return { title: 'Salón no encontrado · Gonper' };
+    return { title: 'Salón no encontrado · Gestori' };
   }
 
   const titulo = `${salon.nombre} · Reserva con Juanita`;
@@ -131,7 +131,7 @@ export async function generateMetadata({
       url,
       title: titulo,
       description: descripcion,
-      siteName: 'Gonper · gestori.es',
+      siteName: 'Gestori · gestori.es',
       locale: 'es_ES',
       images: imagen
         ? [
@@ -352,10 +352,10 @@ export default async function SalonPublicPage({
     ACCENTS[salon.tipoNegocio as keyof typeof ACCENTS] ?? ACCENTS.otro;
 
   const styleVars: CSSProperties = {
-    ['--gomper-accent' as string]: accent.accent,
-    ['--gomper-accent-2' as string]: accent.accent2,
-    ['--gomper-accent-soft' as string]: accent.accentSoft,
-    ['--gomper-accent-blush' as string]: accent.accentBlush,
+    ['--gestori-accent' as string]: accent.accent,
+    ['--gestori-accent-2' as string]: accent.accent2,
+    ['--gestori-accent-soft' as string]: accent.accentSoft,
+    ['--gestori-accent-blush' as string]: accent.accentBlush,
   } as CSSProperties;
 
   return (

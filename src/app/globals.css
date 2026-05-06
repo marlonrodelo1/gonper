@@ -140,7 +140,7 @@
 }
 
 /* =====================================================================
-   Gonper · Brand palette (Landing + Salon-Publico)
+   Gestori · Brand palette (Landing + Salon-Publico)
    Convive en paralelo con tokens shadcn — no los toca.
 ===================================================================== */
 
@@ -174,10 +174,10 @@
   --amber-soft: #F2E4C7;
 
   /* Tokens semánticos del salón (sobreescribibles inline en /s/[slug]) */
-  --gomper-accent: var(--terracotta);
-  --gomper-accent-2: var(--terracotta-2);
-  --gomper-accent-soft: var(--terracotta-soft);
-  --gomper-accent-blush: #FAEFEA;
+  --gestori-accent: var(--terracotta);
+  --gestori-accent-2: var(--terracotta-2);
+  --gestori-accent-soft: var(--terracotta-soft);
+  --gestori-accent-blush: #FAEFEA;
 }
 
 @theme inline {
@@ -202,10 +202,10 @@
   --color-rose-blush: var(--rose-blush);
   --color-amber-brand: var(--amber);
   --color-amber-soft: var(--amber-soft);
-  --color-gomper-accent: var(--gomper-accent);
-  --color-gomper-accent-2: var(--gomper-accent-2);
-  --color-gomper-accent-soft: var(--gomper-accent-soft);
-  --color-gomper-accent-blush: var(--gomper-accent-blush);
+  --color-gestori-accent: var(--gestori-accent);
+  --color-gestori-accent-2: var(--gestori-accent-2);
+  --color-gestori-accent-soft: var(--gestori-accent-soft);
+  --color-gestori-accent-blush: var(--gestori-accent-blush);
   --font-instrument: var(--font-instrument-serif);
 }
 
@@ -244,9 +244,9 @@
 }
 .gloss-btn:hover { filter: brightness(1.08); }
 
-/* CTA acento (usa tokens gomper-accent → cambia por tipo de negocio) */
+/* CTA acento (usa tokens gestori-accent → cambia por tipo de negocio) */
 .accent-btn {
-  background: linear-gradient(180deg, var(--gomper-accent) 0%, var(--gomper-accent-2) 100%);
+  background: linear-gradient(180deg, var(--gestori-accent) 0%, var(--gestori-accent-2) 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.4),
     inset 0 -3px 10px rgba(0, 0, 0, 0.18),
@@ -415,7 +415,7 @@
 
 .promo-glow {
   background:
-    radial-gradient(120% 100% at 0% 0%, var(--gomper-accent-soft) 0%, transparent 60%),
+    radial-gradient(120% 100% at 0% 0%, var(--gestori-accent-soft) 0%, transparent 60%),
     linear-gradient(135deg, var(--paper) 0%, var(--cream) 100%);
 }
 

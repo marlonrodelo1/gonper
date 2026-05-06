@@ -41,9 +41,9 @@ export function TopNav({ salonNombre, logoUrl }: Props) {
             ) : (
               <span
                 className="w-7 h-7 rounded-full grid place-items-center"
-                style={{ background: 'var(--gomper-accent-soft)' }}
+                style={{ background: 'var(--gestori-accent-soft)' }}
               >
-                <Icon.Sparkle width="14" height="14" className="text-gomper-accent" />
+                <Icon.Sparkle width="14" height="14" className="text-gestori-accent" />
               </span>
             )}
             <span className="text-[16px] tight font-medium">{salonNombre}</span>

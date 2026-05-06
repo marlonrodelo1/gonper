@@ -36,9 +36,9 @@ const ACCENTS = {
 export function getAccentVars(tipoNegocio: string | null | undefined): CSSProperties {
   const accent = ACCENTS[tipoNegocio as keyof typeof ACCENTS] ?? ACCENTS.otro;
   return {
-    ['--gomper-accent' as string]: accent.accent,
-    ['--gomper-accent-2' as string]: accent.accent2,
-    ['--gomper-accent-soft' as string]: accent.accentSoft,
-    ['--gomper-accent-blush' as string]: accent.accentBlush,
+    ['--gestori-accent' as string]: accent.accent,
+    ['--gestori-accent-2' as string]: accent.accent2,
+    ['--gestori-accent-soft' as string]: accent.accentSoft,
+    ['--gestori-accent-blush' as string]: accent.accentBlush,
   } as CSSProperties;
 }

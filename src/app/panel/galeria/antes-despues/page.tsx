@@ -224,7 +224,7 @@ export default async function AntesDespuesPage({
                 <span
                   className="absolute top-2 right-2 rounded-full px-2 py-0.5 text-[10.5px] font-medium backdrop-blur"
                   style={{
-                    background: 'var(--gomper-accent-2, #A8451F)',
+                    background: 'var(--gestori-accent-2, #A8451F)',
                     color: '#FFF',
                   }}
                 >

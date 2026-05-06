@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-const STORAGE_KEY = 'gomper_onboarding_done_v2';
+const STORAGE_KEY = 'gestori_onboarding_done_v2';
 
 interface Step {
   /** Selector CSS de un elemento con data-tour="...". null = modal centrado sin spotlight. */

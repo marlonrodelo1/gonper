@@ -27,7 +27,7 @@ const PLACEHOLDERS_BIENVENIDA: Record<string, string> = {
   cercano:
     'Ej: "¡Hola! Soy Juanita, encantada de conocerte. ¿En qué te ayudo?"',
   desenfadado:
-    'Ej: "¡Buenas! Soy Juanita, tu recepcionista virtual. Cuéntame en qué te ayudo."',
+    'Ej: "¡Buenas! Soy Juanita, tu asistente virtual. Cuéntame en qué te ayudo."',
 };
 
 const REGLAS_ABSOLUTAS = [
@@ -51,7 +51,7 @@ function generarSaludoBase(
       return `¡Buenas! Soy ${nombreAgente}. ¿En qué te ayudo?`;
     case 'cercano':
     default:
-      return `¡Hola! Soy ${nombreAgente}, la recepcionista de ${nombreSalon}. ¿Cómo te llamas?`;
+      return `¡Hola! Soy ${nombreAgente}, la asistente de ${nombreSalon}. ¿Cómo te llamas?`;
   }
 }
 
@@ -299,7 +299,7 @@ export default async function ConfigAgentePage({
               maxLength={1500}
               rows={8}
               defaultValue={salon.agenteInstrucciones ?? ''}
-              placeholder={`Ej:\nEres ${salon.agenteNombre || 'Juanita'}, recepcionista de ${salon.nombre}.\n— Responde siempre en español, frases cortas y útiles.\n— Si preguntan por reservas, comparte el enlace y di que ahí eligen servicio y hora.\n— Si preguntan por algo que no sabes, dilo con honestidad y ofrece llamar al teléfono del salón.\n— Trato cercano, sin formalismos. Usa "tú" en lugar de "usted".\n— Si el cliente está dudoso, recomienda nuestros servicios estrella.`}
+              placeholder={`Ej:\nEres ${salon.agenteNombre || 'Juanita'}, asistente de ${salon.nombre}.\n— Responde siempre en español, frases cortas y útiles.\n— Si preguntan por reservas, comparte el enlace y di que ahí eligen servicio y hora.\n— Si preguntan por algo que no sabes, dilo con honestidad y ofrece llamar al teléfono del salón.\n— Trato cercano, sin formalismos. Usa "tú" en lugar de "usted".\n— Si el cliente está dudoso, recomienda nuestros servicios estrella.`}
               className={textareaClass}
             />
             <div
@@ -310,7 +310,7 @@ export default async function ConfigAgentePage({
                 Cómo escribir buenas instrucciones
               </p>
               <ul className="flex flex-col gap-1.5 list-disc pl-5">
-                <li>Escribe en segunda persona: <em>“Eres ${'<nombre>'}, recepcionista de ${'<salón>'}…”</em></li>
+                <li>Escribe en segunda persona: <em>“Eres ${'<nombre>'}, asistente de ${'<salón>'}…”</em></li>
                 <li>Indica QUÉ debe hacer y QUÉ NO debe hacer (precios, promesas, datos médicos…).</li>
                 <li>Si tienes servicios estrella o promos, menciónalos.</li>
                 <li>Especifica idioma, longitud y tono concreto.</li>
@@ -389,7 +389,7 @@ export default async function ConfigAgentePage({
             No negociables
           </h2>
           <p className="text-[13px] text-stone">
-            Independientemente del tono, todos los agentes Gonper siguen estas
+            Independientemente del tono, todos los agentes Gestori siguen estas
             reglas.
           </p>
         </header>
