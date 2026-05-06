@@ -6,7 +6,6 @@ import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { enviarEmailBienvenida } from '@/lib/email/resend';
-import { getStripe, PLANES } from '@/lib/stripe/client';
 import { checkRateLimit } from '@/lib/api/rate-limit';
 
 export async function login(formData: FormData) {
@@ -75,13 +74,6 @@ const HORARIOS_DEFAULT: HorarioSeed[] = [
   { dia_semana: 6, inicio: '09:00', fin: '14:00' },
 ];
 
-async function buildBaseUrl() {
-  const h = await headers();
-  const host = h.get('host') ?? '';
-  const proto = h.get('x-forwarded-proto') ?? 'https';
-  return `${proto}://${host}`;
-}
-
 export async function signup(formData: FormData) {
   const email = String(formData.get('email') || '');
   const password = String(formData.get('password') || '');
@@ -145,8 +137,9 @@ export async function signup(formData: FormData) {
     redirect('/signup?error=' + encodeURIComponent(`El slug "${salonSlug}" ya está en uso. Prueba con otro.`));
   }
 
-  // 3. Crear el salón. plan='trial' y trial_until null hasta que pase Checkout
-  // (el trial real lo gestiona Stripe con trial_period_days: 30).
+  // 3. Crear el salón con trial de 30 días sin tarjeta. Se accede al panel
+  // inmediatamente; el upgrade a Stripe se hace desde /panel/config/suscripcion.
+  const trialUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   const { data: salon, error: salonError } = await admin
     .from('salones')
     .insert({
@@ -155,7 +148,7 @@ export async function signup(formData: FormData) {
       tipo_negocio: tipoNegocio,
       email,
       plan: 'trial',
-      trial_until: null,
+      trial_until: trialUntil,
     })
     .select()
     .single();
@@ -174,8 +167,7 @@ export async function signup(formData: FormData) {
     redirect('/signup?error=' + encodeURIComponent('Error vinculando user: ' + linkError.message));
   }
 
-  // 5. Iniciar sesión inmediatamente para que la cookie esté lista cuando vuelva
-  // de Stripe Checkout.
+  // 5. Iniciar sesión inmediatamente y redirigir al panel.
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
   if (signInError) {
@@ -229,68 +221,8 @@ export async function signup(formData: FormData) {
     console.warn('[signup:email]:', err);
   }
 
-  // ----- Crear Stripe Customer + Checkout Session con trial 30d -----
-  // El cliente añade tarjeta pero NO se le cobra hoy. A los 30 días Stripe
-  // cobra automáticamente los 30€/mes salvo que cancele antes.
-  const plan = PLANES.basico;
-  if (!plan.priceId) {
-    redirect(
-      '/panel/config/suscripcion?error=' +
-        encodeURIComponent('Plan no configurado en Stripe. Configúralo desde aquí.'),
-    );
-  }
-
-  let checkoutUrl: string | null = null;
-  try {
-    const stripe = getStripe();
-    const baseUrl = await buildBaseUrl();
-
-    const customer = await stripe.customers.create({
-      email,
-      name: salonNombre,
-      metadata: { salon_id: salon.id },
-    });
-
-    await admin
-      .from('salones')
-      .update({ stripe_customer_id: customer.id })
-      .eq('id', salon.id);
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'subscription',
-      customer: customer.id,
-      line_items: [{ price: plan.priceId, quantity: 1 }],
-      // 30 días gratis: tarjeta obligatoria pero hoy se cobran 0€.
-      // El primer cobro de 30€ es en el día 31.
-      subscription_data: {
-        trial_period_days: 30,
-        metadata: { salon_id: salon.id, plan: 'basico' },
-      },
-      payment_method_collection: 'always',
-      success_url: `${baseUrl}/api/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/panel/config/suscripcion?canceled=1`,
-      metadata: { salon_id: salon.id, plan: 'basico' },
-      allow_promotion_codes: true,
-      locale: 'es',
-    });
-
-    checkoutUrl = session.url;
-  } catch (err) {
-    console.error('[signup:stripe] error creando checkout:', err);
-    redirect(
-      '/panel/config/suscripcion?error=' +
-        encodeURIComponent('No se pudo abrir el pago. Pulsa "Suscribirme" para reintentar.'),
-    );
-  }
-
   revalidatePath('/', 'layout');
-  if (!checkoutUrl) {
-    redirect(
-      '/panel/config/suscripcion?error=' +
-        encodeURIComponent('Stripe no devolvió URL'),
-    );
-  }
-  redirect(checkoutUrl);
+  redirect('/panel/hoy');
 }
 
 export async function signOut() {
