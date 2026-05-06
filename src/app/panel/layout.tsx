@@ -15,44 +15,57 @@ const PLANES_ACTIVOS = new Set(["basico", "solo", "studio", "pro"]);
 function leerEstadoSuscripcion(salon: Record<string, unknown> | null): {
   trialExpirado: boolean;
   planActivo: boolean;
-  sinSuscripcion: boolean;
+  diasRestantesTrial: number | null;
 } {
   if (!salon) {
-    return { trialExpirado: false, planActivo: false, sinSuscripcion: false };
+    return { trialExpirado: false, planActivo: false, diasRestantesTrial: null };
   }
   const plan = typeof salon.plan === "string" ? salon.plan : null;
-  const subscriptionId =
-    (salon.stripe_subscription_id as string | null | undefined) ??
-    (salon.stripeSubscriptionId as string | null | undefined) ??
-    null;
   const trialUntilRaw = salon.trial_until ?? salon.trialUntil ?? null;
 
   const planActivo = plan != null && PLANES_ACTIVOS.has(plan);
   if (planActivo) {
-    return { trialExpirado: false, planActivo: true, sinSuscripcion: false };
+    return {
+      trialExpirado: false,
+      planActivo: true,
+      diasRestantesTrial: null,
+    };
   }
-  // Sin suscripción Stripe = el dueño aún no completó Checkout.
-  // En ese caso bloqueamos siempre (la regla nueva: tarjeta obligatoria).
-  const sinSuscripcion = !subscriptionId;
-  if (sinSuscripcion) {
-    return { trialExpirado: false, planActivo: false, sinSuscripcion: true };
+
+  // Plan no activo: comprobamos trial_until.
+  // Sin trial_until ⇒ trial sin caducidad (early adopter); no bloqueamos.
+  if (!trialUntilRaw) {
+    return {
+      trialExpirado: false,
+      planActivo: false,
+      diasRestantesTrial: null,
+    };
   }
-  // Tiene sub_id pero plan != activo (cancelado, impagado, etc.).
-  // Mantenemos compat con el modo antiguo "trial expirado por trial_until".
-  if (plan === "trial" && trialUntilRaw) {
-    const fin =
-      trialUntilRaw instanceof Date
-        ? trialUntilRaw
-        : new Date(String(trialUntilRaw));
-    if (!isNaN(fin.getTime())) {
-      return {
-        trialExpirado: fin.getTime() <= Date.now(),
-        planActivo: false,
-        sinSuscripcion: false,
-      };
-    }
+
+  const fin =
+    trialUntilRaw instanceof Date
+      ? trialUntilRaw
+      : new Date(String(trialUntilRaw));
+
+  if (isNaN(fin.getTime())) {
+    return {
+      trialExpirado: false,
+      planActivo: false,
+      diasRestantesTrial: null,
+    };
   }
-  return { trialExpirado: true, planActivo: false, sinSuscripcion: false };
+
+  const ahoraMs = Date.now();
+  const expirado = fin.getTime() <= ahoraMs;
+  const diasRestantes = expirado
+    ? 0
+    : Math.ceil((fin.getTime() - ahoraMs) / (24 * 60 * 60 * 1000));
+
+  return {
+    trialExpirado: expirado,
+    planActivo: false,
+    diasRestantesTrial: diasRestantes,
+  };
 }
 
 export default async function PanelLayout({
@@ -83,8 +96,7 @@ export default async function PanelLayout({
       null
     : null;
 
-  const { trialExpirado, planActivo, sinSuscripcion } =
-    leerEstadoSuscripcion(salon);
+  const { trialExpirado, planActivo } = leerEstadoSuscripcion(salon);
 
   // Conversaciones únicas iniciadas hoy (cuenta sesiones distintas en `mensajes`).
   // Si algo falla, default 0 — no debe romper el layout.
@@ -123,7 +135,6 @@ export default async function PanelLayout({
       />
       <main className="min-w-0 flex-1 pt-12 md:pt-0">{children}</main>
       <TrialBlocker
-        sinSuscripcion={sinSuscripcion}
         trialExpirado={trialExpirado}
         planActivo={planActivo}
       />

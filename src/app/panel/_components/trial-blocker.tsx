@@ -4,26 +4,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export type TrialBlockerProps = {
-  /**
-   * El salón aún no tiene suscripción Stripe (no completó Checkout en signup).
-   * Esto bloquea siempre, salvo en /panel/config/suscripcion.
-   */
-  sinSuscripcion: boolean;
-  /** Trial Stripe terminado y suscripción cancelada / impaga. */
+  /** Trial caducado y suscripción NO activa. */
   trialExpirado: boolean;
   planActivo: boolean;
 };
 
 /**
- * Overlay full-screen que bloquea el panel cuando:
- *  a) el salón aún no ha pasado por Stripe Checkout (sinSuscripcion), o
- *  b) el plan ya no está activo (cancelado, impagado, etc.).
+ * Overlay full-screen que bloquea el panel solo cuando el periodo gratis
+ * ha expirado y el dueño aún no ha activado un plan de pago.
  *
- * Sólo se oculta en /panel/config/suscripcion para que el dueño pueda
- * completar el flujo.
+ * Durante el trial (con o sin tarjeta) NO se bloquea: el dueño usa el panel
+ * libremente. Sólo se muestra el overlay cuando vence el trial.
  */
 export function TrialBlocker({
-  sinSuscripcion,
   trialExpirado,
   planActivo,
 }: TrialBlockerProps) {
@@ -31,18 +24,15 @@ export function TrialBlocker({
 
   const debeBloquear =
     !planActivo &&
-    (sinSuscripcion || trialExpirado) &&
+    trialExpirado &&
     !pathname.startsWith('/panel/config/suscripcion');
 
   if (!debeBloquear) return null;
 
-  const titulo = sinSuscripcion
-    ? 'Activa tu cuenta'
-    : 'Tu prueba gratuita ha terminado';
-  const descripcion = sinSuscripcion
-    ? 'Para empezar a usar Gonper necesitas añadir tu tarjeta. Tienes 7 días gratis y no se te cobra nada hoy. Cancelas cuando quieras.'
-    : 'Para seguir usando Gonper, suscríbete al plan Básico (30 €/mes, sin permanencia, cancelas cuando quieras).';
-  const cta = sinSuscripcion ? 'Añadir tarjeta y activar' : 'Suscribirme ahora';
+  const titulo = 'Tu prueba gratuita ha terminado';
+  const descripcion =
+    'Para seguir usando Gonper, suscríbete al plan Básico (30 €/mes, sin permanencia, cancelas cuando quieras).';
+  const cta = 'Suscribirme ahora';
 
   return (
     <div
