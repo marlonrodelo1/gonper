@@ -86,7 +86,7 @@ export default async function ReservarPage({
   ]);
 
   const hoyISO = todayISO(tz);
-  const maxISO = addDaysISO(hoyISO, 90);
+  const maxISO = addDaysISO(hoyISO, salon.maxAdvanceDays ?? 90);
 
   let slots: Date[] | null = null;
   let servicioSel: typeof serviciosActivos[number] | null = null;

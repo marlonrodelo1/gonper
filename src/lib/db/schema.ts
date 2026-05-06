@@ -117,6 +117,12 @@ export const salones = pgTable(
     email: text('email'),
     timezone: text('timezone').notNull().default('Europe/Madrid'),
 
+    // Configuración de reservas
+    slotIntervalMin: integer('slot_interval_min'),
+    leadTimeMin: integer('lead_time_min').notNull().default(5),
+    maxAdvanceDays: integer('max_advance_days').notNull().default(90),
+    bufferMin: integer('buffer_min').notNull().default(0),
+
     // Configuración del agente
     agenteNombre: text('agente_nombre').notNull().default('Juanita'),
     agenteGenero: text('agente_genero').notNull().default('femenino'),

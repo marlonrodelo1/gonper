@@ -93,6 +93,50 @@ export async function actualizarDatosSalon(formData: FormData) {
   redirect('/panel/config?ok=1');
 }
 
+const SLOT_INTERVAL_VALORES = [0, 15, 30, 60] as const; // 0 = auto
+
+export async function actualizarProgramacionReservas(formData: FormData) {
+  const salon = await requireSalon();
+
+  const slotIntervalRaw = Number(formData.get('slot_interval_min') ?? '0');
+  const leadTimeRaw = Number(formData.get('lead_time_min') ?? '5');
+  const maxAdvanceRaw = Number(formData.get('max_advance_days') ?? '90');
+  const bufferRaw = Number(formData.get('buffer_min') ?? '0');
+
+  if (!SLOT_INTERVAL_VALORES.includes(slotIntervalRaw as 0 | 15 | 30 | 60)) {
+    redirectError('/panel/config/reservas', 'Granularidad inválida');
+  }
+  if (!Number.isFinite(leadTimeRaw) || leadTimeRaw < 0 || leadTimeRaw > 1440) {
+    redirectError('/panel/config/reservas', 'Antelación mínima inválida (0-1440 min)');
+  }
+  if (!Number.isFinite(maxAdvanceRaw) || maxAdvanceRaw < 1 || maxAdvanceRaw > 365) {
+    redirectError('/panel/config/reservas', 'Antelación máxima inválida (1-365 días)');
+  }
+  if (!Number.isFinite(bufferRaw) || bufferRaw < 0 || bufferRaw > 60) {
+    redirectError('/panel/config/reservas', 'Buffer inválido (0-60 min)');
+  }
+
+  try {
+    await db
+      .update(salones)
+      .set({
+        slotIntervalMin: slotIntervalRaw === 0 ? null : slotIntervalRaw,
+        leadTimeMin: leadTimeRaw,
+        maxAdvanceDays: maxAdvanceRaw,
+        bufferMin: bufferRaw,
+        updatedAt: new Date(),
+      })
+      .where(eq(salones.id, salon.id));
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Error desconocido';
+    redirectError('/panel/config/reservas', msg);
+  }
+
+  revalidatePath('/panel/config/reservas');
+  revalidarWebPublica(salon.slug);
+  redirect('/panel/config/reservas?ok=1');
+}
+
 const AVATAR_BUCKET = 'salon-assets';
 const AVATAR_MIME_OK = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif']);
 const AVATAR_MAX_BYTES = 3 * 1024 * 1024; // 3 MB

@@ -12,8 +12,8 @@
  */
 
 import { db } from '@/lib/db';
-import { citas, cierres, horarios } from '@/lib/db/schema';
-import { and, eq, gte, lt, lte, gt, inArray } from 'drizzle-orm';
+import { citas, cierres, horarios, salones } from '@/lib/db/schema';
+import { and, eq, gte, lt, gt, inArray } from 'drizzle-orm';
 
 export interface CalcularSlotsOptions {
   salonId: string;
@@ -43,9 +43,27 @@ function granularidadPorDefecto(duracionMin: number): number {
  * Devuelve un array de Date (instantes UTC) representando inicios de slot disponibles.
  */
 export async function calcularSlots(opts: CalcularSlotsOptions): Promise<Date[]> {
+  // Cargar configuración del salón (slot interval forzado, lead time, buffer)
+  const [config] = await db
+    .select({
+      slotIntervalMin: salones.slotIntervalMin,
+      leadTimeMin: salones.leadTimeMin,
+      bufferMin: salones.bufferMin,
+      timezone: salones.timezone,
+    })
+    .from(salones)
+    .where(eq(salones.id, opts.salonId))
+    .limit(1);
+
+  // Granularidad: 1) override del caller, 2) config del salón, 3) auto por duración
   const granularidad =
-    opts.granularidadMin ?? granularidadPorDefecto(opts.duracionMin);
-  const tz = opts.timezone ?? 'Europe/Madrid';
+    opts.granularidadMin ??
+    config?.slotIntervalMin ??
+    granularidadPorDefecto(opts.duracionMin);
+
+  const leadTimeMin = config?.leadTimeMin ?? 5;
+  const bufferMin = config?.bufferMin ?? 0;
+  const tz = opts.timezone ?? config?.timezone ?? 'Europe/Madrid';
 
   // 1. Día calendario en zona horaria del salón → diaSemana 0-6 (0=domingo)
   // Usamos formatToParts para extraer Y/M/D en la TZ destino.
@@ -115,10 +133,10 @@ export async function calcularSlots(opts: CalcularSlotsOptions): Promise<Date[]>
     );
 
   // 6. Para cada tramo del horario, generar candidatos cada `granularidad` min
-  // Excluir slots cuyo inicio sea anterior a "ahora + 5 min" (no permitir
-  // reservar para el pasado ni para los próximos 5 min — el bot/cliente
-  // necesita tiempo para confirmar).
-  const minimoUtc = Date.now() + 5 * 60_000;
+  // Excluir slots cuyo inicio sea anterior a "ahora + leadTimeMin" según
+  // configuración del salón.
+  const minimoUtc = Date.now() + leadTimeMin * 60_000;
+  const bufferMs = bufferMin * 60_000;
 
   const slots: Date[] = [];
   for (const tramo of tramos) {
@@ -143,8 +161,14 @@ export async function calcularSlots(opts: CalcularSlotsOptions): Promise<Date[]>
         continue;
       }
 
-      // Filtrar: descartar si solapa con cita activa
-      if (citasDia.some((c) => slotInicio < c.fin && slotFin > c.inicio)) {
+      // Filtrar: descartar si solapa con cita activa (incluye buffer entre citas)
+      if (
+        citasDia.some(
+          (c) =>
+            slotInicio.getTime() < c.fin.getTime() + bufferMs &&
+            slotFin.getTime() + bufferMs > c.inicio.getTime(),
+        )
+      ) {
         continue;
       }
 
