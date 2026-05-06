@@ -152,15 +152,33 @@ export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
 
   if (!open) {
     return (
-      <button
-        type="button"
-        aria-label="Abrir chat"
-        onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full text-white shadow-2xl transition-transform hover:scale-105 active:scale-95"
-        style={{ backgroundColor: 'var(--gomper-accent)' }}
-      >
-        <Icon.Assistant className="h-6 w-6" />
-      </button>
+      <div className="fixed bottom-5 right-5 z-50">
+        {/* Anillo pulsante para llamar la atención (sutil) */}
+        <span
+          aria-hidden
+          className="juanita-ping pointer-events-none absolute inset-0 rounded-full"
+          style={{ backgroundColor: 'var(--gomper-accent)' }}
+        />
+        <button
+          type="button"
+          aria-label={`Abrir chat con ${agenteNombre}`}
+          onClick={() => setOpen(true)}
+          className="juanita-bubble relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full text-white shadow-2xl transition-transform hover:scale-105 active:scale-95"
+          style={{ backgroundColor: 'var(--gomper-accent)' }}
+        >
+          {agenteAvatar ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={agenteAvatar}
+              alt={agenteNombre}
+              className="h-full w-full object-cover"
+              draggable={false}
+            />
+          ) : (
+            <Icon.Assistant className="h-6 w-6" />
+          )}
+        </button>
+      </div>
     );
   }
 

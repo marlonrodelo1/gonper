@@ -1,10 +1,13 @@
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 import { Icon } from '@/app/panel/_components/icons';
 import { actualizarAgente } from '../actions';
+import { PlantillasButton } from './plantillas-button';
 
 type Salon = {
   id: string;
   nombre: string;
+  tipoNegocio?: string;
+  tipo_negocio?: string;
   agenteNombre: string;
   agenteGenero: string;
   agenteTono: string;
@@ -237,6 +240,12 @@ export default async function ConfigAgentePage({
               </p>
             </div>
           </div>
+
+          <PlantillasButton
+            tipoNegocio={salon.tipoNegocio ?? salon.tipo_negocio ?? 'otro'}
+            agenteNombre={salon.agenteNombre || 'Juanita'}
+            salonNombre={salon.nombre}
+          />
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="agente_bienvenida" className={labelClass}>
