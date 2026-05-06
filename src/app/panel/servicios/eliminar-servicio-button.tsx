@@ -37,8 +37,9 @@ export function EliminarServicioButton({
         <AlertDialogHeader>
           <AlertDialogTitle>Eliminar “{nombre}”</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. Las citas existentes con este
-            servicio se mantienen pero ya no podrá usarse para nuevas citas.
+            Si el servicio no tiene citas, se elimina del todo. Si ya tiene
+            citas asociadas (pasadas o futuras), se desactivará para que no
+            aparezca en nuevas reservas y mantener el histórico.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

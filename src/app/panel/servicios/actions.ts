@@ -156,9 +156,36 @@ export async function eliminarServicio(formData: FormData) {
     redirect('/panel/servicios?error=' + encodeURIComponent('No autorizado'));
   }
 
-  await db
-    .delete(servicios)
-    .where(and(eq(servicios.id, id), eq(servicios.salonId, salon.id)));
+  // Intento hard-delete. Si hay citas asociadas, postgres rechaza por FK
+  // restrict (código 23503). En ese caso hacemos soft-delete (activo=false)
+  // para preservar el histórico de citas y dejarlo claramente fuera del
+  // catálogo activo.
+  try {
+    await db
+      .delete(servicios)
+      .where(and(eq(servicios.id, id), eq(servicios.salonId, salon.id)));
+  } catch (err: unknown) {
+    const code =
+      err && typeof err === 'object' && 'code' in err
+        ? String((err as { code?: unknown }).code)
+        : '';
+    if (code === '23503') {
+      await db
+        .update(servicios)
+        .set({ activo: false })
+        .where(and(eq(servicios.id, id), eq(servicios.salonId, salon.id)));
+      revalidatePath('/panel/servicios');
+      revalidatePath('/panel/config/reservas');
+      revalidarWebPublica(salon.slug);
+      redirect(
+        '/panel/servicios?error=' +
+          encodeURIComponent(
+            'Este servicio tiene citas asociadas, no se puede eliminar. Lo hemos desactivado para que no aparezca en nuevas reservas.',
+          ),
+      );
+    }
+    throw err;
+  }
 
   revalidatePath('/panel/servicios');
   revalidatePath('/panel/config/reservas');
