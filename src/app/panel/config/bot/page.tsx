@@ -8,10 +8,6 @@ import {
 import { CopyLinkButton } from './copy-link-button';
 import { VincularDuenoButton } from './vincular-dueno-button';
 
-/**
- * Supabase devuelve la fila de `salones` con los nombres reales de las
- * columnas (snake_case). Aceptamos ambos formatos por compatibilidad.
- */
 type SalonRow = {
   id: string;
   slug: string;
@@ -27,26 +23,6 @@ type SalonRow = {
 const inputClass =
   'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2';
 const labelClass = 'text-[11px] uppercase tracking-[0.2em] text-stone/80';
-
-function StatePill({ ok, okText, koText }: { ok: boolean; okText: string; koText: string }) {
-  return ok ? (
-    <span
-      className="pill"
-      style={{ background: 'rgba(139,157,122,0.15)', color: '#5A6B4D' }}
-    >
-      <span className="pill-dot" style={{ background: '#8B9D7A' }} />
-      {okText}
-    </span>
-  ) : (
-    <span
-      className="pill"
-      style={{ background: 'rgba(107,99,86,0.10)', color: '#6B6356' }}
-    >
-      <span className="pill-dot" style={{ background: '#8A8174' }} />
-      {koText}
-    </span>
-  );
-}
 
 export default async function ConfigBotPage({
   searchParams,
@@ -77,12 +53,10 @@ export default async function ConfigBotPage({
     salon.telegram_chat_id_dueno ?? salon.telegramChatIdDueno ?? null;
   const tieneBot = !!tokenBot;
   const duenoVinculado = !!chatIdDueno;
-  const botUrl = usernameBot ? `https://t.me/${usernameBot}` : null;
-
-  const todoOk = tieneBot && duenoVinculado;
   const linkCliente = usernameBot
     ? `https://t.me/${usernameBot}?start=${salon.slug}`
     : null;
+  const botUrl = usernameBot ? `https://t.me/${usernameBot}` : null;
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -102,257 +76,215 @@ export default async function ConfigBotPage({
       ) : null}
 
       {/* ============================================
-          BANNER · Bot operativo (cliente + dueño)
+          ESTADO 1: Todo OK — bot + dueño vinculado
           ============================================ */}
-      {todoOk ? (
+      {tieneBot && duenoVinculado ? (
         <section
-          className="card grain flex flex-col gap-4 p-5 md:p-7"
+          className="card grain flex flex-col gap-5 p-5 md:p-7"
           style={{
             borderColor: 'rgba(139,157,122,0.45)',
             background:
               'linear-gradient(180deg, rgba(139,157,122,0.10) 0%, rgba(139,157,122,0.02) 100%)',
           }}
         >
-          <header className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span
-                className="flex h-9 w-9 items-center justify-center rounded-full"
-                style={{ background: 'rgba(139,157,122,0.25)', color: '#3F4D34' }}
-              >
-                <Icon.Check width="16" height="16" />
+          <header className="flex flex-wrap items-center gap-3">
+            <span
+              className="flex h-9 w-9 items-center justify-center rounded-full"
+              style={{ background: 'rgba(139,157,122,0.25)', color: '#3F4D34' }}
+            >
+              <Icon.Check width="16" height="16" />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+                Bot operativo
               </span>
-              <div className="flex flex-col">
-                <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
-                  Bot operativo
-                </span>
-                <h2 className="tight text-[18px] font-medium text-ink">
-                  Atiende a clientes y a ti como dueño
-                </h2>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className="pill"
-                style={{ background: 'rgba(139,157,122,0.18)', color: '#3F4D34' }}
-              >
-                <span
-                  className="pill-dot"
-                  style={{ background: '#8B9D7A' }}
-                />
-                Clientes
-              </span>
-              <span
-                className="pill"
-                style={{ background: 'rgba(139,157,122,0.18)', color: '#3F4D34' }}
-              >
-                <span
-                  className="pill-dot"
-                  style={{ background: '#8B9D7A' }}
-                />
-                Dueño vinculado
-              </span>
+              <h2 className="tight text-[19px] font-medium text-ink">
+                Atiende a tus clientes y a ti como dueño
+              </h2>
             </div>
           </header>
 
-          <div className="grid gap-3 md:grid-cols-2">
-            {/* Lado cliente */}
-            <div className="card-tight flex flex-col gap-2 px-4 py-4">
-              <span className={labelClass}>Para clientes (compártelo)</span>
-              <div className="flex flex-wrap items-center gap-2">
-                <code className="rounded-lg bg-cream-2 px-2.5 py-1.5 font-mono text-[12px] text-ink">
-                  t.me/{usernameBot}?start={salon.slug}
-                </code>
-                {linkCliente ? (
-                  <CopyLinkButton
-                    link={linkCliente}
-                    label="Copiar enlace"
-                    copiedLabel="Copiado"
-                  />
-                ) : null}
-              </div>
-              <p className="text-[12px] text-stone">
-                Quien lo abra reserva con Juanita 24/7.
-              </p>
+          {/* Enlace para clientes */}
+          <div className="card-tight flex flex-col gap-2 px-4 py-4">
+            <span className={labelClass}>Enlace para tus clientes</span>
+            <div className="flex flex-wrap items-center gap-2">
+              <code className="rounded-lg bg-cream-2 px-2.5 py-1.5 font-mono text-[12.5px] text-ink">
+                t.me/{usernameBot}?start={salon.slug}
+              </code>
+              {linkCliente ? (
+                <CopyLinkButton link={linkCliente} label="Copiar" copiedLabel="Copiado" />
+              ) : null}
             </div>
-
-            {/* Lado dueño */}
-            <div className="card-tight flex flex-col gap-2 px-4 py-4">
-              <span className={labelClass}>Tú como dueño</span>
-              <a
-                href={botUrl ?? '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="tight text-[13.5px] font-medium text-terracotta hover:text-terracotta-2"
-              >
-                Abrir Juanita Pro en Telegram →
-              </a>
-              <p className="font-mono text-[11.5px] text-stone">
-                Chat ID {chatIdDueno}
-              </p>
-              <p className="text-[12px] text-stone">
-                Pregúntale por tu agenda, KPIs o clientes.
-              </p>
-            </div>
+            <p className="text-[12px] text-stone">
+              Pégalo en tu Instagram, web o donde quieras. Quien lo abra reservará con Juanita 24/7.
+            </p>
           </div>
+
+          {/* Configuración avanzada — colapsada */}
+          <details className="rounded-2xl border border-line bg-paper px-4 py-3 text-[13px]">
+            <summary className="cursor-pointer select-none text-stone hover:text-ink">
+              Configuración avanzada
+            </summary>
+            <div className="mt-4 flex flex-col gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
+                <div className="flex flex-col">
+                  <span className="text-[11px] uppercase tracking-[0.18em] text-stone/70">
+                    Bot Telegram
+                  </span>
+                  <a
+                    href={botUrl ?? '#'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[13.5px] font-medium text-terracotta hover:text-terracotta-2"
+                  >
+                    @{usernameBot}
+                  </a>
+                </div>
+                <form action={desconectarBotSalon}>
+                  <button
+                    type="submit"
+                    className="tight rounded-full border border-line bg-paper px-4 py-2 text-[12.5px] font-medium text-ink transition hover:bg-cream"
+                  >
+                    Cambiar bot
+                  </button>
+                </form>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-col">
+                  <span className="text-[11px] uppercase tracking-[0.18em] text-stone/70">
+                    Tú como dueño
+                  </span>
+                  <span className="font-mono text-[12.5px] text-ink">
+                    Chat ID {chatIdDueno}
+                  </span>
+                </div>
+                <form action={desvincularTelegramDueno}>
+                  <button
+                    type="submit"
+                    className="tight rounded-full border border-line bg-paper px-4 py-2 text-[12.5px] font-medium text-ink transition hover:bg-cream"
+                  >
+                    Desvincular
+                  </button>
+                </form>
+              </div>
+            </div>
+          </details>
         </section>
       ) : null}
 
       {/* ============================================
-          PASO 1 · Token del bot
+          ESTADO 2: Bot SIN configurar — pegar token
           ============================================ */}
-      <section className="card flex flex-col gap-5 p-5 md:p-8">
-        <header className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex flex-col gap-1.5">
+      {!tieneBot ? (
+        <section className="card flex flex-col gap-5 p-5 md:p-8">
+          <header className="flex flex-col gap-1.5">
             <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
-              Paso 1 · Bot Telegram
+              Empieza aquí
             </span>
             <h2 className="tight text-[20px] font-medium text-ink">
-              Bot del salón
+              Conecta tu bot de Telegram
             </h2>
-            <p className="text-[13px] text-stone">
-              Un único bot que atiende a tus clientes para reservas <strong className="text-ink">y</strong> que tú usarás
-              como dueño para hablar con tu Juanita Pro. Pega el token de @BotFather y lo configuramos
-              automáticamente.
+            <p className="text-[14px] text-stone">
+              Un único bot que atiende a tus clientes <strong className="text-ink">y</strong> que tú
+              usarás como dueño para hablar con tu Juanita Pro.
             </p>
-          </div>
-          <StatePill ok={tieneBot} okText="Configurado" koText="Sin configurar" />
-        </header>
+          </header>
 
-        {tieneBot && usernameBot ? (
-          <div className="card-tight flex flex-col gap-2.5 px-4 py-4">
-            <p className={labelClass}>Bot configurado</p>
-            <a
-              href={botUrl ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="tight text-[13.5px] font-medium text-terracotta hover:text-terracotta-2"
-            >
-              Abrir en Telegram → t.me/{usernameBot}
-            </a>
-            <p className="mt-2 text-[11px] uppercase tracking-[0.2em] text-stone/80">
-              Enlace de reserva para clientes
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <code className="rounded-lg bg-cream-2 px-2.5 py-1.5 font-mono text-[12px] text-ink">
-                t.me/{usernameBot}?start={salon.slug}
-              </code>
-              <CopyLinkButton
-                link={`https://t.me/${usernameBot}?start=${salon.slug}`}
-                label="Copiar enlace"
-                copiedLabel="Copiado"
+          <form action={guardarTokenBotCliente} className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="bot_token" className={labelClass}>
+                Token del bot (de @BotFather)
+              </label>
+              <input
+                id="bot_token"
+                name="bot_token"
+                type="password"
+                autoComplete="off"
+                required
+                placeholder="123456789:AAH..."
+                className={inputClass}
               />
             </div>
-          </div>
-        ) : null}
 
-        <form action={guardarTokenBotCliente} className="flex flex-col gap-5">
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="bot_token" className={labelClass}>
-              {tieneBot ? 'Cambiar token del bot' : 'Token del bot'}
-            </label>
-            <input
-              id="bot_token"
-              name="bot_token"
-              type="password"
-              autoComplete="off"
-              required
-              placeholder="123456789:AAH..."
-              className={inputClass}
-            />
-            <p className="text-[12px] text-stone/80">
-              Lo obtienes al crear el bot con @BotFather. Validamos contra Telegram y configuramos el
-              webhook automáticamente.
+            <button
+              type="submit"
+              className="gloss-btn tight self-end rounded-full px-5 py-3 text-[13.5px] font-medium"
+            >
+              Conectar bot
+            </button>
+          </form>
+
+          <details className="rounded-2xl border border-line bg-paper px-4 py-3 text-[13px] text-stone">
+            <summary className="cursor-pointer select-none text-ink">
+              ¿Cómo creo un bot en BotFather?
+            </summary>
+            <ol className="mt-3 flex flex-col gap-1.5 pl-5 list-decimal text-[12.5px]">
+              <li>
+                Abre Telegram y busca <strong className="text-ink">@BotFather</strong>.
+              </li>
+              <li>
+                Envíale{' '}
+                <code className="rounded bg-cream-2 px-1.5 py-0.5 font-mono text-[11.5px]">
+                  /newbot
+                </code>{' '}
+                y sigue las instrucciones (nombre + username terminado en{' '}
+                <code className="font-mono">bot</code>).
+              </li>
+              <li>Copia el token que te da y pégalo arriba.</li>
+            </ol>
+          </details>
+        </section>
+      ) : null}
+
+      {/* ============================================
+          ESTADO 3: Bot OK pero dueño NO vinculado
+          ============================================ */}
+      {tieneBot && !duenoVinculado ? (
+        <section className="card flex flex-col gap-4 p-5 md:p-8">
+          <header className="flex flex-col gap-1.5">
+            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Último paso
+            </span>
+            <h2 className="tight text-[20px] font-medium text-ink">
+              Vincúlate como dueño
+            </h2>
+            <p className="text-[14px] text-stone">
+              Para que cuando le escribas a tu propio bot te tratemos como dueño y respondamos con
+              datos de tu negocio. Tus clientes solo verán info pública.
             </p>
-          </div>
+          </header>
 
-          <div className="flex flex-wrap justify-end gap-2 pt-2">
-            {tieneBot ? (
+          <VincularDuenoButton />
+
+          <details className="rounded-2xl border border-line bg-paper px-4 py-3 text-[13px] text-stone">
+            <summary className="cursor-pointer select-none text-ink">
+              Configuración avanzada
+            </summary>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col">
+                <span className={labelClass}>Bot Telegram</span>
+                <a
+                  href={botUrl ?? '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[13px] font-medium text-terracotta hover:text-terracotta-2"
+                >
+                  @{usernameBot}
+                </a>
+              </div>
               <form action={desconectarBotSalon}>
                 <button
                   type="submit"
-                  className="tight rounded-full border border-line bg-paper px-5 py-3 text-[13.5px] font-medium text-ink transition hover:bg-cream"
+                  className="tight rounded-full border border-line bg-paper px-4 py-2 text-[12.5px] font-medium text-ink transition hover:bg-cream"
                 >
-                  Desconectar bot
+                  Cambiar bot
                 </button>
               </form>
-            ) : null}
-            <button
-              type="submit"
-              className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium"
-            >
-              {tieneBot ? 'Cambiar token' : 'Guardar token'}
-            </button>
-          </div>
-        </form>
-
-        <div className="rule" />
-
-        <ol className="flex flex-col gap-1.5 pl-5 text-[12.5px] text-stone list-decimal">
-          <li>
-            Abre Telegram y busca <strong className="text-ink">@BotFather</strong>.
-          </li>
-          <li>
-            Envíale{' '}
-            <code className="rounded bg-cream-2 px-1.5 py-0.5 font-mono text-[11.5px]">
-              /newbot
-            </code>{' '}
-            y sigue las instrucciones (nombre + username terminado en <code className="font-mono">bot</code>).
-          </li>
-          <li>Copia el token que te da y pégalo arriba.</li>
-        </ol>
-      </section>
-
-      {/* ============================================
-          PASO 2 · Vincular tu Telegram personal como dueño
-          ============================================ */}
-      <section className="card flex flex-col gap-5 p-5 md:p-8">
-        <header className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
-              Paso 2 · Vincular como dueño
-            </span>
-            <h2 className="tight text-[20px] font-medium text-ink">
-              Tu Telegram → Juanita Pro
-            </h2>
-            <p className="text-[13px] text-stone">
-              Cuando escribes a tu propio bot, te tratamos como dueño y respondemos con datos de tu
-              negocio. Cualquier otra persona verá info pública (servicios, precios, link a reservar).
-            </p>
-          </div>
-          <StatePill ok={duenoVinculado} okText="Vinculado" koText="Sin vincular" />
-        </header>
-
-        {!tieneBot ? (
-          <div className="card-tight px-4 py-4 text-[13px] text-stone">
-            Configura primero el token del bot arriba para poder vincularte.
-          </div>
-        ) : duenoVinculado ? (
-          <div className="flex flex-col gap-4">
-            <div className="card-tight flex flex-col gap-2 px-4 py-4">
-              <span className={labelClass}>Chat ID conectado</span>
-              <code className="font-mono text-[13.5px] text-ink">
-                {chatIdDueno}
-              </code>
             </div>
-
-            <p className="text-[13px] text-stone">
-              Recibirás avisos del agente Juanita Pro por aquí. Cualquier pregunta que le hagas a tu
-              Juanita por Telegram tendrá la misma capacidad que el chat del panel.
-            </p>
-
-            <form action={desvincularTelegramDueno} className="flex justify-end pt-1">
-              <button
-                type="submit"
-                className="tight rounded-full border border-line bg-paper px-5 py-3 text-[13.5px] font-medium text-ink transition hover:bg-cream"
-              >
-                Desvincular Telegram
-              </button>
-            </form>
-          </div>
-        ) : (
-          <VincularDuenoButton />
-        )}
-      </section>
+          </details>
+        </section>
+      ) : null}
     </div>
   );
 }
