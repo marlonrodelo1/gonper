@@ -93,7 +93,11 @@ export function SalonPublico({
       />
       <Ubicacion salon={salon} horariosSemana={horariosSemana} diaActual={diaActual} />
       <Footer salon={salon} />
-      <ChatWidget slug={salon.slug} agenteNombre={salon.agenteNombre || 'Juanita'} />
+      <ChatWidget
+        slug={salon.slug}
+        agenteNombre={salon.agenteNombre || 'Juanita'}
+        agenteAvatar={salon.agenteAvatarUrl ?? undefined}
+      />
     </>
   );
 }

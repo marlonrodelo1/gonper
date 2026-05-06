@@ -104,6 +104,8 @@ export async function GET(request: Request) {
         agente_genero: salon.agenteGenero,
         agente_tono: salon.agenteTono,
         agente_bienvenida: salon.agenteBienvenida,
+        agente_instrucciones: salon.agenteInstrucciones,
+        agente_avatar_url: salon.agenteAvatarUrl,
         // Tokens necesarios para que n8n responda con el bot del salón
         telegram_bot_token: salon.telegramBotToken,
         telegram_bot_username: salon.telegramBotUsername,

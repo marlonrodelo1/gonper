@@ -9,6 +9,8 @@ type Salon = {
   agenteGenero: string;
   agenteTono: string;
   agenteBienvenida: string | null;
+  agenteInstrucciones: string | null;
+  agenteAvatarUrl: string | null;
 } | null;
 
 const GENEROS: { value: string; label: string }[] = [
@@ -124,7 +126,51 @@ export default async function ConfigAgentePage({
           </p>
         </header>
 
-        <form action={actualizarAgente} className="flex flex-col gap-5">
+        <form
+          action={actualizarAgente}
+          encType="multipart/form-data"
+          className="flex flex-col gap-5"
+        >
+          {/* Avatar */}
+          <div className="flex flex-col gap-2">
+            <label className={labelClass}>Avatar del agente (opcional)</label>
+            <div className="flex items-center gap-4">
+              <div
+                className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-paper text-[20px] font-semibold text-terracotta"
+                style={{ background: 'rgba(197,86,44,0.10)' }}
+              >
+                {salon.agenteAvatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={salon.agenteAvatarUrl}
+                    alt={salon.agenteNombre}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  (salon.agenteNombre || 'J').charAt(0).toUpperCase()
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  id="agente_avatar"
+                  name="agente_avatar"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
+                  className="block w-full cursor-pointer rounded-2xl border border-line bg-paper px-4 py-3 text-[13.5px] text-ink file:mr-3 file:rounded-full file:border-0 file:bg-ink file:px-4 file:py-1.5 file:text-[12px] file:font-medium file:text-cream hover:file:opacity-90"
+                />
+                <p className="mt-1.5 text-[12px] text-stone/80">
+                  JPG, PNG, WEBP o AVIF. Cuadrada idealmente (256×256+). Máx. 3 MB.
+                </p>
+                {salon.agenteAvatarUrl ? (
+                  <label className="mt-2 inline-flex items-center gap-2 text-[12.5px] text-stone">
+                    <input type="checkbox" name="eliminar_avatar" className="h-4 w-4 rounded border-line" />
+                    Eliminar avatar actual
+                  </label>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-1.5">
             <label htmlFor="agente_nombre" className={labelClass}>
               Nombre del agente
@@ -213,6 +259,39 @@ export default async function ConfigAgentePage({
             </p>
           </div>
 
+          <div className="flex flex-col gap-2">
+            <label htmlFor="agente_instrucciones" className={labelClass}>
+              Instrucciones para tu agente
+            </label>
+            <textarea
+              id="agente_instrucciones"
+              name="agente_instrucciones"
+              maxLength={1500}
+              rows={8}
+              defaultValue={salon.agenteInstrucciones ?? ''}
+              placeholder={`Ej:\nEres ${salon.agenteNombre || 'Juanita'}, recepcionista de ${salon.nombre}.\n— Responde siempre en español, frases cortas y útiles.\n— Si preguntan por reservas, comparte el enlace y di que ahí eligen servicio y hora.\n— Si preguntan por algo que no sabes, dilo con honestidad y ofrece llamar al teléfono del salón.\n— Trato cercano, sin formalismos. Usa "tú" en lugar de "usted".\n— Si el cliente está dudoso, recomienda nuestros servicios estrella.`}
+              className={textareaClass}
+            />
+            <div
+              className="card-tight flex flex-col gap-2 px-4 py-3 text-[12.5px] text-stone"
+              style={{ background: 'rgba(197,142,44,0.06)' }}
+            >
+              <p className="text-[12px] uppercase tracking-[0.16em] text-stone/70">
+                Cómo escribir buenas instrucciones
+              </p>
+              <ul className="flex flex-col gap-1.5 list-disc pl-5">
+                <li>Escribe en segunda persona: <em>“Eres ${'<nombre>'}, recepcionista de ${'<salón>'}…”</em></li>
+                <li>Indica QUÉ debe hacer y QUÉ NO debe hacer (precios, promesas, datos médicos…).</li>
+                <li>Si tienes servicios estrella o promos, menciónalos.</li>
+                <li>Especifica idioma, longitud y tono concreto.</li>
+                <li>Para reservar siempre comparte el enlace, no gestiones la cita por chat.</li>
+              </ul>
+              <p className="mt-1 text-[11.5px] text-stone/70">
+                Estas instrucciones se añaden al system prompt de Juanita en TODOS los canales (chat web, Telegram). Máx. 1500 caracteres.
+              </p>
+            </div>
+          </div>
+
           <div className="flex justify-end pt-2">
             <button
               type="submit"
@@ -251,8 +330,19 @@ export default async function ConfigAgentePage({
           ) : null}
         </header>
         <div className="flex items-end gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-terracotta/15 text-[14px] font-semibold text-terracotta">
-            {(salon.agenteNombre || 'J').charAt(0).toUpperCase()}
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-terracotta/15 text-[14px] font-semibold text-terracotta"
+          >
+            {salon.agenteAvatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={salon.agenteAvatarUrl}
+                alt={salon.agenteNombre}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              (salon.agenteNombre || 'J').charAt(0).toUpperCase()
+            )}
           </div>
           <div className="card-tight max-w-[80%] rounded-bl-sm px-4 py-3 text-[14px] whitespace-pre-wrap text-ink">
             {saludoPreview}

@@ -98,9 +98,13 @@ function buildSystemPrompt(args: {
   horariosTexto: string;
   fechaHoy: string;
   reservarUrl: string;
+  instruccionesDueno: string | null;
 }): string {
   const tipo = TIPO_NEGOCIO_LEGIBLE[args.tipoNegocio] ?? args.tipoNegocio;
   const lugar = args.direccion ?? 'España';
+  const bloqueInstrucciones = args.instruccionesDueno && args.instruccionesDueno.trim()
+    ? `\n## Instrucciones del dueño del salón (prioritarias)\n${args.instruccionesDueno.trim()}\n`
+    : '';
   return `Eres ${args.agenteNombre}, la recepcionista virtual de ${args.salonNombre}, un ${tipo} en ${lugar}.
 Tono: ${args.agenteTono}. Habla SIEMPRE en español, con frases cortas y útiles.
 
@@ -110,7 +114,7 @@ Si el usuario quiere reservar / pedir hora / coger cita, NO intentes hacerlo tú
 ${args.reservarUrl}
 Lo que NO sabes, pregunta al usuario; no te inventes datos.
 Hoy es ${args.fechaHoy}.
-
+${bloqueInstrucciones}
 ## Datos del salón
 Servicios:
 ${args.serviciosTexto}
@@ -162,6 +166,7 @@ export async function POST(
           telefono: salones.telefono,
           agenteNombre: salones.agenteNombre,
           agenteTono: salones.agenteTono,
+          agenteInstrucciones: salones.agenteInstrucciones,
           activo: salones.activo,
         })
         .from(salones)
@@ -283,6 +288,7 @@ export async function POST(
     const systemPrompt = buildSystemPrompt({
       agenteNombre: salon.agenteNombre,
       agenteTono: salon.agenteTono,
+      instruccionesDueno: salon.agenteInstrucciones,
       salonNombre: salon.nombre,
       tipoNegocio: salon.tipoNegocio,
       direccion: salon.direccion,

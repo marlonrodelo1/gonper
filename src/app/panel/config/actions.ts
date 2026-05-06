@@ -3,6 +3,7 @@
 import { db } from '@/lib/db';
 import { salones } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -92,6 +93,52 @@ export async function actualizarDatosSalon(formData: FormData) {
   redirect('/panel/config?ok=1');
 }
 
+const AVATAR_BUCKET = 'salon-assets';
+const AVATAR_MIME_OK = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif']);
+const AVATAR_MAX_BYTES = 3 * 1024 * 1024; // 3 MB
+
+const INSTRUCCIONES_MAX = 1500;
+const BIENVENIDA_MAX = 280;
+
+function avatarExt(mime: string): string {
+  if (mime === 'image/jpeg' || mime === 'image/jpg') return 'jpg';
+  if (mime === 'image/png') return 'png';
+  if (mime === 'image/webp') return 'webp';
+  if (mime === 'image/avif') return 'avif';
+  return 'bin';
+}
+
+function pathFromAssetUrl(url: string): string | null {
+  const marker = `/${AVATAR_BUCKET}/`;
+  const i = url.indexOf(marker);
+  if (i === -1) return null;
+  return url.slice(i + marker.length);
+}
+
+async function subirAvatarAgente(salonId: string, file: File): Promise<string> {
+  if (!AVATAR_MIME_OK.has(file.type)) {
+    redirectError('/panel/config/agente', 'Imagen no válida (usa JPG, PNG, WEBP o AVIF)');
+  }
+  if (file.size > AVATAR_MAX_BYTES) {
+    redirectError('/panel/config/agente', 'La imagen del avatar debe pesar menos de 3 MB');
+  }
+  const path = `${salonId}/agente/avatar-${Date.now()}.${avatarExt(file.type)}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const admin = createAdminClient();
+  const upload = await admin.storage.from(AVATAR_BUCKET).upload(path, buffer, {
+    contentType: file.type,
+    upsert: false,
+  });
+  if (upload.error) {
+    redirectError('/panel/config/agente', 'Error subiendo avatar: ' + upload.error.message);
+  }
+  const { data } = admin.storage.from(AVATAR_BUCKET).getPublicUrl(path);
+  if (!data.publicUrl) {
+    redirectError('/panel/config/agente', 'No se pudo obtener URL del avatar');
+  }
+  return data.publicUrl;
+}
+
 export async function actualizarAgente(formData: FormData) {
   const salon = await requireSalon();
 
@@ -99,6 +146,8 @@ export async function actualizarAgente(formData: FormData) {
   const agenteGenero = String(formData.get('agente_genero') || '').trim();
   const agenteTono = String(formData.get('agente_tono') || '').trim();
   const bienvenidaRaw = String(formData.get('agente_bienvenida') || '').trim();
+  const instruccionesRaw = String(formData.get('agente_instrucciones') || '').trim();
+  const eliminarAvatar = formData.get('eliminar_avatar') === 'on';
 
   if (!agenteNombre || agenteNombre.length > 60) {
     redirectError(
@@ -112,11 +161,47 @@ export async function actualizarAgente(formData: FormData) {
   if (!TONOS.includes(agenteTono as (typeof TONOS)[number])) {
     redirectError('/panel/config/agente', 'Tono inválido');
   }
-  if (bienvenidaRaw.length > 280) {
+  if (bienvenidaRaw.length > BIENVENIDA_MAX) {
     redirectError(
       '/panel/config/agente',
-      'El mensaje de bienvenida no puede superar 280 caracteres',
+      `El mensaje de bienvenida no puede superar ${BIENVENIDA_MAX} caracteres`,
     );
+  }
+  if (instruccionesRaw.length > INSTRUCCIONES_MAX) {
+    redirectError(
+      '/panel/config/agente',
+      `Las instrucciones no pueden superar ${INSTRUCCIONES_MAX} caracteres`,
+    );
+  }
+
+  // Avatar: subir nuevo, eliminar, o mantener
+  let avatarUrlUpdate: string | null | undefined = undefined;
+
+  // Estado actual para borrar archivo viejo si lo cambiamos/quitamos
+  const [actual] = await db
+    .select({ avatarActual: salones.agenteAvatarUrl })
+    .from(salones)
+    .where(eq(salones.id, salon.id))
+    .limit(1);
+
+  const avatarFile = formData.get('agente_avatar');
+  if (avatarFile instanceof File && avatarFile.size > 0) {
+    const url = await subirAvatarAgente(salon.id, avatarFile);
+    avatarUrlUpdate = url;
+    if (actual?.avatarActual) {
+      const prevPath = pathFromAssetUrl(actual.avatarActual);
+      if (prevPath && prevPath.startsWith(`${salon.id}/`)) {
+        const admin = createAdminClient();
+        await admin.storage.from(AVATAR_BUCKET).remove([prevPath]).catch(() => {});
+      }
+    }
+  } else if (eliminarAvatar && actual?.avatarActual) {
+    const prevPath = pathFromAssetUrl(actual.avatarActual);
+    if (prevPath && prevPath.startsWith(`${salon.id}/`)) {
+      const admin = createAdminClient();
+      await admin.storage.from(AVATAR_BUCKET).remove([prevPath]).catch(() => {});
+    }
+    avatarUrlUpdate = null;
   }
 
   try {
@@ -127,6 +212,8 @@ export async function actualizarAgente(formData: FormData) {
         agenteGenero,
         agenteTono,
         agenteBienvenida: bienvenidaRaw === '' ? null : bienvenidaRaw,
+        agenteInstrucciones: instruccionesRaw === '' ? null : instruccionesRaw,
+        ...(avatarUrlUpdate !== undefined ? { agenteAvatarUrl: avatarUrlUpdate } : {}),
         updatedAt: new Date(),
       })
       .where(eq(salones.id, salon.id))

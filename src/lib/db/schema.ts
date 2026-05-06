@@ -122,6 +122,8 @@ export const salones = pgTable(
     agenteGenero: text('agente_genero').notNull().default('femenino'),
     agenteTono: text('agente_tono').notNull().default('cercano'),
     agenteBienvenida: text('agente_bienvenida'),
+    agenteInstrucciones: text('agente_instrucciones'),
+    agenteAvatarUrl: text('agente_avatar_url'),
 
     // Conexiones externas
     telegramBotToken: text('telegram_bot_token'),
