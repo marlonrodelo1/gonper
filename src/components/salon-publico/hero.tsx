@@ -54,8 +54,7 @@ export function Hero({
     <section className="relative pt-[88px] sm:pt-[96px]">
       <div className="mx-auto max-w-[1200px] px-6">
         <div
-          className="reveal relative rounded-[32px] overflow-hidden grain border border-line"
-          style={{ aspectRatio: '21/9' }}
+          className="reveal relative rounded-[32px] overflow-hidden grain border border-line aspect-[4/3] sm:aspect-[21/9]"
         >
           <img
             src={cover}
@@ -82,7 +81,7 @@ export function Hero({
           </div>
 
           {/* socials */}
-          <div className="absolute top-6 right-6 flex items-center gap-2">
+          <div className="absolute top-6 right-6 hidden sm:flex items-center gap-2">
             {salon.telefono && (
               <a
                 href={`https://wa.me/${salon.telefono.replace(/\D/g, '')}`}

@@ -4,6 +4,7 @@ import { and, eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { profesionales, salones, servicios } from '@/lib/db/schema';
+import { getAccentVars } from '@/lib/salon-publico/accent';
 import { crearReservaWeb } from '../../actions';
 
 function formatPrecio(eur: string | number): string {
@@ -63,6 +64,7 @@ export default async function DatosReservaPage({
   }
 
   const tz = salon.timezone ?? 'Europe/Madrid';
+  const styleVars = getAccentVars(salon.tipoNegocio);
 
   const [servicio] = await db
     .select()
@@ -94,35 +96,44 @@ export default async function DatosReservaPage({
   const fechaTxt = formatFechaCompleta(slotDate, tz);
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
-        <header className="flex flex-col gap-2">
+    <div style={styleVars} className="bg-cream text-ink min-h-screen">
+      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10 sm:py-14">
+        <header className="flex flex-col gap-3">
           <Link
             href={`/s/${salon.slug}/reservar?servicio=${servicio.id}&profesional=${profesional.id}`}
-            className="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="text-[13px] text-stone hover:text-ink transition w-fit"
           >
             ← Cambiar hora
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-3xl">
-            Tus datos
+          <h1
+            className="tight font-medium text-ink"
+            style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+          >
+            Tus <span className="font-serif-it">datos</span>
           </h1>
         </header>
 
-        <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm text-purple-900 dark:border-purple-900/50 dark:bg-purple-950/20 dark:text-purple-200">
-          <p className="font-medium">
-            Reserva: {servicio.nombre} con {profesional.nombre}
+        <div
+          className="rounded-3xl p-5 border"
+          style={{
+            background: 'var(--gomper-accent-blush)',
+            borderColor: 'var(--gomper-accent-soft)',
+          }}
+        >
+          <p className="text-[14px] font-medium text-ink">
+            {servicio.nombre} con {profesional.nombre}
           </p>
-          <p className="mt-1 text-purple-800 dark:text-purple-300">
+          <p className="mt-1 text-[13px] text-ink/80">
             {fechaTxt.charAt(0).toUpperCase() + fechaTxt.slice(1)}
           </p>
-          <p className="mt-1 text-xs text-purple-700 dark:text-purple-400">
+          <p className="mt-1 text-[12px] text-stone tabular-nums">
             {formatPrecio(servicio.precioEur)} · {servicio.duracionMin} min
           </p>
         </div>
 
         <form
           action={crearReservaWeb}
-          className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+          className="flex flex-col gap-4 rounded-3xl border border-line bg-paper p-5 sm:p-6"
         >
           <input type="hidden" name="slug" value={salon.slug} />
           <input type="hidden" name="slot" value={slotDate.toISOString()} />
@@ -136,9 +147,9 @@ export default async function DatosReservaPage({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="nombre"
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
             >
-              Nombre <span className="text-red-500">*</span>
+              Nombre <span style={{ color: 'var(--gomper-accent-2)' }}>*</span>
             </label>
             <input
               id="nombre"
@@ -147,16 +158,16 @@ export default async function DatosReservaPage({
               required
               maxLength={120}
               autoComplete="name"
-              className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-900 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="telefono"
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
             >
-              Teléfono <span className="text-red-500">*</span>
+              Teléfono <span style={{ color: 'var(--gomper-accent-2)' }}>*</span>
             </label>
             <input
               id="telefono"
@@ -165,37 +176,38 @@ export default async function DatosReservaPage({
               required
               maxLength={30}
               autoComplete="tel"
-              className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-900 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="email"
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
             >
-              Email{' '}
-              <span className="text-xs font-normal text-zinc-500 dark:text-zinc-400">
-                (opcional, para recibir confirmación)
-              </span>
+              Email <span style={{ color: 'var(--gomper-accent-2)' }}>*</span>
             </label>
             <input
               id="email"
               name="email"
               type="email"
+              required
               maxLength={200}
               autoComplete="email"
-              className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-900 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
+            <p className="text-[12px] text-stone/80">
+              Usaremos tu email para enviarte la confirmación y el recordatorio de la cita.
+            </p>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="notas"
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
             >
               Notas{' '}
-              <span className="text-xs font-normal text-zinc-500 dark:text-zinc-400">
+              <span className="text-[10px] font-normal tracking-normal text-stone/60 normal-case">
                 (opcional)
               </span>
             </label>
@@ -204,23 +216,15 @@ export default async function DatosReservaPage({
               name="notas"
               rows={3}
               maxLength={500}
-              className="rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+              className="rounded-xl border border-line bg-paper px-3 py-2.5 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
           </div>
 
-          <label className="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-            <input
-              type="checkbox"
-              name="enviar_email"
-              defaultChecked
-              className="mt-0.5 size-4 rounded border-zinc-300 text-purple-600 focus:ring-purple-500"
-            />
-            <span>Acepto recibir un email de confirmación</span>
-          </label>
+          <input type="hidden" name="enviar_email" value="1" />
 
           <button
             type="submit"
-            className="inline-flex h-11 items-center justify-center rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+            className="mt-1 inline-flex h-12 items-center justify-center rounded-full px-5 text-[14px] font-medium accent-btn"
           >
             Confirmar reserva
           </button>

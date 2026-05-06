@@ -36,8 +36,7 @@ export async function crearReservaWeb(formData: FormData) {
   const profesionalId = String(formData.get('profesional_id') || '').trim();
   const nombre = String(formData.get('nombre') || '').trim();
   const telefono = String(formData.get('telefono') || '').trim();
-  const emailRaw = String(formData.get('email') || '').trim();
-  const email = emailRaw === '' ? null : emailRaw;
+  const email = String(formData.get('email') || '').trim();
   const notasRaw = String(formData.get('notas') || '').trim();
   const notas = notasRaw === '' ? null : notasRaw;
   const enviarEmail = formData.get('enviar_email') !== null;
@@ -52,8 +51,8 @@ export async function crearReservaWeb(formData: FormData) {
   if (!telefono || telefono.length > 30) {
     fail(slug, 'El teléfono es obligatorio');
   }
-  if (email && (!isValidEmail(email) || email.length > 200)) {
-    fail(slug, 'Email no válido');
+  if (!email || !isValidEmail(email) || email.length > 200) {
+    fail(slug, 'El email es obligatorio y debe ser válido');
   }
 
   const slotDate = new Date(slotIso);

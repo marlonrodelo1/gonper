@@ -103,6 +103,83 @@ export async function notificarDuenoNuevaCita(
   }
 }
 
+interface NotifRespuestaCitaParams {
+  botToken: string | null | undefined;
+  duenoChatId: string | null | undefined;
+  salonNombre: string;
+  clienteNombre: string;
+  servicioNombre: string;
+  profesionalNombre: string;
+  inicioIso: string;
+  timezone?: string;
+  accion: 'confirmar' | 'cancelar';
+  source: 'email' | 'telegram' | 'whatsapp' | 'web';
+}
+
+const SOURCE_LABEL: Record<string, string> = {
+  email: '📧 email',
+  telegram: '💬 Telegram',
+  whatsapp: '📱 WhatsApp',
+  web: '🌐 web',
+};
+
+/**
+ * Avisa al dueño cuando un cliente confirma o cancela una cita en respuesta
+ * al recordatorio. Best-effort: nunca lanza, sólo logea.
+ */
+export async function notificarDuenoRespuestaCita(
+  p: NotifRespuestaCitaParams,
+): Promise<boolean> {
+  if (!p.botToken || !p.duenoChatId) return false;
+
+  const tz = p.timezone || 'Europe/Madrid';
+  const cuando = formateaFechaHora(p.inicioIso, tz);
+  const sourceLabel = SOURCE_LABEL[p.source] ?? p.source;
+
+  const titulo =
+    p.accion === 'confirmar'
+      ? `✅ *Cita confirmada por el cliente*`
+      : `❌ *Cita cancelada por el cliente*`;
+
+  const texto = [
+    titulo,
+    '',
+    `🏠 ${escapeMd(p.salonNombre)}`,
+    `👤 *${escapeMd(p.clienteNombre)}*`,
+    `✂️ ${escapeMd(p.servicioNombre)}`,
+    `👥 con ${escapeMd(p.profesionalNombre)}`,
+    `📅 ${escapeMd(cuando)}`,
+    '',
+    `Vía ${sourceLabel}`,
+  ].join('\n');
+
+  try {
+    const res = await fetch(
+      `https://api.telegram.org/bot${p.botToken}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: p.duenoChatId,
+          text: texto,
+          parse_mode: 'Markdown',
+          disable_web_page_preview: true,
+        }),
+        signal: AbortSignal.timeout(8000),
+      },
+    );
+    if (!res.ok) {
+      const t = await res.text().catch(() => '');
+      console.warn('[notify:respuesta] Telegram respondió no-OK', res.status, t);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('[notify:respuesta] error enviando Telegram', err);
+    return false;
+  }
+}
+
 /**
  * Markdown legacy de Telegram tiene caracteres especiales que conviene
  * escapar para que no se rompa el formato (cliente puede tener "_" en su

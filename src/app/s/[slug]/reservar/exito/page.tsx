@@ -4,6 +4,8 @@ import { eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { citas, profesionales, salones, servicios } from '@/lib/db/schema';
+import { getAccentVars } from '@/lib/salon-publico/accent';
+import { Icon } from '@/components/salon-publico/icons';
 
 function formatPrecio(eur: string | number): string {
   const n = typeof eur === 'string' ? Number(eur) : eur;
@@ -46,6 +48,8 @@ export default async function ExitoPage({
   }
 
   const tz = row.salon.timezone ?? 'Europe/Madrid';
+  const styleVars = getAccentVars(row.salon.tipoNegocio);
+
   const fecha = new Intl.DateTimeFormat('es-ES', {
     weekday: 'long',
     day: 'numeric',
@@ -62,50 +66,62 @@ export default async function ExitoPage({
   const emailEnviado = sp.email && sp.email !== '';
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-12 sm:px-6 sm:py-16">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <span className="text-5xl">✅</span>
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-4xl">
-            ¡Reserva confirmada!
+    <div style={styleVars} className="bg-cream text-ink min-h-screen">
+      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-12 sm:py-16">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span
+            className="grid h-16 w-16 place-items-center rounded-full"
+            style={{ background: 'var(--gomper-accent-soft)' }}
+          >
+            <Icon.Check
+              width="28"
+              height="28"
+              style={{ color: 'var(--gomper-accent-2)' }}
+            />
+          </span>
+          <h1
+            className="tight font-medium text-ink"
+            style={{ fontSize: 'clamp(32px, 5vw, 48px)', lineHeight: 1.05 }}
+          >
+            ¡Reserva <span className="font-serif-it">confirmada</span>!
           </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="text-[14px] text-stone">
             Te esperamos en {row.salon.nombre}.
           </p>
         </div>
 
-        <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-          <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
+        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
+          <h2 className="text-[12px] uppercase tracking-[0.22em] text-stone/80">
             Resumen
           </h2>
-          <dl className="mt-3 divide-y divide-zinc-100 text-sm dark:divide-zinc-800">
-            <div className="flex justify-between gap-3 py-2">
-              <dt className="text-zinc-500 dark:text-zinc-400">Servicio</dt>
-              <dd className="text-right font-medium text-zinc-900 dark:text-zinc-100">
+          <dl className="mt-4 divide-y divide-line text-[14px]">
+            <div className="flex justify-between gap-3 py-2.5">
+              <dt className="text-stone">Servicio</dt>
+              <dd className="text-right font-medium text-ink">
                 {row.servicio.nombre}
               </dd>
             </div>
-            <div className="flex justify-between gap-3 py-2">
-              <dt className="text-zinc-500 dark:text-zinc-400">Profesional</dt>
-              <dd className="text-right font-medium text-zinc-900 dark:text-zinc-100">
+            <div className="flex justify-between gap-3 py-2.5">
+              <dt className="text-stone">Profesional</dt>
+              <dd className="text-right font-medium text-ink">
                 {row.profesional.nombre}
               </dd>
             </div>
-            <div className="flex justify-between gap-3 py-2">
-              <dt className="text-zinc-500 dark:text-zinc-400">Fecha</dt>
-              <dd className="text-right font-medium text-zinc-900 dark:text-zinc-100">
+            <div className="flex justify-between gap-3 py-2.5">
+              <dt className="text-stone">Fecha</dt>
+              <dd className="text-right font-medium text-ink">
                 {fecha.charAt(0).toUpperCase() + fecha.slice(1)}
               </dd>
             </div>
-            <div className="flex justify-between gap-3 py-2">
-              <dt className="text-zinc-500 dark:text-zinc-400">Hora</dt>
-              <dd className="text-right font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
+            <div className="flex justify-between gap-3 py-2.5">
+              <dt className="text-stone">Hora</dt>
+              <dd className="text-right font-medium tabular-nums text-ink">
                 {hora}
               </dd>
             </div>
-            <div className="flex justify-between gap-3 py-2">
-              <dt className="text-zinc-500 dark:text-zinc-400">Precio</dt>
-              <dd className="text-right font-medium tabular-nums text-zinc-900 dark:text-zinc-100">
+            <div className="flex justify-between gap-3 py-2.5">
+              <dt className="text-stone">Precio</dt>
+              <dd className="text-right font-medium tabular-nums text-ink">
                 {formatPrecio(row.cita.precioEur)}
               </dd>
             </div>
@@ -113,17 +129,17 @@ export default async function ExitoPage({
         </section>
 
         {emailEnviado && (
-          <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
-            Te hemos enviado un email a <strong>{sp.email}</strong> con los
-            detalles.
+          <p className="text-center text-[13px] text-stone">
+            Te hemos enviado un email a <strong className="text-ink">{sp.email}</strong> con
+            los detalles.
           </p>
         )}
 
         <Link
           href={`/s/${row.salon.slug}`}
-          className="inline-flex h-11 items-center justify-center rounded-lg border border-zinc-200 bg-white px-4 text-sm font-medium text-zinc-800 shadow-sm transition-colors hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800"
+          className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-paper px-5 text-[14px] font-medium text-ink transition hover:border-ink/30"
         >
-          Volver a la web del salón
+          Volver a {row.salon.nombre}
         </Link>
       </div>
     </div>

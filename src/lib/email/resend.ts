@@ -105,6 +105,10 @@ function botonHtml(label: string, href: string): string {
   return `<a href="${href}" style="display:inline-block;background:${COLOR_TERRACOTTA};color:#ffffff;text-decoration:none;font-size:15px;font-weight:500;padding:14px 24px;border-radius:999px">${escapeHtml(label)}</a>`;
 }
 
+function botonSecundarioHtml(label: string, href: string): string {
+  return `<a href="${href}" style="display:inline-block;background:${COLOR_PAPER};color:${COLOR_INK};text-decoration:none;font-size:15px;font-weight:500;padding:13px 23px;border-radius:999px;border:1px solid ${COLOR_LINE}">${escapeHtml(label)}</a>`;
+}
+
 // ============================================
 // Emails transaccionales del onboarding
 // ============================================
@@ -218,6 +222,7 @@ export async function enviarRecordatorioTrialAcaba(params: {
 
 export async function enviarRecordatorioCita(params: {
   to: string;
+  citaId: string;
   clienteNombre: string;
   salonNombre: string;
   salonSlug: string;
@@ -242,16 +247,20 @@ export async function enviarRecordatorioCita(params: {
     timeZone: tz,
   }).format(fecha);
 
-  const subject = `Recordatorio de tu cita en ${params.salonNombre}`;
-  const reservarUrl = `${siteUrl}/s/${params.salonSlug}`;
+  // Tokens firmados con HMAC para confirmar/cancelar desde email
+  const { signCitaToken } = await import('@/lib/citas/token');
+  const confirmarUrl = `${siteUrl}/c/${signCitaToken(params.citaId, 'confirmar')}`;
+  const cancelarUrl = `${siteUrl}/x/${signCitaToken(params.citaId, 'cancelar')}`;
+
+  const subject = `¿Confirmas tu cita en ${params.salonNombre}?`;
   const cuerpoHtml = `
     <tr><td style="padding:8px 32px 16px">
       <h1 style="margin:0 0 12px;font-size:24px;font-weight:500;line-height:1.2;color:${COLOR_INK}">
-        Recordatorio de tu cita
+        ¿Confirmas tu cita?
       </h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
-        Hola ${escapeHtml(params.clienteNombre.split(' ')[0] ?? params.clienteNombre)}, te recordamos tu cita en
-        <strong>${escapeHtml(params.salonNombre)}</strong>:
+        Hola ${escapeHtml(params.clienteNombre.split(' ')[0] ?? params.clienteNombre)}, tu cita en
+        <strong>${escapeHtml(params.salonNombre)}</strong> es en aproximadamente 1 hora.
       </p>
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;font-size:14px;color:${COLOR_INK}">
         <tr><td style="padding:4px 0;color:${COLOR_STONE};width:120px">📅 Fecha</td><td style="padding:4px 0"><strong>${escapeHtml(fechaFmt)}</strong></td></tr>
@@ -259,10 +268,18 @@ export async function enviarRecordatorioCita(params: {
         <tr><td style="padding:4px 0;color:${COLOR_STONE}">✂️ Servicio</td><td style="padding:4px 0">${escapeHtml(params.servicioNombre)} (${params.duracionMin} min)</td></tr>
         <tr><td style="padding:4px 0;color:${COLOR_STONE}">👤 Con</td><td style="padding:4px 0">${escapeHtml(params.profesionalNombre)}</td></tr>
       </table>
-      <p style="margin:0 0 20px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">
-        Si no puedes asistir, avísanos cuanto antes para liberar el hueco.
+      <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${COLOR_INK}">
+        <strong>Por favor, confirma si vas a asistir.</strong> Así sabemos que cuentes con la cita y no se la damos a nadie más.
       </p>
-      <div>${botonHtml('Ver salón', reservarUrl)}</div>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px">
+        <tr>
+          <td style="padding:0 8px 8px 0">${botonHtml('Sí, confirmo', confirmarUrl)}</td>
+          <td style="padding:0 0 8px 0">${botonSecundarioHtml('No podré ir', cancelarUrl)}</td>
+        </tr>
+      </table>
+      <p style="margin:8px 0 0;font-size:12px;line-height:1.55;color:${COLOR_STONE}">
+        Si tienes problemas con los botones, contacta directamente con el salón.
+      </p>
     </td></tr>
   `;
   return sendTemplate({

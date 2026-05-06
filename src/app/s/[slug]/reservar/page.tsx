@@ -5,6 +5,7 @@ import { and, asc, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { profesionales, salones, servicios } from '@/lib/db/schema';
 import { calcularSlots } from '@/lib/agenda/slots';
+import { getAccentVars } from '@/lib/salon-publico/accent';
 
 function formatPrecio(eur: string | number): string {
   const n = typeof eur === 'string' ? Number(eur) : eur;
@@ -67,6 +68,7 @@ export default async function ReservarPage({
   }
 
   const tz = salon.timezone ?? 'Europe/Madrid';
+  const styleVars = getAccentVars(salon.tipoNegocio);
 
   const [serviciosActivos, profesionalesActivos] = await Promise.all([
     db
@@ -86,7 +88,6 @@ export default async function ReservarPage({
   const hoyISO = todayISO(tz);
   const maxISO = addDaysISO(hoyISO, 90);
 
-  // Validar searchParams para mostrar slots
   let slots: Date[] | null = null;
   let servicioSel: typeof serviciosActivos[number] | null = null;
   let profesionalSel: typeof profesionalesActivos[number] | null = null;
@@ -98,7 +99,6 @@ export default async function ReservarPage({
       profesionalesActivos.find((p) => p.id === sp.profesional) ?? null;
 
     if (servicioSel && profesionalSel) {
-      // Construir fecha al mediodía local del salón para evitar issues TZ
       const fechaBase = new Date(`${sp.fecha}T12:00:00.000Z`);
       slots = await calcularSlots({
         salonId: salon.id,
@@ -108,29 +108,38 @@ export default async function ReservarPage({
         timezone: tz,
       });
 
-      // Filtrar slots en el pasado (si fecha = hoy)
       const ahora = new Date();
       slots = slots.filter((s) => s.getTime() > ahora.getTime());
     }
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950">
-      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-8 sm:px-6 sm:py-12">
-        <header className="flex flex-col gap-2">
+    <div style={styleVars} className="bg-cream text-ink min-h-screen">
+      <div className="mx-auto flex max-w-2xl flex-col gap-6 px-6 py-10 sm:py-14">
+        <header className="flex flex-col gap-3">
           <Link
             href={`/s/${salon.slug}`}
-            className="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            className="text-[13px] text-stone hover:text-ink transition w-fit"
           >
-            ← Volver
+            ← Volver a {salon.nombre}
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-950 dark:text-zinc-50 sm:text-3xl">
-            Reservar en {salon.nombre}
+          <h1
+            className="tight font-medium text-ink"
+            style={{ fontSize: 'clamp(28px, 4vw, 40px)', lineHeight: 1.1 }}
+          >
+            Reservar en <span className="font-serif-it">{salon.nombre}</span>
           </h1>
         </header>
 
         {sp.error && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+          <div
+            className="rounded-2xl px-4 py-3 text-[13px] border"
+            style={{
+              background: 'var(--gomper-accent-blush)',
+              borderColor: 'var(--gomper-accent-soft)',
+              color: 'var(--gomper-accent-2)',
+            }}
+          >
             {sp.error}
           </div>
         )}
@@ -138,12 +147,12 @@ export default async function ReservarPage({
         <form
           method="GET"
           action={`/s/${salon.slug}/reservar`}
-          className="flex flex-col gap-4 rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+          className="flex flex-col gap-4 rounded-3xl border border-line bg-paper p-5 sm:p-6"
         >
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="servicio"
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
             >
               Servicio
             </label>
@@ -152,7 +161,7 @@ export default async function ReservarPage({
               name="servicio"
               required
               defaultValue={sp.servicio ?? ''}
-              className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-900 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             >
               <option value="" disabled>
                 Selecciona un servicio
@@ -169,7 +178,7 @@ export default async function ReservarPage({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="profesional"
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
             >
               Profesional
             </label>
@@ -178,7 +187,7 @@ export default async function ReservarPage({
               name="profesional"
               required
               defaultValue={sp.profesional ?? ''}
-              className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-900 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             >
               <option value="" disabled>
                 Selecciona un profesional
@@ -194,7 +203,7 @@ export default async function ReservarPage({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="fecha"
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
             >
               Fecha
             </label>
@@ -206,24 +215,24 @@ export default async function ReservarPage({
               min={hoyISO}
               max={maxISO}
               defaultValue={sp.fecha ?? hoyISO}
-              className="h-10 rounded-md border border-zinc-200 bg-white px-3 text-sm text-zinc-900 focus:border-purple-400 focus:outline-none focus:ring-2 focus:ring-purple-200 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
           </div>
 
           <button
             type="submit"
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
+            className="mt-1 inline-flex h-12 items-center justify-center rounded-full px-5 text-[14px] font-medium accent-btn"
           >
             Ver huecos disponibles
           </button>
         </form>
 
         {slots !== null && servicioSel && profesionalSel && (
-          <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="text-base font-semibold text-zinc-950 dark:text-zinc-50">
+          <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
+            <h2 className="text-[13px] uppercase tracking-[0.22em] text-stone/80">
               Huecos disponibles
             </h2>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="mt-2 text-[13px] text-stone">
               {servicioSel.nombre} · {profesionalSel.nombre} ·{' '}
               {new Intl.DateTimeFormat('es-ES', {
                 weekday: 'long',
@@ -234,11 +243,11 @@ export default async function ReservarPage({
             </p>
 
             {slots.length === 0 ? (
-              <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-5 text-[14px] text-stone">
                 No hay huecos disponibles ese día. Prueba otra fecha.
               </p>
             ) : (
-              <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+              <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
                 {slots.map((slot) => {
                   const iso = slot.toISOString();
                   const horaTxt = new Intl.DateTimeFormat('es-ES', {
@@ -255,7 +264,7 @@ export default async function ReservarPage({
                     <Link
                       key={iso}
                       href={`/s/${salon.slug}/reservar/datos?${qs.toString()}`}
-                      className="inline-flex items-center justify-center rounded-md border border-zinc-200 bg-white px-3 py-2 text-sm font-medium tabular-nums text-zinc-800 shadow-sm transition-colors hover:border-purple-300 hover:bg-purple-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:border-purple-700 dark:hover:bg-purple-950/30"
+                      className="inline-flex items-center justify-center rounded-xl border border-line bg-paper px-3 py-2.5 text-[14px] font-medium tabular-nums text-ink transition hover:border-[color:var(--gomper-accent)] hover:text-[color:var(--gomper-accent-2)]"
                     >
                       {horaTxt}
                     </Link>

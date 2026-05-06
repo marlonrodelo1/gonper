@@ -15,6 +15,7 @@ export const dynamic = 'force-dynamic';
  * Body esperado:
  * {
  *   to: string,                  // email del cliente
+ *   citaId: string,              // id UUID de la cita (para tokens confirmar/cancelar)
  *   clienteNombre: string,
  *   salonNombre: string,
  *   salonSlug: string,
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
 
   const data = body as Partial<{
     to: string;
+    citaId: string;
     clienteNombre: string;
     salonNombre: string;
     salonSlug: string;
@@ -50,6 +52,7 @@ export async function POST(req: Request) {
 
   const requeridos: (keyof typeof data)[] = [
     'to',
+    'citaId',
     'clienteNombre',
     'salonNombre',
     'salonSlug',
@@ -69,6 +72,7 @@ export async function POST(req: Request) {
 
   const result = await enviarRecordatorioCita({
     to: String(data.to),
+    citaId: String(data.citaId),
     clienteNombre: String(data.clienteNombre),
     salonNombre: String(data.salonNombre),
     salonSlug: String(data.salonSlug),
