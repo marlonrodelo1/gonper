@@ -15,19 +15,6 @@ type Props = {
 const COVER_DEFAULT =
   'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=2200&auto=format&fit=crop&q=80';
 
-function splitName(nombre: string): { primary: string; serif?: string; rest?: string } {
-  const parts = nombre.trim().split(/\s+/);
-  if (parts.length === 1) return { primary: parts[0] };
-  if (parts.length === 2) return { primary: parts[0], serif: parts[1] };
-  return { primary: parts[0], serif: parts[1], rest: parts.slice(2).join(' ') };
-}
-
-function lugarFromDireccion(d?: string | null): string {
-  if (!d) return 'España';
-  const parts = d.split(',').map((s) => s.trim()).filter(Boolean);
-  return parts[parts.length - 1] || 'España';
-}
-
 function calleFromDireccion(d?: string | null): string {
   if (!d) return '—';
   const parts = d.split(',').map((s) => s.trim()).filter(Boolean);
@@ -38,15 +25,12 @@ export function Hero({
   salon,
   abierto,
   estadoTexto,
-  tipoNegocioLabel,
   urlTelegram,
   agenteNombre,
   horarioHoyTexto,
   servicios,
 }: Props) {
   const cover = salon.bannerUrl ?? COVER_DEFAULT;
-  const { primary, serif, rest } = splitName(salon.nombre);
-  const lugar = lugarFromDireccion(salon.direccion);
   const calle = calleFromDireccion(salon.direccion);
   const top3 = servicios.slice(0, 3).map((s) => s.nombre).join(' · ') || '—';
 
@@ -102,39 +86,8 @@ export function Hero({
             )}
           </div>
 
-          {/* bottom info */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 flex items-end justify-between gap-6 flex-wrap">
-            <div className="text-paper">
-              <div className="flex items-center gap-2 text-[13px] uppercase tracking-[0.22em] text-paper/80 mb-3">
-                <Icon.Sparkle width="13" height="13" />
-                <span>
-                  {tipoNegocioLabel} · {lugar}
-                </span>
-              </div>
-              <h1
-                className="tight font-medium"
-                style={{ fontSize: 'clamp(40px, 6vw, 72px)', lineHeight: 1.05 }}
-              >
-                {serif ? (
-                  <>
-                    {primary} <span className="font-serif-it">{serif}</span>
-                    {rest && (
-                      <>
-                        <br />
-                        {rest}
-                      </>
-                    )}
-                  </>
-                ) : (
-                  primary
-                )}
-              </h1>
-              <div className="mt-4 flex items-center gap-5 text-[14px] text-paper/85">
-                <span className="hidden sm:flex items-center gap-1.5">
-                  <Icon.Pin width="13" height="13" /> {calle}
-                </span>
-              </div>
-            </div>
+          {/* bottom info: solo botones */}
+          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 flex items-end justify-end gap-6 flex-wrap">
             <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
               <a
                 href="#reservar"

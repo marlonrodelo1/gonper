@@ -590,6 +590,36 @@ export const galeriaImagenes = pgTable(
 );
 
 // ============================================
+// TABLA: comparativas_antes_despues
+// (pares de fotos antes/después que se muestran como slider en la web pública)
+// ============================================
+export const comparativasAntesDespues = pgTable(
+  'comparativas_antes_despues',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salones.id, { onDelete: 'cascade' }),
+    antesUrl: text('antes_url').notNull(),
+    despuesUrl: text('despues_url').notNull(),
+    descripcion: text('descripcion'),
+    orden: integer('orden').notNull().default(0),
+    activa: boolean('activa').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxSalonActiva: index('idx_comparativas_salon_activa')
+      .on(t.salonId, t.orden)
+      .where(sql`${t.activa} = true`),
+  }),
+);
+
+// ============================================
 // TABLA: resenas
 // ============================================
 export const resenas = pgTable(
@@ -731,6 +761,9 @@ export type NewPromocion = typeof promociones.$inferInsert;
 
 export type GaleriaImagen = typeof galeriaImagenes.$inferSelect;
 export type NewGaleriaImagen = typeof galeriaImagenes.$inferInsert;
+
+export type ComparativaAntesDespues = typeof comparativasAntesDespues.$inferSelect;
+export type NewComparativaAntesDespues = typeof comparativasAntesDespues.$inferInsert;
 
 export type Resena = typeof resenas.$inferSelect;
 export type NewResena = typeof resenas.$inferInsert;

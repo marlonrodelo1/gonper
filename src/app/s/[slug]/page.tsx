@@ -5,6 +5,7 @@ import type { Metadata } from 'next';
 
 import { db } from '@/lib/db';
 import {
+  comparativasAntesDespues,
   galeriaImagenes,
   horarios,
   profesionales,
@@ -175,6 +176,7 @@ export default async function SalonPublicPage({
     tramosHorario,
     promocionesActivas,
     galeriaActiva,
+    comparativasActivas,
     resenasAprobadas,
     resumenResenasRows,
   ] = await Promise.all([
@@ -233,6 +235,20 @@ export default async function SalonPublicPage({
       )
       .orderBy(asc(galeriaImagenes.orden), asc(galeriaImagenes.createdAt))
       .limit(12),
+    db
+      .select()
+      .from(comparativasAntesDespues)
+      .where(
+        and(
+          eq(comparativasAntesDespues.salonId, salon.id),
+          eq(comparativasAntesDespues.activa, true),
+        ),
+      )
+      .orderBy(
+        asc(comparativasAntesDespues.orden),
+        asc(comparativasAntesDespues.createdAt),
+      )
+      .limit(10),
     db
       .select()
       .from(resenas)
@@ -358,6 +374,7 @@ export default async function SalonPublicPage({
         diaActual={diaActual}
         promociones={promocionesActivas}
         galeria={galeriaActiva}
+        comparativas={comparativasActivas}
         resenas={resenasAprobadas}
         resumenResenas={resumenResenas}
       />

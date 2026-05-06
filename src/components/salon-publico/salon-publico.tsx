@@ -14,6 +14,7 @@ import { Ubicacion, type HorarioSemana } from './ubicacion';
 import { Footer } from './footer';
 import { ChatWidget } from './chat-widget';
 import type {
+  ComparativaAntesDespues,
   GaleriaImagen,
   Promocion,
   Resena,
@@ -34,6 +35,7 @@ type Props = {
   diaActual: number;
   promociones: Promocion[];
   galeria: GaleriaImagen[];
+  comparativas: ComparativaAntesDespues[];
   resenas: Resena[];
   resumenResenas: { rating: number; total: number } | null;
 };
@@ -52,6 +54,7 @@ export function SalonPublico({
   diaActual,
   promociones,
   galeria,
+  comparativas,
   resenas,
   resumenResenas,
 }: Props) {
@@ -77,7 +80,7 @@ export function SalonPublico({
         agenteNombre={salon.agenteNombre}
         onPick={setPickedServicio}
       />
-      <Galeria galeria={galeria} />
+      <Galeria galeria={galeria} comparativas={comparativas} />
       <Equipo profesionales={profesionales} />
       <Resenas resenas={resenas} resumen={resumenResenas} />
       <Reserva

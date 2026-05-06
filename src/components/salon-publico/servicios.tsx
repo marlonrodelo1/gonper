@@ -94,7 +94,7 @@ export function Servicios({ servicios, agenteNombre, onPick }: Props) {
               className="tight font-medium text-ink"
               style={{ fontSize: 'clamp(36px,5vw,56px)', lineHeight: 1 }}
             >
-              Carta del <span className="font-serif-it">studio</span>
+              Nuestros <span className="font-serif-it">servicios</span>
             </h2>
           </div>
           <div className="text-[14px] text-stone max-w-[360px] leading-relaxed">

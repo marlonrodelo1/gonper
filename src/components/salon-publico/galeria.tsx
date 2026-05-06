@@ -3,14 +3,18 @@
 import { useState } from 'react';
 import { Icon } from './icons';
 import { ImageSwiper, type SwiperImage } from './image-swiper';
-import type { GaleriaImagen } from '@/lib/db/schema';
+import type { ComparativaAntesDespues, GaleriaImagen } from '@/lib/db/schema';
 
-type Props = { galeria: GaleriaImagen[] };
+type Props = {
+  galeria: GaleriaImagen[];
+  comparativas?: ComparativaAntesDespues[];
+};
 
-export function Galeria({ galeria }: Props) {
+export function Galeria({ galeria, comparativas = [] }: Props) {
   const [clip, setClip] = useState(50);
+  const [comparativaIdx, setComparativaIdx] = useState(0);
 
-  if (galeria.length === 0) return null;
+  if (galeria.length === 0 && comparativas.length === 0) return null;
 
   const works: SwiperImage[] = galeria.map((g) => ({
     src: g.url,
@@ -19,10 +23,12 @@ export function Galeria({ galeria }: Props) {
     title: g.titulo ?? '',
   }));
 
-  // Antes/Después solo si hay >= 2 imágenes
-  const hayBeforeAfter = galeria.length >= 2;
-  const despuesUrl = hayBeforeAfter ? galeria[0].url : null;
-  const antesUrl = hayBeforeAfter ? galeria[1].url : null;
+  // Antes/Después: usar comparativas guardadas por el dueño
+  const comparativaActiva = comparativas[comparativaIdx] ?? null;
+  const hayBeforeAfter = !!comparativaActiva;
+  const antesUrl = comparativaActiva?.antesUrl ?? null;
+  const despuesUrl = comparativaActiva?.despuesUrl ?? null;
+  const descripcion = comparativaActiva?.descripcion ?? null;
 
   return (
     <section id="galeria" className="py-24 px-6 bg-paper border-y border-line">
@@ -44,17 +50,19 @@ export function Galeria({ galeria }: Props) {
 
         <div
           className={
-            hayBeforeAfter
+            hayBeforeAfter && works.length > 0
               ? 'grid grid-cols-1 lg:grid-cols-[auto_1fr] gap-12 lg:gap-16 items-start'
               : 'flex justify-center'
           }
         >
-          <div className="reveal flex justify-center" data-delay="60">
-            <ImageSwiper images={works} />
-          </div>
+          {works.length > 0 ? (
+            <div className="reveal flex justify-center" data-delay="60">
+              <ImageSwiper images={works} />
+            </div>
+          ) : null}
 
           {hayBeforeAfter && despuesUrl && antesUrl ? (
-            <div className="reveal flex flex-col gap-5" data-delay="160">
+            <div className="reveal flex flex-col gap-5 max-w-[520px] w-full mx-auto" data-delay="160">
               <div className="text-[13px] uppercase tracking-[0.18em] text-stone/80">Antes / Después</div>
               <div
                 className="text-ink tight font-medium"
@@ -110,9 +118,42 @@ export function Galeria({ galeria }: Props) {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
                 />
               </div>
-              <div className="text-[14px] text-stone leading-relaxed">
-                Cada cita empieza con limpieza profunda y termina con un acabado de larga duración. Mueve el slider para ver la diferencia.
-              </div>
+              {descripcion ? (
+                <div className="text-[14px] text-stone leading-relaxed">
+                  {descripcion}
+                </div>
+              ) : (
+                <div className="text-[14px] text-stone leading-relaxed">
+                  Mueve el control deslizante para ver la transformación.
+                </div>
+              )}
+              {comparativas.length > 1 ? (
+                <div className="flex items-center gap-3 text-[12.5px] text-stone">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setComparativaIdx(
+                        (i) => (i - 1 + comparativas.length) % comparativas.length,
+                      )
+                    }
+                    className="w-9 h-9 rounded-full bg-paper border border-line hover:border-line-2 transition flex items-center justify-center"
+                  >
+                    <Icon.ArrowL width="14" height="14" />
+                  </button>
+                  <span>
+                    {comparativaIdx + 1} / {comparativas.length}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setComparativaIdx((i) => (i + 1) % comparativas.length)
+                    }
+                    className="w-9 h-9 rounded-full bg-paper border border-line hover:border-line-2 transition flex items-center justify-center"
+                  >
+                    <Icon.ArrowR width="14" height="14" />
+                  </button>
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>

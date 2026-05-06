@@ -54,12 +54,20 @@ export default async function GaleriaPage({
             </span>
           </h1>
         </div>
-        <Link
-          href="/panel/galeria/nuevo"
-          className="gloss-btn tight inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] font-medium"
-        >
-          <Icon.Plus width="15" height="15" /> Nueva imagen
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/panel/galeria/antes-despues"
+            className="tight inline-flex items-center gap-2 rounded-full border border-line bg-paper px-4 py-2.5 text-[13.5px] font-medium text-ink hover:bg-cream"
+          >
+            Antes / Después
+          </Link>
+          <Link
+            href="/panel/galeria/nuevo"
+            className="gloss-btn tight inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-[13.5px] font-medium"
+          >
+            <Icon.Plus width="15" height="15" /> Nueva imagen
+          </Link>
+        </div>
       </header>
 
       {params.error ? (
