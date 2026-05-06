@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   }
 
   const salon = (await getCurrentSalon()) as
-    | { id: string; nombre: string }
+    | { id: string; nombre: string; slug: string }
     | null;
   if (!salon || !salon.id) {
     return NextResponse.json(
@@ -71,6 +71,8 @@ export async function POST(request: Request) {
       signal: controller.signal,
       body: JSON.stringify({
         salon_id: salon.id,
+        salon_slug: salon.slug,
+        salon_nombre: salon.nombre,
         user_id: user.id,
         message: parsed.data.message,
         session_id: sessionId,
