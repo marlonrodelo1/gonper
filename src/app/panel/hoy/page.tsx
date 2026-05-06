@@ -68,6 +68,8 @@ export default async function HoyPage() {
         timezone: string | null;
         agenteNombre?: string | null;
         agente_nombre?: string | null;
+        agenteAvatarUrl?: string | null;
+        agente_avatar_url?: string | null;
       }
     | null;
 
@@ -358,7 +360,13 @@ export default async function HoyPage() {
           </div>
 
           <div className="flex flex-col gap-6">
-            <JuanitaPro mensajeInicial={resumenJuanita} />
+            <JuanitaPro
+              mensajeInicial={resumenJuanita}
+              agenteNombre={salon.agenteNombre ?? salon.agente_nombre ?? null}
+              agenteAvatarUrl={
+                salon.agenteAvatarUrl ?? salon.agente_avatar_url ?? null
+              }
+            />
             <ScheduleRail proximas={proximasItems} />
           </div>
         </div>

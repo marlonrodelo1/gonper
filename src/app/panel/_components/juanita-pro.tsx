@@ -14,9 +14,17 @@ const sugerencias = [
 
 export type JuanitaProProps = {
   mensajeInicial: string;
+  agenteNombre?: string | null;
+  agenteAvatarUrl?: string | null;
 };
 
-export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
+export function JuanitaPro({
+  mensajeInicial,
+  agenteNombre,
+  agenteAvatarUrl,
+}: JuanitaProProps) {
+  const nombreMostrar = agenteNombre?.trim() || 'Tu asistente';
+  const inicial = nombreMostrar.charAt(0).toUpperCase();
   const [msgs, setMsgs] = useState<Mensaje[]>([
     { from: 'pro', text: mensajeInicial },
   ]);
@@ -80,14 +88,23 @@ export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
   return (
     <div className="card flex h-[460px] flex-col overflow-hidden">
       <div className="flex items-center gap-3 border-b border-line bg-gradient-to-b from-paper to-cream px-5 py-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-terracotta to-[#A8451F] text-[13px] font-medium text-paper">
-          J
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-terracotta to-[#A8451F] text-[13px] font-medium text-paper">
+          {agenteAvatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={agenteAvatarUrl}
+              alt={nombreMostrar}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            inicial
+          )}
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <div className="tight flex items-center gap-2 text-[14px] font-medium text-ink">
-            Juanita Pro
+            <span className="truncate">{nombreMostrar}</span>
             <span
-              className="pill"
+              className="pill shrink-0"
               style={{
                 background: 'rgba(139,157,122,0.15)',
                 color: '#5A6B4D',
@@ -101,7 +118,7 @@ export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
             </span>
           </div>
           <div className="text-[11px] text-stone">
-            Tu copiloto de salón · responde en lenguaje natural
+            Tu asistente de salón · responde en lenguaje natural
           </div>
         </div>
         <button
@@ -166,7 +183,7 @@ export function JuanitaPro({ mensajeInicial }: JuanitaProProps) {
           <input
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            placeholder="Pregúntale algo a Juanita…"
+            placeholder={`Pregúntale algo a ${nombreMostrar}…`}
             disabled={enviando}
             className="flex-1 rounded-full border border-line bg-cream px-3.5 py-2.5 text-[13px] outline-none focus:border-line-2 disabled:opacity-50"
           />

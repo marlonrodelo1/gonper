@@ -124,8 +124,17 @@ export function PanelSidebar({
           </span>
         </div>
 
-        {/* Salón switcher: logo del salón si existe, inicial como fallback */}
-        <div className="mx-3 flex cursor-pointer items-center gap-3 rounded-xl border border-line bg-paper px-3 py-2.5 hover:border-line-2">
+        {/* Salón switcher: enlaza a /panel/cuenta (perfil del dueño + datos) */}
+        <Link
+          href="/panel/cuenta"
+          onClick={cerrar}
+          aria-label="Mi cuenta"
+          className={`mx-3 flex items-center gap-3 rounded-xl border bg-paper px-3 py-2.5 transition ${
+            pathname.startsWith('/panel/cuenta')
+              ? 'border-line-2'
+              : 'border-line hover:border-line-2'
+          }`}
+        >
           {salonLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -143,11 +152,11 @@ export function PanelSidebar({
               {salonNombre ?? 'Tu salón'}
             </div>
             <div className="truncate text-[11px] text-stone">
-              gestori.es/{salonSlug ?? '—'}
+              {userEmail ?? `gestori.es/${salonSlug ?? '—'}`}
             </div>
           </div>
           <Icon.Caret width="14" height="14" className="text-stone" />
-        </div>
+        </Link>
 
         {/* Nav scroll-area */}
         <div className="nice-scroll flex-1 overflow-y-auto">
