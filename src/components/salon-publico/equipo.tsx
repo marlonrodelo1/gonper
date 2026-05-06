@@ -26,7 +26,7 @@ export function Equipo({ profesionales }: Props) {
       <div className="mx-auto max-w-[1200px]">
         <div className="reveal flex items-end justify-between gap-6 flex-wrap mb-10">
           <div>
-            <div className="text-[12px] uppercase tracking-[0.22em] text-stone/80 mb-3">
+            <div className="text-[13px] uppercase tracking-[0.22em] text-stone/80 mb-3">
               El equipo
             </div>
             <h2
@@ -76,15 +76,15 @@ export function Equipo({ profesionales }: Props) {
                   >
                     {t.nombre}
                   </div>
-                  <div className="truncate text-[12px] text-stone">{role}</div>
+                  <div className="truncate text-[13px] text-stone">{role}</div>
                   <div className="mt-1 flex items-center justify-between gap-2">
-                    <span className="flex items-center gap-1.5 text-[11px] text-sage-deep">
+                    <span className="flex items-center gap-1.5 text-[12px] text-sage-deep">
                       <span className="h-1.5 w-1.5 rounded-full bg-sage" />
                       Disponible
                     </span>
                     <a
                       href="#reservar"
-                      className="flex items-center gap-1 text-[12px] font-medium text-gomper-accent hover:text-ink transition"
+                      className="flex items-center gap-1 text-[13px] font-medium text-gomper-accent hover:text-ink transition"
                     >
                       Reservar <Icon.Arrow width="11" height="11" />
                     </a>

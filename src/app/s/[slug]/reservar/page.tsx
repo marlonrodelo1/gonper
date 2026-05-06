@@ -119,7 +119,7 @@ export default async function ReservarPage({
         <header className="flex flex-col gap-3">
           <Link
             href={`/s/${salon.slug}`}
-            className="text-[13px] text-stone hover:text-ink transition w-fit"
+            className="text-[14px] text-stone hover:text-ink transition w-fit"
           >
             ← Volver a {salon.nombre}
           </Link>
@@ -133,7 +133,7 @@ export default async function ReservarPage({
 
         {sp.error && (
           <div
-            className="rounded-2xl px-4 py-3 text-[13px] border"
+            className="rounded-2xl px-4 py-3 text-[14px] border"
             style={{
               background: 'var(--gomper-accent-blush)',
               borderColor: 'var(--gomper-accent-soft)',
@@ -152,7 +152,7 @@ export default async function ReservarPage({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="servicio"
-              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
+              className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
               Servicio
             </label>
@@ -161,7 +161,7 @@ export default async function ReservarPage({
               name="servicio"
               required
               defaultValue={sp.servicio ?? ''}
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             >
               <option value="" disabled>
                 Selecciona un servicio
@@ -178,7 +178,7 @@ export default async function ReservarPage({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="profesional"
-              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
+              className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
               Profesional
             </label>
@@ -187,7 +187,7 @@ export default async function ReservarPage({
               name="profesional"
               required
               defaultValue={sp.profesional ?? ''}
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             >
               <option value="" disabled>
                 Selecciona un profesional
@@ -203,7 +203,7 @@ export default async function ReservarPage({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="fecha"
-              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
+              className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
               Fecha
             </label>
@@ -215,13 +215,13 @@ export default async function ReservarPage({
               min={hoyISO}
               max={maxISO}
               defaultValue={sp.fecha ?? hoyISO}
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
           </div>
 
           <button
             type="submit"
-            className="mt-1 inline-flex h-12 items-center justify-center rounded-full px-5 text-[14px] font-medium accent-btn"
+            className="mt-1 inline-flex h-12 items-center justify-center rounded-full px-5 text-[15px] font-medium accent-btn"
           >
             Ver huecos disponibles
           </button>
@@ -229,10 +229,10 @@ export default async function ReservarPage({
 
         {slots !== null && servicioSel && profesionalSel && (
           <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
-            <h2 className="text-[13px] uppercase tracking-[0.22em] text-stone/80">
+            <h2 className="text-[14px] uppercase tracking-[0.22em] text-stone/80">
               Huecos disponibles
             </h2>
-            <p className="mt-2 text-[13px] text-stone">
+            <p className="mt-2 text-[14px] text-stone">
               {servicioSel.nombre} · {profesionalSel.nombre} ·{' '}
               {new Intl.DateTimeFormat('es-ES', {
                 weekday: 'long',
@@ -243,7 +243,7 @@ export default async function ReservarPage({
             </p>
 
             {slots.length === 0 ? (
-              <p className="mt-5 text-[14px] text-stone">
+              <p className="mt-5 text-[15px] text-stone">
                 No hay huecos disponibles ese día. Prueba otra fecha.
               </p>
             ) : (
@@ -264,7 +264,7 @@ export default async function ReservarPage({
                     <Link
                       key={iso}
                       href={`/s/${salon.slug}/reservar/datos?${qs.toString()}`}
-                      className="inline-flex items-center justify-center rounded-xl border border-line bg-paper px-3 py-2.5 text-[14px] font-medium tabular-nums text-ink transition hover:border-[color:var(--gomper-accent)] hover:text-[color:var(--gomper-accent-2)]"
+                      className="inline-flex items-center justify-center rounded-xl border border-line bg-paper px-3 py-2.5 text-[15px] font-medium tabular-nums text-ink transition hover:border-[color:var(--gomper-accent)] hover:text-[color:var(--gomper-accent-2)]"
                     >
                       {horaTxt}
                     </Link>

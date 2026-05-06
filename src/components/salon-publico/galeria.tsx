@@ -29,7 +29,7 @@ export function Galeria({ galeria }: Props) {
       <div className="mx-auto max-w-[1200px]">
         <div className="reveal flex items-end justify-between gap-6 flex-wrap mb-12">
           <div>
-            <div className="text-[12px] uppercase tracking-[0.22em] text-stone/80 mb-3">Galería</div>
+            <div className="text-[13px] uppercase tracking-[0.22em] text-stone/80 mb-3">Galería</div>
             <h2
               className="tight font-medium text-ink"
               style={{ fontSize: 'clamp(36px,5vw,56px)', lineHeight: 1 }}
@@ -37,7 +37,7 @@ export function Galeria({ galeria }: Props) {
               Trabajos <span className="font-serif-it">recientes</span>
             </h2>
           </div>
-          <div className="text-[13px] text-stone max-w-[340px] leading-relaxed">
+          <div className="text-[14px] text-stone max-w-[340px] leading-relaxed">
             Una muestra real de lo que hacemos cada semana. Síguenos en Instagram para ver más.
           </div>
         </div>
@@ -55,7 +55,7 @@ export function Galeria({ galeria }: Props) {
 
           {hayBeforeAfter && despuesUrl && antesUrl ? (
             <div className="reveal flex flex-col gap-5" data-delay="160">
-              <div className="text-[12px] uppercase tracking-[0.18em] text-stone/80">Antes / Después</div>
+              <div className="text-[13px] uppercase tracking-[0.18em] text-stone/80">Antes / Después</div>
               <div
                 className="text-ink tight font-medium"
                 style={{ fontSize: '28px', lineHeight: 1.1 }}
@@ -83,11 +83,11 @@ export function Galeria({ galeria }: Props) {
                     draggable={false}
                   />
                 </div>
-                <div className="absolute top-4 left-4 px-2.5 py-1 rounded-full bg-paper/95 text-[10px] uppercase tracking-[0.2em] text-stone">
+                <div className="absolute top-4 left-4 px-2.5 py-1 rounded-full bg-paper/95 text-[11px] uppercase tracking-[0.2em] text-stone">
                   Antes
                 </div>
                 <div
-                  className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-paper text-[10px] uppercase tracking-[0.2em]"
+                  className="absolute top-4 right-4 px-2.5 py-1 rounded-full text-paper text-[11px] uppercase tracking-[0.2em]"
                   style={{ background: 'var(--gomper-accent-2)' }}
                 >
                   Después
@@ -110,7 +110,7 @@ export function Galeria({ galeria }: Props) {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize"
                 />
               </div>
-              <div className="text-[13px] text-stone leading-relaxed">
+              <div className="text-[14px] text-stone leading-relaxed">
                 Cada cita empieza con limpieza profunda y termina con un acabado de larga duración. Mueve el slider para ver la diferencia.
               </div>
             </div>

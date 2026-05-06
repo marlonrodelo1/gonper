@@ -131,7 +131,7 @@ export function ImageSwiper({ images }: { images: SwiperImage[] }) {
                     'linear-gradient(180deg, transparent 0%, rgba(26,24,21,0.7) 100%)',
                 }}
               >
-                <div className="text-[11px] uppercase tracking-[0.2em] text-paper/70">
+                <div className="text-[12px] uppercase tracking-[0.2em] text-paper/70">
                   {images[origIdx].tag}
                 </div>
                 <div className="text-[18px] tight font-medium mt-1">
@@ -143,7 +143,7 @@ export function ImageSwiper({ images }: { images: SwiperImage[] }) {
         })}
       </div>
 
-      <div className="flex items-center gap-3 text-[12px] text-stone">
+      <div className="flex items-center gap-3 text-[13px] text-stone">
         <button
           onClick={skip}
           className="w-11 h-11 rounded-full bg-paper border border-line text-stone hover:text-ink hover:border-line-2 transition flex items-center justify-center"

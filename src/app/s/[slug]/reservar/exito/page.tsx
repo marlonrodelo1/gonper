@@ -85,16 +85,16 @@ export default async function ExitoPage({
           >
             ¡Reserva <span className="font-serif-it">confirmada</span>!
           </h1>
-          <p className="text-[14px] text-stone">
+          <p className="text-[15px] text-stone">
             Te esperamos en {row.salon.nombre}.
           </p>
         </div>
 
         <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
-          <h2 className="text-[12px] uppercase tracking-[0.22em] text-stone/80">
+          <h2 className="text-[13px] uppercase tracking-[0.22em] text-stone/80">
             Resumen
           </h2>
-          <dl className="mt-4 divide-y divide-line text-[14px]">
+          <dl className="mt-4 divide-y divide-line text-[15px]">
             <div className="flex justify-between gap-3 py-2.5">
               <dt className="text-stone">Servicio</dt>
               <dd className="text-right font-medium text-ink">
@@ -129,7 +129,7 @@ export default async function ExitoPage({
         </section>
 
         {emailEnviado && (
-          <p className="text-center text-[13px] text-stone">
+          <p className="text-center text-[14px] text-stone">
             Te hemos enviado un email a <strong className="text-ink">{sp.email}</strong> con
             los detalles.
           </p>
@@ -137,7 +137,7 @@ export default async function ExitoPage({
 
         <Link
           href={`/s/${row.salon.slug}`}
-          className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-paper px-5 text-[14px] font-medium text-ink transition hover:border-ink/30"
+          className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-paper px-5 text-[15px] font-medium text-ink transition hover:border-ink/30"
         >
           Volver a {row.salon.nombre}
         </Link>

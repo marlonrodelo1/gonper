@@ -87,7 +87,7 @@ export function Servicios({ servicios, agenteNombre, onPick }: Props) {
       <div className="mx-auto max-w-[1200px]">
         <div className="reveal flex items-end justify-between gap-6 flex-wrap mb-10">
           <div>
-            <div className="text-[12px] uppercase tracking-[0.22em] text-stone/80 mb-3">
+            <div className="text-[13px] uppercase tracking-[0.22em] text-stone/80 mb-3">
               Servicios
             </div>
             <h2
@@ -97,7 +97,7 @@ export function Servicios({ servicios, agenteNombre, onPick }: Props) {
               Carta del <span className="font-serif-it">studio</span>
             </h2>
           </div>
-          <div className="text-[13px] text-stone max-w-[360px] leading-relaxed">
+          <div className="text-[14px] text-stone max-w-[360px] leading-relaxed">
             Si tienes dudas, escribe a {agenteNombre} y te aconseja.
           </div>
         </div>
@@ -121,7 +121,7 @@ export function Servicios({ servicios, agenteNombre, onPick }: Props) {
         )}
 
         {visible.length === 0 ? (
-          <div className="text-[14px] text-stone bg-paper border border-line rounded-3xl p-8 text-center">
+          <div className="text-[15px] text-stone bg-paper border border-line rounded-3xl p-8 text-center">
             Aún no hay servicios publicados.
           </div>
         ) : (
@@ -140,9 +140,9 @@ export function Servicios({ servicios, agenteNombre, onPick }: Props) {
                     {s.nombre}
                   </div>
                   {s.descripcion && (
-                    <div className="text-[13px] text-stone mt-1">{s.descripcion}</div>
+                    <div className="text-[14px] text-stone mt-1">{s.descripcion}</div>
                   )}
-                  <div className="flex items-center gap-2 mt-2 text-[12px] text-stone/80">
+                  <div className="flex items-center gap-2 mt-2 text-[13px] text-stone/80">
                     <Icon.Clock width="12" height="12" />
                     <span>{formatDuracion(s.duracionMin)}</span>
                   </div>

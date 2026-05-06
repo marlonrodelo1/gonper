@@ -48,12 +48,12 @@ export function Promos({ agenteNombre, promociones }: Props) {
       <div className="mx-auto max-w-[1200px]">
         <div className="reveal flex items-end justify-between gap-6 flex-wrap mb-10">
           <div>
-            <div className="text-[12px] uppercase tracking-[0.22em] text-stone/80 mb-3">Promociones</div>
+            <div className="text-[13px] uppercase tracking-[0.22em] text-stone/80 mb-3">Promociones</div>
             <h2 className="tight font-medium text-ink" style={{ fontSize: 'clamp(32px,4vw,46px)', lineHeight: 1 }}>
               Ofertas <span className="font-serif-it">de la semana</span>
             </h2>
           </div>
-          <div className="text-[13px] text-stone max-w-[320px]">
+          <div className="text-[14px] text-stone max-w-[320px]">
             Descuentos válidos solo reservando online. Cuéntale a {agenteNombre} al confirmar.
           </div>
         </div>
@@ -73,7 +73,7 @@ export function Promos({ agenteNombre, promociones }: Props) {
               >
                 <div className="flex items-center justify-between">
                   {p.tag ? (
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-stone">
+                    <span className="text-[12px] uppercase tracking-[0.2em] text-stone">
                       {p.tag}
                     </span>
                   ) : (
@@ -81,7 +81,7 @@ export function Promos({ agenteNombre, promociones }: Props) {
                   )}
                   {p.descuentoLabel ? (
                     <span
-                      className="px-2.5 py-1 rounded-full text-[11px] font-medium"
+                      className="px-2.5 py-1 rounded-full text-[12px] font-medium"
                       style={{ background: 'var(--ink)', color: 'var(--paper)' }}
                     >
                       {p.descuentoLabel}
@@ -102,18 +102,18 @@ export function Promos({ agenteNombre, promociones }: Props) {
                       </span>
                     ) : null}
                     {precioAnterior ? (
-                      <span className="text-stone/60 line-through text-[14px]">
+                      <span className="text-stone/60 line-through text-[15px]">
                         {precioAnterior}
                       </span>
                     ) : null}
                   </div>
                 ) : null}
                 {nota ? (
-                  <div className="text-[12px] text-stone">{nota}</div>
+                  <div className="text-[13px] text-stone">{nota}</div>
                 ) : null}
                 <a
                   href="#reservar"
-                  className="mt-2 self-start text-[13px] font-medium text-ink hover:text-gomper-accent flex items-center gap-1.5 transition"
+                  className="mt-2 self-start text-[14px] font-medium text-ink hover:text-gomper-accent flex items-center gap-1.5 transition"
                 >
                   Aprovechar <Icon.Arrow width="13" height="13" />
                 </a>

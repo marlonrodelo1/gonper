@@ -27,7 +27,7 @@ export function Resenas({ resenas, resumen }: Props) {
       <div className="mx-auto max-w-[1200px]">
         <div className="reveal flex items-end justify-between gap-6 flex-wrap mb-12">
           <div>
-            <div className="text-[12px] uppercase tracking-[0.22em] text-stone/80 mb-3">Reseñas</div>
+            <div className="text-[13px] uppercase tracking-[0.22em] text-stone/80 mb-3">Reseñas</div>
             <h2
               className="tight font-medium text-ink"
               style={{ fontSize: 'clamp(36px,5vw,56px)', lineHeight: 1 }}
@@ -54,10 +54,10 @@ export function Resenas({ resenas, resumen }: Props) {
                     {iniciales(r.autorNombre)}
                   </div>
                   <div>
-                    <div className="text-[14px] tight font-medium text-ink">
+                    <div className="text-[15px] tight font-medium text-ink">
                       {r.autorNombre}
                     </div>
-                    <div className="text-[11px] text-stone/70">
+                    <div className="text-[12px] text-stone/70">
                       {tiempoRelativo(r.fecha as unknown as string)}
                     </div>
                   </div>
@@ -69,7 +69,7 @@ export function Resenas({ resenas, resumen }: Props) {
                 </div>
               </div>
               {r.texto ? (
-                <p className="text-[14px] text-ink/85 leading-relaxed">
+                <p className="text-[15px] text-ink/85 leading-relaxed">
                   &ldquo;{r.texto}&rdquo;
                 </p>
               ) : null}

@@ -129,7 +129,7 @@ export function Reserva({
       <div className="mx-auto max-w-[1200px]">
         <div className="reveal flex items-end justify-between gap-6 flex-wrap mb-10">
           <div>
-            <div className="text-[12px] uppercase tracking-[0.22em] text-stone/80 mb-3">
+            <div className="text-[13px] uppercase tracking-[0.22em] text-stone/80 mb-3">
               Reserva tu cita
             </div>
             <h2
@@ -151,7 +151,7 @@ export function Reserva({
           {/* LEFT — calendar */}
           <div className="bg-paper border border-line rounded-3xl p-6 sm:p-8">
             <div className="mb-7">
-              <label className="text-[11px] uppercase tracking-[0.2em] text-stone/80">
+              <label className="text-[12px] uppercase tracking-[0.2em] text-stone/80">
                 Servicio
               </label>
               <div className="mt-2 relative">
@@ -210,7 +210,7 @@ export function Reserva({
               {DOWS.map((d) => (
                 <div
                   key={d}
-                  className="text-center text-[10px] uppercase tracking-[0.18em] text-stone/60 py-1"
+                  className="text-center text-[11px] uppercase tracking-[0.18em] text-stone/60 py-1"
                 >
                   {d}
                 </div>
@@ -252,7 +252,7 @@ export function Reserva({
               })}
             </div>
 
-            <div className="mt-6 flex items-center gap-4 text-[11px] text-stone flex-wrap">
+            <div className="mt-6 flex items-center gap-4 text-[12px] text-stone flex-wrap">
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-sage"></span>Disponible
               </span>
@@ -266,14 +266,14 @@ export function Reserva({
           <div className="flex flex-col gap-4">
             {/* Profesional */}
             <div className="bg-paper border border-line rounded-3xl p-6">
-              <label className="text-[11px] uppercase tracking-[0.2em] text-stone/80">
+              <label className="text-[12px] uppercase tracking-[0.2em] text-stone/80">
                 Profesional
               </label>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setProfesionalId('any')}
-                  className={`px-4 py-2 rounded-full text-[13px] tight transition border ${
+                  className={`px-4 py-2 rounded-full text-[14px] tight transition border ${
                     profesionalId === 'any'
                       ? 'bg-ink text-paper border-ink'
                       : 'bg-cream text-stone border-line hover:text-ink hover:border-line-2'
@@ -286,7 +286,7 @@ export function Reserva({
                     type="button"
                     key={p.id}
                     onClick={() => setProfesionalId(p.id)}
-                    className={`px-4 py-2 rounded-full text-[13px] tight transition border ${
+                    className={`px-4 py-2 rounded-full text-[14px] tight transition border ${
                       profesionalId === p.id
                         ? 'bg-ink text-paper border-ink'
                         : 'bg-cream text-stone border-line hover:text-ink hover:border-line-2'
@@ -300,7 +300,7 @@ export function Reserva({
 
             {/* Time slots */}
             <div className="bg-paper border border-line rounded-3xl p-6">
-              <label className="text-[11px] uppercase tracking-[0.2em] text-stone/80">
+              <label className="text-[12px] uppercase tracking-[0.2em] text-stone/80">
                 Hora
               </label>
               {!selectedDay ? (
@@ -325,7 +325,7 @@ export function Reserva({
                         type="button"
                         key={iso}
                         onClick={() => setSelectedSlotIso(iso)}
-                        className={`py-2.5 rounded-xl text-[13px] tight transition border ${
+                        className={`py-2.5 rounded-xl text-[14px] tight transition border ${
                           sel
                             ? 'bg-ink text-paper border-ink'
                             : 'bg-cream text-ink border-line hover:bg-gomper-accent-blush hover:border-gomper-accent'
@@ -353,7 +353,7 @@ export function Reserva({
                   name="profesional_id"
                   value={profesionalEfectivoId}
                 />
-                <label className="text-[11px] uppercase tracking-[0.2em] text-stone/80">
+                <label className="text-[12px] uppercase tracking-[0.2em] text-stone/80">
                   Tus datos
                 </label>
                 <input
@@ -387,11 +387,11 @@ export function Reserva({
                 </label>
                 <button
                   type="submit"
-                  className="mt-2 py-3.5 rounded-full text-[14px] font-medium tight transition accent-btn"
+                  className="mt-2 py-3.5 rounded-full text-[15px] font-medium tight transition accent-btn"
                 >
                   Confirmar reserva
                 </button>
-                <div className="text-[11px] text-stone/70 text-center">
+                <div className="text-[12px] text-stone/70 text-center">
                   Sin pago previo. Pagas en el local.
                 </div>
               </form>

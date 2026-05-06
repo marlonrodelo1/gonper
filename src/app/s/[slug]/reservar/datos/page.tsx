@@ -101,7 +101,7 @@ export default async function DatosReservaPage({
         <header className="flex flex-col gap-3">
           <Link
             href={`/s/${salon.slug}/reservar?servicio=${servicio.id}&profesional=${profesional.id}`}
-            className="text-[13px] text-stone hover:text-ink transition w-fit"
+            className="text-[14px] text-stone hover:text-ink transition w-fit"
           >
             ← Cambiar hora
           </Link>
@@ -120,13 +120,13 @@ export default async function DatosReservaPage({
             borderColor: 'var(--gomper-accent-soft)',
           }}
         >
-          <p className="text-[14px] font-medium text-ink">
+          <p className="text-[15px] font-medium text-ink">
             {servicio.nombre} con {profesional.nombre}
           </p>
-          <p className="mt-1 text-[13px] text-ink/80">
+          <p className="mt-1 text-[14px] text-ink/80">
             {fechaTxt.charAt(0).toUpperCase() + fechaTxt.slice(1)}
           </p>
-          <p className="mt-1 text-[12px] text-stone tabular-nums">
+          <p className="mt-1 text-[13px] text-stone tabular-nums">
             {formatPrecio(servicio.precioEur)} · {servicio.duracionMin} min
           </p>
         </div>
@@ -147,7 +147,7 @@ export default async function DatosReservaPage({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="nombre"
-              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
+              className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
               Nombre <span style={{ color: 'var(--gomper-accent-2)' }}>*</span>
             </label>
@@ -158,14 +158,14 @@ export default async function DatosReservaPage({
               required
               maxLength={120}
               autoComplete="name"
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="telefono"
-              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
+              className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
               Teléfono <span style={{ color: 'var(--gomper-accent-2)' }}>*</span>
             </label>
@@ -176,14 +176,14 @@ export default async function DatosReservaPage({
               required
               maxLength={30}
               autoComplete="tel"
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="email"
-              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
+              className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
               Email <span style={{ color: 'var(--gomper-accent-2)' }}>*</span>
             </label>
@@ -194,9 +194,9 @@ export default async function DatosReservaPage({
               required
               maxLength={200}
               autoComplete="email"
-              className="h-11 rounded-xl border border-line bg-paper px-3 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="h-11 rounded-xl border border-line bg-paper px-3 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
-            <p className="text-[12px] text-stone/80">
+            <p className="text-[13px] text-stone/80">
               Usaremos tu email para enviarte la confirmación y el recordatorio de la cita.
             </p>
           </div>
@@ -204,10 +204,10 @@ export default async function DatosReservaPage({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor="notas"
-              className="text-[12px] uppercase tracking-[0.18em] text-stone/80"
+              className="text-[13px] uppercase tracking-[0.18em] text-stone/80"
             >
               Notas{' '}
-              <span className="text-[10px] font-normal tracking-normal text-stone/60 normal-case">
+              <span className="text-[11px] font-normal tracking-normal text-stone/60 normal-case">
                 (opcional)
               </span>
             </label>
@@ -216,7 +216,7 @@ export default async function DatosReservaPage({
               name="notas"
               rows={3}
               maxLength={500}
-              className="rounded-xl border border-line bg-paper px-3 py-2.5 text-[14px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
+              className="rounded-xl border border-line bg-paper px-3 py-2.5 text-[15px] text-ink focus:outline-none focus:border-ink/30 focus:ring-2 focus:ring-[color:var(--gomper-accent-soft)]"
             />
           </div>
 
@@ -224,7 +224,7 @@ export default async function DatosReservaPage({
 
           <button
             type="submit"
-            className="mt-1 inline-flex h-12 items-center justify-center rounded-full px-5 text-[14px] font-medium accent-btn"
+            className="mt-1 inline-flex h-12 items-center justify-center rounded-full px-5 text-[15px] font-medium accent-btn"
           >
             Confirmar reserva
           </button>

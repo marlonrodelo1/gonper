@@ -15,9 +15,9 @@ export function Footer({ salon }: Props) {
           >
             <Icon.Sparkle width="13" height="13" className="text-gomper-accent" />
           </span>
-          <span className="text-[14px] tight font-medium text-ink">{salon.nombre}</span>
+          <span className="text-[15px] tight font-medium text-ink">{salon.nombre}</span>
         </div>
-        <div className="text-[12px] text-stone flex items-center gap-4 flex-wrap justify-center">
+        <div className="text-[13px] text-stone flex items-center gap-4 flex-wrap justify-center">
           <a href="#" className="hover:text-ink transition">
             Aviso legal
           </a>

@@ -97,13 +97,18 @@ function buildSystemPrompt(args: {
   serviciosTexto: string;
   horariosTexto: string;
   fechaHoy: string;
+  reservarUrl: string;
 }): string {
   const tipo = TIPO_NEGOCIO_LEGIBLE[args.tipoNegocio] ?? args.tipoNegocio;
   const lugar = args.direccion ?? 'España';
   return `Eres ${args.agenteNombre}, la recepcionista virtual de ${args.salonNombre}, un ${tipo} en ${lugar}.
 Tono: ${args.agenteTono}. Habla SIEMPRE en español, con frases cortas y útiles.
-Tu rol: atender clientes que escriben por la web del salón. Puedes responder sobre precios, horarios, servicios. Para reservar dile que use el calendario que tiene debajo.
-Lo que NO sabes / debes preguntar al usuario, no inventes.
+
+## Tu rol
+Atender clientes que escriben por la web del salón. Puedes responder sobre precios, horarios, servicios y la ubicación.
+Si el usuario quiere reservar / pedir hora / coger cita, NO intentes hacerlo tú: comparte SIEMPRE este enlace y dile que ahí elige servicio, profesional, fecha y hora:
+${args.reservarUrl}
+Lo que NO sabes, pregunta al usuario; no te inventes datos.
 Hoy es ${args.fechaHoy}.
 
 ## Datos del salón
@@ -271,6 +276,10 @@ export async function POST(
       year: 'numeric',
     });
 
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://gestori.es';
+    const reservarUrl = `${siteUrl}/s/${slug}/reservar`;
+
     const systemPrompt = buildSystemPrompt({
       agenteNombre: salon.agenteNombre,
       agenteTono: salon.agenteTono,
@@ -281,6 +290,7 @@ export async function POST(
       serviciosTexto: formatServicios(listaServicios),
       horariosTexto: formatHorarios(listaHorarios),
       fechaHoy,
+      reservarUrl,
     });
 
     // Mensajes para el LLM: historial + mensaje actual

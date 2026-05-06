@@ -103,7 +103,7 @@ export async function RespuestaCitaPage({ token, esperada }: Props) {
               </>
             )}
           </h1>
-          <p className="text-[14px] text-stone max-w-md">
+          <p className="text-[15px] text-stone max-w-md">
             {esConfirmar
               ? `Gracias, ${result.cliente.nombre}. ${result.salon.nombre} ya sabe que vas a llegar.`
               : `Hemos avisado a ${result.salon.nombre} de que no podrás asistir. Gracias por avisar.`}
@@ -111,10 +111,10 @@ export async function RespuestaCitaPage({ token, esperada }: Props) {
         </div>
 
         <section className="rounded-3xl border border-line bg-paper p-5 sm:p-6">
-          <h2 className="text-[12px] uppercase tracking-[0.22em] text-stone/80">
+          <h2 className="text-[13px] uppercase tracking-[0.22em] text-stone/80">
             Tu cita
           </h2>
-          <dl className="mt-4 divide-y divide-line text-[14px]">
+          <dl className="mt-4 divide-y divide-line text-[15px]">
             <div className="flex justify-between gap-3 py-2.5">
               <dt className="text-stone">Salón</dt>
               <dd className="text-right font-medium text-ink">
@@ -144,7 +144,7 @@ export async function RespuestaCitaPage({ token, esperada }: Props) {
 
         <Link
           href={`/s/${result.salon.slug}`}
-          className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-paper px-5 text-[14px] font-medium text-ink transition hover:border-ink/30"
+          className="inline-flex h-12 items-center justify-center rounded-full border border-line bg-paper px-5 text-[15px] font-medium text-ink transition hover:border-ink/30"
         >
           Ir a {result.salon.nombre}
         </Link>
@@ -158,7 +158,7 @@ function ErrorShell({ titulo, mensaje }: { titulo: string; mensaje: string }) {
     <div style={getAccentVars(null)} className="bg-cream text-ink min-h-screen">
       <div className="mx-auto flex max-w-md flex-col gap-4 px-6 py-16 text-center">
         <h1 className="tight font-medium text-ink text-3xl">{titulo}</h1>
-        <p className="text-[14px] text-stone">{mensaje}</p>
+        <p className="text-[15px] text-stone">{mensaje}</p>
       </div>
     </div>
   );
@@ -169,7 +169,7 @@ function NeutralShell({ titulo, mensaje }: { titulo: string; mensaje: string }) 
     <div style={getAccentVars(null)} className="bg-cream text-ink min-h-screen">
       <div className="mx-auto flex max-w-md flex-col gap-4 px-6 py-16 text-center">
         <h1 className="tight font-medium text-ink text-3xl">{titulo}</h1>
-        <p className="text-[14px] text-stone">{mensaje}</p>
+        <p className="text-[15px] text-stone">{mensaje}</p>
       </div>
     </div>
   );

@@ -70,7 +70,7 @@ export function Hero({
           ></div>
 
           {/* status pill */}
-          <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 rounded-full bg-paper/90 backdrop-blur-sm border border-line text-[12px]">
+          <div className="absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 rounded-full bg-paper/90 backdrop-blur-sm border border-line text-[13px]">
             <span
               className={`relative w-2 h-2 rounded-full ${abierto ? 'bg-sage live-dot' : 'bg-stone/50'}`}
             ></span>
@@ -105,7 +105,7 @@ export function Hero({
           {/* bottom info */}
           <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 flex items-end justify-between gap-6 flex-wrap">
             <div className="text-paper">
-              <div className="flex items-center gap-2 text-[12px] uppercase tracking-[0.22em] text-paper/80 mb-3">
+              <div className="flex items-center gap-2 text-[13px] uppercase tracking-[0.22em] text-paper/80 mb-3">
                 <Icon.Sparkle width="13" height="13" />
                 <span>
                   {tipoNegocioLabel} · {lugar}
@@ -129,7 +129,7 @@ export function Hero({
                   primary
                 )}
               </h1>
-              <div className="mt-4 flex items-center gap-5 text-[13px] text-paper/85">
+              <div className="mt-4 flex items-center gap-5 text-[14px] text-paper/85">
                 <span className="hidden sm:flex items-center gap-1.5">
                   <Icon.Pin width="13" height="13" /> {calle}
                 </span>
@@ -138,7 +138,7 @@ export function Hero({
             <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
               <a
                 href="#reservar"
-                className="px-6 py-3.5 rounded-full text-[14px] font-medium accent-btn text-center"
+                className="px-6 py-3.5 rounded-full text-[15px] font-medium accent-btn text-center"
               >
                 Reservar cita
               </a>
@@ -147,7 +147,7 @@ export function Hero({
                   href={urlTelegram}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-6 py-3.5 rounded-full text-[14px] font-medium bg-paper/95 hover:bg-paper text-ink border border-line/40 transition flex items-center justify-center gap-2"
+                  className="px-6 py-3.5 rounded-full text-[15px] font-medium bg-paper/95 hover:bg-paper text-ink border border-line/40 transition flex items-center justify-center gap-2"
                 >
                   <Icon.Telegram width="14" height="14" /> Chatear con {agenteNombre}
                 </a>
@@ -194,10 +194,10 @@ export function Hero({
                 {it.icon}
               </span>
               <div className="min-w-0">
-                <div className="text-[11px] uppercase tracking-[0.18em] text-stone/70">
+                <div className="text-[12px] uppercase tracking-[0.18em] text-stone/70">
                   {it.label}
                 </div>
-                <div className="text-[13px] text-ink tight font-medium truncate">
+                <div className="text-[14px] text-ink tight font-medium truncate">
                   {it.value}
                 </div>
               </div>

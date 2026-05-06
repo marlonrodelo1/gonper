@@ -24,6 +24,7 @@ const postSchema = z.object({
     telegram_id: z.union([z.string(), z.number()]).optional(),
     nombre: z.string().min(1),
     telefono: z.string().optional(),
+    email: z.string().email().max(200).optional(),
   }),
   notas: z.string().optional(),
   origen: z.enum(['telegram', 'whatsapp', 'web']),
@@ -132,11 +133,13 @@ export async function POST(
         .limit(1);
       if (c) {
         clienteId = c.id;
-        if (c.nombre !== data.cliente.nombre) {
-          await db
-            .update(clientes)
-            .set({ nombre: data.cliente.nombre, updatedAt: new Date() })
-            .where(eq(clientes.id, c.id));
+        const updates: Record<string, unknown> = {};
+        if (c.nombre !== data.cliente.nombre) updates.nombre = data.cliente.nombre;
+        if (data.cliente.email) updates.email = data.cliente.email;
+        if (data.cliente.telefono) updates.telefono = data.cliente.telefono;
+        if (Object.keys(updates).length > 0) {
+          updates.updatedAt = new Date();
+          await db.update(clientes).set(updates).where(eq(clientes.id, c.id));
         }
       } else {
         const [nuevo] = await db
@@ -145,6 +148,7 @@ export async function POST(
             salonId: salon.id,
             nombre: data.cliente.nombre,
             telefono: data.cliente.telefono ?? null,
+            email: data.cliente.email ?? null,
             telegramId: telegramIdBig,
           })
           .returning({ id: clientes.id });
@@ -163,11 +167,12 @@ export async function POST(
         .limit(1);
       if (c) {
         clienteId = c.id;
-        if (c.nombre !== data.cliente.nombre) {
-          await db
-            .update(clientes)
-            .set({ nombre: data.cliente.nombre, updatedAt: new Date() })
-            .where(eq(clientes.id, c.id));
+        const updates: Record<string, unknown> = {};
+        if (c.nombre !== data.cliente.nombre) updates.nombre = data.cliente.nombre;
+        if (data.cliente.email) updates.email = data.cliente.email;
+        if (Object.keys(updates).length > 0) {
+          updates.updatedAt = new Date();
+          await db.update(clientes).set(updates).where(eq(clientes.id, c.id));
         }
       } else {
         const [nuevo] = await db
@@ -176,6 +181,7 @@ export async function POST(
             salonId: salon.id,
             nombre: data.cliente.nombre,
             telefono: data.cliente.telefono,
+            email: data.cliente.email ?? null,
           })
           .returning({ id: clientes.id });
         clienteId = nuevo.id;

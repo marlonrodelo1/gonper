@@ -200,7 +200,7 @@ export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
         <div className="flex-1 leading-tight">
           <div className="text-sm font-semibold text-neutral-900">{agenteNombre}</div>
           <div className="flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               en línea
             </span>

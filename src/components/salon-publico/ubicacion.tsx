@@ -52,7 +52,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
           {/* Info card */}
           <div className="bg-paper border border-line rounded-3xl p-8 flex flex-col gap-7">
             <div>
-              <div className="text-[12px] uppercase tracking-[0.22em] text-stone/80 mb-3">
+              <div className="text-[13px] uppercase tracking-[0.22em] text-stone/80 mb-3">
                 Visítanos
               </div>
               <h2
@@ -70,10 +70,10 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
             </div>
 
             <div className="border-t border-line pt-6">
-              <div className="text-[11px] uppercase tracking-[0.2em] text-stone/80 mb-3">
+              <div className="text-[12px] uppercase tracking-[0.2em] text-stone/80 mb-3">
                 Horario
               </div>
-              <ul className="flex flex-col gap-2 text-[14px]">
+              <ul className="flex flex-col gap-2 text-[15px]">
                 {filas.map((f) => {
                   const esHoy = f.dia === diaActual;
                   const cerrado = f.tramos.length === 0;
@@ -82,7 +82,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
                       <span className={esHoy ? 'text-ink font-medium' : 'text-stone'}>
                         {NOMBRES_DIA_LARGO[f.dia]}
                         {esHoy && (
-                          <span className="text-sage-deep text-[11px] ml-2">· Hoy</span>
+                          <span className="text-sage-deep text-[12px] ml-2">· Hoy</span>
                         )}
                       </span>
                       <span className={cerrado ? 'text-stone/50' : 'text-ink tight'}>
@@ -98,7 +98,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
               {salon.telefono && (
                 <a
                   href={`tel:${salon.telefono}`}
-                  className="flex items-center gap-3 text-[14px] text-ink hover:text-gomper-accent transition"
+                  className="flex items-center gap-3 text-[15px] text-ink hover:text-gomper-accent transition"
                 >
                   <span className="w-9 h-9 rounded-full bg-cream-2 grid place-items-center">
                     <Icon.Phone width="14" height="14" />
@@ -111,7 +111,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
                   href={`https://wa.me/${salon.telefono.replace(/\D/g, '')}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center gap-3 text-[14px] text-ink hover:text-gomper-accent transition"
+                  className="flex items-center gap-3 text-[15px] text-ink hover:text-gomper-accent transition"
                 >
                   <span className="w-9 h-9 rounded-full bg-cream-2 grid place-items-center">
                     <Icon.Whatsapp width="14" height="14" />
@@ -122,7 +122,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
               {salon.email && (
                 <a
                   href={`mailto:${salon.email}`}
-                  className="flex items-center gap-3 text-[14px] text-ink hover:text-gomper-accent transition"
+                  className="flex items-center gap-3 text-[15px] text-ink hover:text-gomper-accent transition"
                 >
                   <span className="w-9 h-9 rounded-full bg-cream-2 grid place-items-center">
                     <Icon.Instagram width="14" height="14" />
@@ -183,7 +183,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
                   style={{ background: 'var(--gomper-accent-2)', opacity: 0.4 }}
                 ></div>
               </div>
-              <div className="mt-5 px-3 py-2 rounded-xl bg-paper border border-line shadow-lg text-[12px] tight text-ink whitespace-nowrap absolute left-1/2 -translate-x-1/2">
+              <div className="mt-5 px-3 py-2 rounded-xl bg-paper border border-line shadow-lg text-[13px] tight text-ink whitespace-nowrap absolute left-1/2 -translate-x-1/2">
                 {salon.nombre}
               </div>
             </div>
@@ -196,7 +196,7 @@ export function Ubicacion({ salon, horariosSemana, diaActual }: Props) {
               }
               target="_blank"
               rel="noreferrer"
-              className="absolute bottom-5 right-5 px-4 py-2.5 rounded-full bg-paper border border-line text-[13px] tight text-ink hover:bg-cream transition flex items-center gap-2 shadow-md"
+              className="absolute bottom-5 right-5 px-4 py-2.5 rounded-full bg-paper border border-line text-[14px] tight text-ink hover:bg-cream transition flex items-center gap-2 shadow-md"
             >
               <Icon.Pin width="13" height="13" className="text-gomper-accent" /> Cómo llegar
             </a>
