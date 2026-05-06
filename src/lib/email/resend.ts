@@ -229,6 +229,28 @@ export async function enviarConfirmacionReserva(params: {
     : null;
   const salonUrl = `${siteUrl}/s/${params.salonSlug}`;
 
+  // Link "Añadir a Google Calendar" — formato YYYYMMDDTHHmmssZ (UTC)
+  const inicioUtc = fecha;
+  const finUtc = new Date(inicioUtc.getTime() + params.duracionMin * 60_000);
+  const fmtCal = (d: Date) =>
+    d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const calDescripcion = [
+    `Servicio: ${params.servicioNombre}`,
+    `Profesional: ${params.profesionalNombre}`,
+    precioNum > 0 ? `Precio: ${precioFmt}` : null,
+    `Reservado en ${salonUrl}`,
+  ]
+    .filter(Boolean)
+    .join('\\n');
+  const googleCalParams = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: `${params.servicioNombre} en ${params.salonNombre}`,
+    dates: `${fmtCal(inicioUtc)}/${fmtCal(finUtc)}`,
+    details: calDescripcion,
+    location: params.salonDireccion ?? params.salonNombre,
+  });
+  const googleCalUrl = `https://calendar.google.com/calendar/render?${googleCalParams.toString()}`;
+
   const subject = `✅ Cita confirmada en ${params.salonNombre} — ${fechaFmt} a las ${horaFmt}`;
 
   const cuerpoHtml = `
@@ -256,8 +278,11 @@ export async function enviarConfirmacionReserva(params: {
 
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px">
         <tr>
-          ${mapsUrl ? `<td style="padding:0 8px 8px 0">${botonHtml('Cómo llegar', mapsUrl)}</td>` : ''}
-          <td style="padding:0 0 8px 0">${botonSecundarioHtml('Cancelar cita', cancelarUrl)}</td>
+          <td style="padding:0 8px 8px 0">${botonHtml('📅 Añadir a Google Calendar', googleCalUrl)}</td>
+          ${mapsUrl ? `<td style="padding:0 8px 8px 0">${botonSecundarioHtml('Cómo llegar', mapsUrl)}</td>` : ''}
+        </tr>
+        <tr>
+          <td style="padding:0 0 8px 0" colspan="2">${botonSecundarioHtml('Cancelar cita', cancelarUrl)}</td>
         </tr>
       </table>
 
