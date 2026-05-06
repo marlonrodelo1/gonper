@@ -1,20 +1,13 @@
+import { eq } from 'drizzle-orm';
+
+import { db } from '@/lib/db';
+import { salones } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 import { Icon } from '@/app/panel/_components/icons';
 import { actualizarAgente } from '../actions';
 import { PlantillasButton } from './plantillas-button';
 
-type Salon = {
-  id: string;
-  nombre: string;
-  tipoNegocio?: string;
-  tipo_negocio?: string;
-  agenteNombre: string;
-  agenteGenero: string;
-  agenteTono: string;
-  agenteBienvenida: string | null;
-  agenteInstrucciones: string | null;
-  agenteAvatarUrl: string | null;
-} | null;
+type CurrentSalon = { id: string } | null;
 
 const GENEROS: { value: string; label: string }[] = [
   { value: 'femenino', label: 'Femenino' },
@@ -77,10 +70,9 @@ export default async function ConfigAgentePage({
   searchParams: Promise<{ ok?: string; error?: string }>;
 }) {
   const params = await searchParams;
-  const salonRaw = (await getCurrentSalon()) as unknown;
-  const salon = salonRaw as Salon;
+  const current = (await getCurrentSalon()) as CurrentSalon;
 
-  if (!salon) {
+  if (!current) {
     return (
       <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
         <h2 className="tight text-[22px] font-medium text-ink">
@@ -89,6 +81,35 @@ export default async function ConfigAgentePage({
         <p className="text-[14px] text-stone">
           Aún no tienes un salón asociado a tu cuenta.
         </p>
+      </div>
+    );
+  }
+
+  // Leemos directo con Drizzle para garantizar camelCase consistente
+  // (getCurrentSalon devuelve la fila de Supabase con snake_case y a veces
+  // mezclado, lo que provocaba que los defaultValue cayeran al placeholder).
+  const [salon] = await db
+    .select({
+      id: salones.id,
+      nombre: salones.nombre,
+      tipoNegocio: salones.tipoNegocio,
+      agenteNombre: salones.agenteNombre,
+      agenteGenero: salones.agenteGenero,
+      agenteTono: salones.agenteTono,
+      agenteBienvenida: salones.agenteBienvenida,
+      agenteInstrucciones: salones.agenteInstrucciones,
+      agenteAvatarUrl: salones.agenteAvatarUrl,
+    })
+    .from(salones)
+    .where(eq(salones.id, current.id))
+    .limit(1);
+
+  if (!salon) {
+    return (
+      <div className="card mx-auto flex max-w-2xl flex-col items-center gap-3 p-10 text-center">
+        <h2 className="tight text-[22px] font-medium text-ink">
+          Salón no encontrado
+        </h2>
       </div>
     );
   }
@@ -242,7 +263,7 @@ export default async function ConfigAgentePage({
           </div>
 
           <PlantillasButton
-            tipoNegocio={salon.tipoNegocio ?? salon.tipo_negocio ?? 'otro'}
+            tipoNegocio={salon.tipoNegocio ?? 'otro'}
             agenteNombre={salon.agenteNombre || 'Juanita'}
             salonNombre={salon.nombre}
           />
