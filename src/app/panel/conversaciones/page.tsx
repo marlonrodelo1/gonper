@@ -6,12 +6,12 @@ import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 import { tiempoRelativo } from '@/lib/format/tiempo-relativo';
 import { Icon } from '../_components/icons';
 
-type Canal = 'todos' | 'web' | 'telegram' | 'whatsapp';
+type Canal = 'todos' | 'web' | 'whatsapp';
 
 type ConversacionRow = {
   id: string; // sessionId o clienteId
   tipo: 'web' | 'cliente';
-  canal: 'web' | 'telegram' | 'whatsapp' | 'sms';
+  canal: 'web' | 'whatsapp' | 'sms';
   nombre: string;
   ultimoMensaje: string;
   ultimaFecha: Date;
@@ -32,7 +32,6 @@ function truncar(s: string, n: number): string {
 const TABS: Array<{ key: Canal; label: string }> = [
   { key: 'todos', label: 'Todos' },
   { key: 'web', label: 'Web' },
-  { key: 'telegram', label: 'Telegram' },
   { key: 'whatsapp', label: 'WhatsApp' },
 ];
 
@@ -44,7 +43,7 @@ export default async function ConversacionesPage({
   const sp = await searchParams;
   const canalParam = (sp.canal ?? 'todos').toLowerCase();
   const canalActivo: Canal = (
-    ['todos', 'web', 'telegram', 'whatsapp'].includes(canalParam)
+    ['todos', 'web', 'whatsapp'].includes(canalParam)
       ? canalParam
       : 'todos'
   ) as Canal;
@@ -123,15 +122,14 @@ export default async function ConversacionesPage({
     );
   }
 
-  // Conversaciones telegram/whatsapp (agrupadas por cliente_id)
+  // Conversaciones whatsapp/sms (agrupadas por cliente_id) — Telegram cliente
+  // se eliminó: en España nadie lo usa, todo va por email/WhatsApp.
   let conversacionesCliente: ConversacionRow[] = [];
   if (canalActivo !== 'web') {
     const filtroCanal =
-      canalActivo === 'telegram'
-        ? sql`AND m.canal = 'telegram'`
-        : canalActivo === 'whatsapp'
-          ? sql`AND m.canal = 'whatsapp'`
-          : sql`AND m.canal IN ('telegram','whatsapp','sms')`;
+      canalActivo === 'whatsapp'
+        ? sql`AND m.canal = 'whatsapp'`
+        : sql`AND m.canal IN ('whatsapp','sms')`;
 
     const rowsCli = await db.execute(sql`
       WITH agrupadas AS (
@@ -176,7 +174,7 @@ export default async function ConversacionesPage({
     ).map((r) => ({
       id: String(r.id),
       tipo: 'cliente' as const,
-      canal: ((r.canal as string) ?? 'telegram') as ConversacionRow['canal'],
+      canal: ((r.canal as string) ?? 'whatsapp') as ConversacionRow['canal'],
       nombre: (r.cliente_nombre as string | null) ?? 'Cliente sin nombre',
       ultimoMensaje: (r.ultimo_mensaje as string | null) ?? '',
       ultimaFecha: new Date(r.ultima_fecha as string),
@@ -231,7 +229,7 @@ export default async function ConversacionesPage({
             Aún no hay conversaciones
           </h2>
           <p className="max-w-md text-[13.5px] text-stone">
-            Cuando tu agente reciba mensajes en Telegram o el chat web, las
+            Cuando tu agente reciba mensajes en el chat web o WhatsApp, las
             verás aquí.
           </p>
         </div>
@@ -251,11 +249,9 @@ export default async function ConversacionesPage({
               const canalLabel =
                 c.canal === 'web'
                   ? 'Chat web'
-                  : c.canal === 'telegram'
-                    ? 'Telegram'
-                    : c.canal === 'whatsapp'
-                      ? 'WhatsApp'
-                      : 'SMS';
+                  : c.canal === 'whatsapp'
+                    ? 'WhatsApp'
+                    : 'SMS';
               const canalStyle =
                 c.canal === 'web'
                   ? {
@@ -277,8 +273,6 @@ export default async function ConversacionesPage({
                       inicial(c.nombre)
                     ) : c.canal === 'web' ? (
                       <Icon.Web width="16" height="16" />
-                    ) : c.canal === 'telegram' ? (
-                      <Icon.Tg width="16" height="16" />
                     ) : (
                       inicial(c.nombre)
                     )}

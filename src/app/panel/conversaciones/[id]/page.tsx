@@ -121,7 +121,7 @@ export default async function ConversacionDetallePage({
 
   // Datos cabecera
   const primero = mensajesLista[0];
-  const canal = primero.canal as 'web' | 'telegram' | 'whatsapp' | 'sms';
+  const canal = primero.canal as 'web' | 'whatsapp' | 'sms';
   const nombre =
     clienteVinculado?.nombre ??
     (modo === 'web'
@@ -139,11 +139,9 @@ export default async function ConversacionDetallePage({
   const canalLabel =
     canal === 'web'
       ? 'Chat web'
-      : canal === 'telegram'
-        ? 'Telegram'
-        : canal === 'whatsapp'
-          ? 'WhatsApp'
-          : 'SMS';
+      : canal === 'whatsapp'
+        ? 'WhatsApp'
+        : 'SMS';
   const canalStyle =
     canal === 'web'
       ? { background: 'rgba(60,110,170,0.12)', color: '#1F4E80' }

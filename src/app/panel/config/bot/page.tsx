@@ -5,7 +5,6 @@ import {
   guardarTokenBotCliente,
   desconectarBotSalon,
 } from './actions';
-import { CopyLinkButton } from './copy-link-button';
 import { VincularDuenoButton } from './vincular-dueno-button';
 
 type SalonRow = {
@@ -53,9 +52,6 @@ export default async function ConfigBotPage({
     salon.telegram_chat_id_dueno ?? salon.telegramChatIdDueno ?? null;
   const tieneBot = !!tokenBot;
   const duenoVinculado = !!chatIdDueno;
-  const linkCliente = usernameBot
-    ? `https://t.me/${usernameBot}?start=${salon.slug}`
-    : null;
   const botUrl = usernameBot ? `https://t.me/${usernameBot}` : null;
 
   return (
@@ -99,26 +95,16 @@ export default async function ConfigBotPage({
                 Bot operativo
               </span>
               <h2 className="tight text-[19px] font-medium text-ink">
-                Atiende a tus clientes y a ti como dueño
+                Tu asistente personal vía Telegram
               </h2>
             </div>
           </header>
 
-          {/* Enlace para clientes */}
-          <div className="card-tight flex flex-col gap-2 px-4 py-4">
-            <span className={labelClass}>Enlace para tus clientes</span>
-            <div className="flex flex-wrap items-center gap-2">
-              <code className="rounded-lg bg-cream-2 px-2.5 py-1.5 font-mono text-[12.5px] text-ink">
-                t.me/{usernameBot}?start={salon.slug}
-              </code>
-              {linkCliente ? (
-                <CopyLinkButton link={linkCliente} label="Copiar" copiedLabel="Copiado" />
-              ) : null}
-            </div>
-            <p className="text-[12px] text-stone">
-              Pégalo en tu Instagram, web o donde quieras. Quien lo abra reservará con Juanita 24/7.
-            </p>
-          </div>
+          <p className="text-[13.5px] text-stone">
+            El bot Telegram es tu canal privado como dueño: te avisa de citas
+            nuevas, recordatorios y te deja consultar tu agenda desde el móvil.
+            Tus clientes reservan por la web — no necesitan Telegram.
+          </p>
 
           {/* Configuración avanzada — colapsada */}
           <details className="rounded-2xl border border-line bg-paper px-4 py-3 text-[13px]">
@@ -186,8 +172,9 @@ export default async function ConfigBotPage({
               Conecta tu bot de Telegram
             </h2>
             <p className="text-[14px] text-stone">
-              Un único bot que atiende a tus clientes <strong className="text-ink">y</strong> que tú
-              usarás como dueño para hablar con tu Juanita Pro.
+              Es tu canal privado como dueño: para hablar con tu Juanita Pro
+              desde el móvil y recibir avisos de citas. Tus clientes reservan
+              por la web — no necesitan Telegram.
             </p>
           </header>
 
