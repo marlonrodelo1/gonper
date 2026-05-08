@@ -2,20 +2,12 @@ import Link from 'next/link';
 import { and, asc, eq, gte, lt } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import {
-  citas,
-  clientes,
-  listaEspera,
-  profesionales,
-  servicios,
-} from '@/lib/db/schema';
+import { citas, clientes, profesionales, servicios } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 
 import { CitaRow, type EstadoCita } from '../_components/cita-row';
-import { Icon } from '../_components/icons';
 import { PanelTopbar } from '../_components/panel-topbar';
 import { PendingBanner } from '../_components/pending-banner';
-import { ScheduleRail } from '../_components/schedule-rail';
 import { StatCard } from '../_components/stat-card';
 
 const SPARK_PATHS = {
@@ -119,16 +111,6 @@ export default async function HoyPage() {
     )
     .orderBy(asc(citas.inicio));
 
-  // Lista de espera (top 3 activas, orden ASC por createdAt).
-  const filasEspera = await db
-    .select({ espera: listaEspera, cliente: clientes, servicio: servicios })
-    .from(listaEspera)
-    .innerJoin(clientes, eq(listaEspera.clienteId, clientes.id))
-    .innerJoin(servicios, eq(listaEspera.servicioId, servicios.id))
-    .where(and(eq(listaEspera.salonId, salon.id), eq(listaEspera.activa, true)))
-    .orderBy(asc(listaEspera.createdAt))
-    .limit(3);
-
   // KPIs
   let facturado = 0;
   let completadas = 0;
@@ -154,21 +136,6 @@ export default async function HoyPage() {
   const total = filas.length;
   const restantes = Math.max(total - completadas - noShows, 0);
 
-  // Próximas (pendiente / confirmada), ya están ordenadas por inicio asc.
-  const proximasFilas = filas.filter((f) => {
-    const e = f.cita.estado as EstadoCita;
-    return e === 'pendiente' || e === 'confirmada';
-  });
-
-  const proximasItems = proximasFilas.map((f) => ({
-    id: f.cita.id,
-    hora: formatearHora(f.cita.inicio, timezone),
-    cliente: f.cliente.nombre,
-    servicio: f.servicio.nombre,
-    pro: f.profesional.nombre,
-    estado: f.cita.estado as EstadoCita,
-  }));
-
   // Pendientes en próximas 4 horas
   const ventana4h = new Date(ahora.getTime() + 4 * 60 * 60 * 1000);
   const pendientesProximas = filas.filter((f) => {
@@ -193,27 +160,6 @@ export default async function HoyPage() {
   const noShowFoot = primerNoShow
     ? `${primerNoShow.cliente.nombre} · ${formatearHora(primerNoShow.cita.inicio, timezone)}`
     : 'Sin incidencias hoy';
-
-  // Resumen Juanita (frase corta basada en KPIs).
-  const resumenJuanita = (() => {
-    if (total === 0) {
-      return 'Hoy no tienes citas programadas. Buen momento para descansar o preparar la semana.';
-    }
-    const partes: string[] = [
-      `Hoy llevas ${completadas}/${total} hechas, ${facturado.toFixed(0)} € en caja.`,
-    ];
-    if (noShows > 0) {
-      partes.push(
-        `${noShows} no-show${noShows === 1 ? '' : 's'} — pídele depósito desde ahora.`,
-      );
-    }
-    if (sinConfirmar > 0) {
-      partes.push(
-        `${sinConfirmar} sin confirmar; las recuerdo 1 h antes.`,
-      );
-    }
-    return partes.join(' ');
-  })();
 
   const fechaTopbar = formatearFechaTopbar(timezone);
   const saludo = `${saludoPorHora(timezone)}, ${ownerName}.`;
@@ -299,9 +245,8 @@ export default async function HoyPage() {
           })()}
         </section>
 
-        {/* Two-col main */}
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_400px]">
-          <div className="card flex flex-col overflow-hidden">
+        {/* Agenda principal */}
+        <div className="card flex flex-col overflow-hidden">
             <div className="flex items-center gap-3 border-b border-line px-5 py-4">
               <div>
                 <div className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
@@ -357,93 +302,6 @@ export default async function HoyPage() {
               </div>
             )}
           </div>
-
-          <div className="flex flex-col gap-6">
-            <ScheduleRail proximas={proximasItems} />
-          </div>
-        </div>
-
-        {/* Bottom row: insights + lista de espera */}
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <div className="card grain col-span-1 p-6 lg:col-span-2">
-            <div className="flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-terracotta/15 text-terracotta">
-                <Icon.Sparkle width="16" height="16" />
-              </div>
-              <div className="flex-1">
-                <div className="mb-2 text-[11px] uppercase tracking-[0.22em] text-stone/70">
-                  Juanita resume tu día
-                </div>
-                <p className="tight max-w-[640px] text-[20px] leading-snug text-ink">
-                  {resumenJuanita}
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    className="tight rounded-full bg-ink px-3 py-1.5 text-[12.5px] text-cream hover:opacity-90"
-                  >
-                    {primerNoShow
-                      ? `Activar depósito a ${primerNoShow.cliente.nombre.split(' ')[0]}`
-                      : 'Activar depósito'}
-                  </button>
-                  <button
-                    type="button"
-                    className="tight rounded-full border border-line px-3 py-1.5 text-[12.5px] text-ink hover:bg-paper"
-                  >
-                    Ver detalle
-                  </button>
-                  <button
-                    type="button"
-                    className="tight rounded-full border border-line px-3 py-1.5 text-[12.5px] text-stone hover:bg-paper"
-                  >
-                    Más tarde
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="card p-5">
-            <div className="mb-3 text-[11px] uppercase tracking-[0.22em] text-stone/70">
-              Lista de espera
-            </div>
-            {filasEspera.length === 0 ? (
-              <div className="text-[12.5px] text-stone">
-                Nadie en lista de espera ahora mismo.
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2.5">
-                {filasEspera.map((row, i) => (
-                  <div key={row.espera.id} className="flex items-center gap-3">
-                    <span className="tabular w-4 font-mono text-[11px] text-stone">
-                      {i + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="tight truncate text-[13px] text-ink">
-                        {row.cliente.nombre}
-                      </div>
-                      <div className="text-[11px] text-stone">
-                        {row.servicio.nombre} · cualquiera
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      className="rounded-full border border-line bg-cream px-2.5 py-1 text-[11.5px] text-stone hover:text-ink"
-                    >
-                      Ofrecer
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <Link
-              href="/panel/clientes"
-              className="mt-4 inline-flex items-center gap-1 text-[12px] text-terracotta hover:text-terracotta-2"
-            >
-              Ver lista completa <Icon.Arrow width="11" height="11" />
-            </Link>
-          </div>
-        </div>
 
         <div className="pt-4 pb-8 text-center">
           <Link
