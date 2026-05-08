@@ -13,7 +13,6 @@ import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 
 import { CitaRow, type EstadoCita } from '../_components/cita-row';
 import { Icon } from '../_components/icons';
-import { JuanitaPro } from '../_components/juanita-pro';
 import { PanelTopbar } from '../_components/panel-topbar';
 import { PendingBanner } from '../_components/pending-banner';
 import { ScheduleRail } from '../_components/schedule-rail';
@@ -360,13 +359,6 @@ export default async function HoyPage() {
           </div>
 
           <div className="flex flex-col gap-6">
-            <JuanitaPro
-              mensajeInicial={resumenJuanita}
-              agenteNombre={salon.agenteNombre ?? salon.agente_nombre ?? null}
-              agenteAvatarUrl={
-                salon.agenteAvatarUrl ?? salon.agente_avatar_url ?? null
-              }
-            />
             <ScheduleRail proximas={proximasItems} />
           </div>
         </div>
