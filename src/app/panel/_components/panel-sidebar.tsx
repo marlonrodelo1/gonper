@@ -14,7 +14,7 @@ export type PanelSidebarProps = {
   salonSlug: string | null;
   salonLogoUrl?: string | null;
   isSuperAdmin?: boolean;
-  /** Conversaciones únicas (chat web/Telegram) iniciadas hoy. */
+  /** Conversaciones únicas (chat web/WhatsApp) iniciadas hoy. */
   conversacionesHoy?: number;
 };
 
@@ -280,7 +280,7 @@ export function PanelSidebar({
               </span>
             </div>
             <div className="tight text-[13px] font-medium text-ink">
-              Atendiendo en Telegram
+              Atendiendo el chat web
             </div>
             <div className="mt-0.5 text-[11px] text-stone">
               {conversacionesHoy === 0

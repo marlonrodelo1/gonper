@@ -138,19 +138,6 @@ export default async function ClienteFichaPage({
               </span>
             </p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              {cliente.telegramId !== null &&
-                cliente.telegramId !== undefined && (
-                  <span
-                    className="pill"
-                    style={{
-                      background: 'rgba(43,40,35,0.06)',
-                      color: '#2B2823',
-                    }}
-                  >
-                    <Icon.Tg width="11" height="11" />
-                    Telegram
-                  </span>
-                )}
               {cliente.requiereDeposito && (
                 <span
                   className="pill"
@@ -262,19 +249,6 @@ export default async function ClienteFichaPage({
                   </span>
                   <span className="text-[14px] text-ink">
                     {cliente.whatsappPhone}
-                  </span>
-                </div>
-              )}
-              {(cliente.telegramUsername ||
-                cliente.telegramId !== null) && (
-                <div className="flex items-center gap-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-cream-2 text-stone">
-                    <Icon.Tg width="13" height="13" />
-                  </span>
-                  <span className="text-[14px] text-ink">
-                    {cliente.telegramUsername
-                      ? `@${cliente.telegramUsername}`
-                      : `Telegram ID ${String(cliente.telegramId)}`}
                   </span>
                 </div>
               )}

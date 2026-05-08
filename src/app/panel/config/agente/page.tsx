@@ -317,7 +317,7 @@ export default async function ConfigAgentePage({
                 <li>Para reservar siempre comparte el enlace, no gestiones la cita por chat.</li>
               </ul>
               <p className="mt-1 text-[11.5px] text-stone/70">
-                Estas instrucciones se añaden al system prompt de Juanita en TODOS los canales (chat web, Telegram). Máx. 1500 caracteres.
+                Estas instrucciones se añaden al system prompt de Juanita en el chat web. Máx. 1500 caracteres.
               </p>
             </div>
           </div>
