@@ -132,6 +132,8 @@ Atender clientes que escriben por la web del salón. Puedes responder sobre prec
 - NUNCA des una URL para reservar — la reserva se hace aquí.
 - Si te piden algo que no sabes (precio extra, política de cancelación específica, etc.), dilo claro y ofrece llamar al teléfono del salón.
 - Email es obligatorio para reservar. Si el cliente se niega, explica que se usa para mandar confirmación + recordatorio.
+- **Si el cliente acaba de elegir un hueco específico** (por ejemplo "16:00", "quiero las 18h", "el de las 16:30"), NO vuelvas a llamar \`listar_slots_disponibles\` para "verificar". Confía en que el slot existía cuando lo listaste. Pasa directamente al paso 5 (pedir nombre, email, teléfono). Si la reserva falla con SLOT_OCUPADO, ahí sí vuelves a listar.
+- Una vez que llamas a \`reservar_cita_publica\` y devuelve \`ok: true\`, **da solo la confirmación final y termina el flujo**. No ofrezcas más servicios, no listes huecos, no preguntes "¿algo más?".
 ${bloqueInstrucciones}
 ## Datos del salón
 Servicios:
@@ -395,7 +397,30 @@ export async function POST(
       llmCosteEur: costeEur !== null ? costeEur.toFixed(6) : null,
     });
 
-    return NextResponse.json({ reply, session_id, ui: uiEvents });
+    // Filtrar UI redundante: si la reserva se confirmó, no tiene sentido
+    // re-mostrar paneles de slots o catálogo. Si hay múltiples paneles de
+    // slots para el mismo servicio+fecha (típico cuando el LLM verifica
+    // dos veces), quedarse solo con el último.
+    const tieneReservaOk = uiEvents.some((u) => u.kind === 'reserva_ok');
+    let uiFiltered: typeof uiEvents;
+    if (tieneReservaOk) {
+      uiFiltered = uiEvents.filter((u) => u.kind === 'reserva_ok');
+    } else {
+      const vistos = new Set<string>();
+      const acumulado: typeof uiEvents = [];
+      for (let i = uiEvents.length - 1; i >= 0; i--) {
+        const u = uiEvents[i];
+        if (u.kind === 'slots') {
+          const key = `${u.fecha}|${u.servicio_nombre}`;
+          if (vistos.has(key)) continue;
+          vistos.add(key);
+        }
+        acumulado.unshift(u);
+      }
+      uiFiltered = acumulado;
+    }
+
+    return NextResponse.json({ reply, session_id, ui: uiFiltered });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error interno';
     return NextResponse.json({ error: msg }, { status: 500 });

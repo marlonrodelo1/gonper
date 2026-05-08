@@ -68,6 +68,8 @@ function formatFechaLegible(fechaIso: string): string {
   }
 }
 
+const AUTOCLOSE_SECONDS = 10;
+
 export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
   const [open, setOpen] = useState(false);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
@@ -75,9 +77,51 @@ export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [autocloseSecs, setAutocloseSecs] = useState<number | null>(null);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const idCounter = useRef(0);
+
+  /** Cierra el widget y borra la sesión para empezar limpia la próxima vez. */
+  function cerrarYReiniciar() {
+    setOpen(false);
+    setMensajes([]);
+    setHistoryLoaded(false);
+    setAutocloseSecs(null);
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(STORAGE_KEY);
+      const nuevo = genUUID();
+      window.localStorage.setItem(STORAGE_KEY, nuevo);
+      setSessionId(nuevo);
+    }
+  }
+
+  // Si el último mensaje del bot trae una confirmación de reserva, iniciar
+  // cuenta atrás para autoclose. Reset si el usuario manda otro mensaje.
+  useEffect(() => {
+    const ultimo = mensajes[mensajes.length - 1];
+    const tieneReservaOk =
+      ultimo?.direccion === 'out' &&
+      ultimo.ui?.some((u) => u.kind === 'reserva_ok');
+    if (tieneReservaOk && autocloseSecs === null) {
+      setAutocloseSecs(AUTOCLOSE_SECONDS);
+    } else if (!tieneReservaOk && autocloseSecs !== null) {
+      // Si el usuario sigue interactuando tras la reserva, cancela el autoclose.
+      setAutocloseSecs(null);
+    }
+  }, [mensajes, autocloseSecs]);
+
+  // Tick del countdown cada 1s.
+  useEffect(() => {
+    if (autocloseSecs === null) return;
+    if (autocloseSecs <= 0) {
+      cerrarYReiniciar();
+      return;
+    }
+    const t = setTimeout(() => setAutocloseSecs((s) => (s === null ? null : s - 1)), 1000);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autocloseSecs]);
 
   function nextLocalId(prefix: string): string {
     idCounter.current += 1;
@@ -291,7 +335,16 @@ export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
         <button
           type="button"
           aria-label="Cerrar chat"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            // Si la reserva ya se confirmó, cerrar limpia la sesión para
+            // que la próxima visita empiece desde cero. Si no, solo
+            // colapsa el widget (mantiene la conversación al reabrir).
+            if (autocloseSecs !== null) {
+              cerrarYReiniciar();
+            } else {
+              setOpen(false);
+            }
+          }}
           className="rounded-full p-1.5 text-neutral-500 transition hover:bg-black/5 hover:text-neutral-900"
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -381,6 +434,20 @@ export function ChatWidget({ slug, agenteNombre, agenteAvatar }: Props) {
                           <div className="opacity-90">
                             {ui.servicio_nombre} con {ui.profesional_nombre}
                           </div>
+                          {autocloseSecs !== null && (
+                            <div className="mt-2 flex items-center justify-between gap-2 border-t border-emerald-200/70 pt-2 text-[11.5px]">
+                              <span className="text-emerald-700/80">
+                                Cerrando en {autocloseSecs}s…
+                              </span>
+                              <button
+                                type="button"
+                                onClick={cerrarYReiniciar}
+                                className="rounded-full bg-emerald-700 px-2.5 py-1 text-[11.5px] font-medium text-white transition hover:bg-emerald-800"
+                              >
+                                Cerrar ahora
+                              </button>
+                            </div>
+                          )}
                         </div>
                       );
                     }
