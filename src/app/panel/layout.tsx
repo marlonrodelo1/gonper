@@ -10,6 +10,8 @@ import { PanelSidebar } from "./_components/panel-sidebar";
 import { TrialBlocker } from "./_components/trial-blocker";
 import { TrialBanner } from "./_components/trial-banner";
 import { OnboardingTour } from "./_components/onboarding-tour";
+import { OnboardingChecklist } from "./_components/onboarding-checklist";
+import { computeOnboardingSteps } from "@/lib/onboarding/compute-steps";
 
 const PLANES_ACTIVOS = new Set(["basico", "solo", "studio", "pro"]);
 
@@ -130,6 +132,39 @@ export default async function PanelLayout({
     }
   }
 
+  // Pasos pendientes para el checklist flotante. Si algo falla, no
+  // mostramos nada — no debe romper el layout.
+  let onboardingSteps: Awaited<
+    ReturnType<typeof computeOnboardingSteps>
+  > | null = null;
+  if (salon && salonId) {
+    try {
+      onboardingSteps = await computeOnboardingSteps({
+        id: salonId,
+        direccion: (salon.direccion as string | null | undefined) ?? null,
+        telefono: (salon.telefono as string | null | undefined) ?? null,
+        logoUrl:
+          (salon.logo_url as string | null | undefined) ??
+          (salon.logoUrl as string | null | undefined) ??
+          null,
+        bannerUrl:
+          (salon.banner_url as string | null | undefined) ??
+          (salon.bannerUrl as string | null | undefined) ??
+          null,
+        agenteNombre:
+          (salon.agente_nombre as string | null | undefined) ??
+          (salon.agenteNombre as string | null | undefined) ??
+          null,
+        telegramChatIdDueno:
+          (salon.telegram_chat_id_dueno as string | null | undefined) ??
+          (salon.telegramChatIdDueno as string | null | undefined) ??
+          null,
+      });
+    } catch (err) {
+      console.warn("[panel/layout] onboarding steps:", err);
+    }
+  }
+
   return (
     <div className="flex min-h-screen w-full bg-cream text-ink">
       <PanelSidebar
@@ -155,6 +190,9 @@ export default async function PanelLayout({
       <Suspense fallback={null}>
         <OnboardingTour />
       </Suspense>
+      {onboardingSteps && !planActivo && !trialExpirado && (
+        <OnboardingChecklist steps={onboardingSteps} />
+      )}
       <Toaster position="top-right" theme="system" />
     </div>
   );
