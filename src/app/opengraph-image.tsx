@@ -1,6 +1,9 @@
 import { ImageResponse } from 'next/og';
 
-export const runtime = 'edge';
+// Edge runtime falla en el container Dokploy (502 Bad Gateway). Con
+// nodejs runtime funciona y next/og sigue generando la imagen sin
+// problema en build/runtime.
+export const runtime = 'nodejs';
 
 export const alt = 'Gestori — Lleva tu negocio desde tu móvil';
 export const size = { width: 1200, height: 630 };
@@ -85,23 +88,37 @@ export default async function Image() {
         </div>
 
         {/* Titular principal */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 24,
+          }}
+        >
           <div
             style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'baseline',
+              gap: '0 18px',
               fontSize: 88,
               fontWeight: 500,
-              lineHeight: 1.0,
+              lineHeight: 1.05,
               letterSpacing: '-2px',
             }}
           >
-            Lleva tu negocio
-            <br />
-            desde tu{' '}
-            <span style={{ fontStyle: 'italic', color: '#C8703F' }}>móvil</span>.
+            <span>Lleva tu negocio</span>
+            <span style={{ display: 'flex', gap: '0 18px' }}>
+              <span>desde tu</span>
+              <span style={{ fontStyle: 'italic', color: '#C8703F' }}>
+                móvil.
+              </span>
+            </span>
           </div>
 
           <div
             style={{
+              display: 'flex',
               fontSize: 28,
               lineHeight: 1.4,
               color: '#5C5247',
@@ -109,9 +126,8 @@ export default async function Image() {
               maxWidth: 880,
             }}
           >
-            El asistente IA que gestiona tu salón desde Telegram.
-            <br />
-            Reservas, recordatorios y números a un mensaje de distancia.
+            El asistente IA que gestiona tu salón desde Telegram. Reservas,
+            recordatorios y números a un mensaje de distancia.
           </div>
         </div>
 
