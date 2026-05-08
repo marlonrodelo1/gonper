@@ -28,10 +28,34 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gestori.es";
+
+const META_TITLE = "Gestori — Lleva tu negocio desde tu móvil";
+const META_DESCRIPTION =
+  "El asistente IA que gestiona tu salón desde Telegram. Reservas, recordatorios y números a un mensaje de distancia. 30 días gratis, sin tarjeta.";
+
 export const metadata: Metadata = {
-  title: "Gestori · Un asistente que nunca descansa",
-  description:
-    "Gestori atiende reservas por Telegram 24/7, confirma cada cita una hora antes y libera el hueco si no hay respuesta. Para barberías, peluquerías y centros de estética en España.",
+  metadataBase: new URL(SITE_URL),
+  title: META_TITLE,
+  description: META_DESCRIPTION,
+  openGraph: {
+    type: "website",
+    locale: "es_ES",
+    url: SITE_URL,
+    siteName: "Gestori",
+    title: META_TITLE,
+    description: META_DESCRIPTION,
+    // La imagen se genera automaticamente desde src/app/opengraph-image.tsx
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: META_TITLE,
+    description: META_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
