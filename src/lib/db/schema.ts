@@ -759,6 +759,30 @@ export const stripeEventsProcessed = pgTable(
 );
 
 // ============================================
+// TABLA: trial_avisos_enviados (idempotencia avisos email del trial)
+// ============================================
+export const trialAvisosEnviados = pgTable(
+  'trial_avisos_enviados',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salones.id, { onDelete: 'cascade' }),
+    // 7d = 7 días antes; 2d = 2 días antes; vencido = trial expirado.
+    tipo: text('tipo').notNull(),
+    enviadoAt: timestamp('enviado_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uniqSalonTipo: unique('trial_avisos_salon_tipo_unique').on(
+      t.salonId,
+      t.tipo,
+    ),
+  }),
+);
+
+// ============================================
 // TIPOS INFERIDOS
 // ============================================
 export type Salon = typeof salones.$inferSelect;

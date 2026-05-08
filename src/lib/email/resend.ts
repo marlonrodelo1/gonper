@@ -308,6 +308,37 @@ export async function enviarConfirmacionReserva(params: {
   });
 }
 
+export async function enviarTrialVencido(params: {
+  to: string;
+  salonNombre: string;
+}): Promise<EmailResult> {
+  const subject = `Tu prueba en Gestori ha terminado`;
+  const panelUrl = `${siteUrl}/panel/config/suscripcion`;
+  const cuerpoHtml = `
+    <tr><td style="padding:8px 32px 16px">
+      <h1 style="margin:0 0 12px;font-size:26px;font-weight:500;line-height:1.2;color:${COLOR_INK}">
+        Tu prueba ha terminado
+      </h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
+        Hola, ${escapeHtml(params.salonNombre)}.
+        Tus 30 días gratis han acabado. Hemos pausado el acceso al panel
+        para que puedas decidir con calma.
+      </p>
+      <p style="margin:0 0 24px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">
+        Tus datos están a salvo. Cuando añadas tu tarjeta, recuperas el
+        acceso al instante y todo sigue funcionando: clientes, citas,
+        configuración del agente. Plan Básico 30€/mes, sin permanencia.
+      </p>
+      <div>${botonHtml('Activar mi plan', panelUrl)}</div>
+    </td></tr>
+  `;
+  return sendTemplate({
+    to: params.to,
+    subject,
+    html: layout({ titulo: subject, cuerpoHtml }),
+  });
+}
+
 export async function enviarRecordatorioTrialAcaba(params: {
   to: string;
   salonNombre: string;

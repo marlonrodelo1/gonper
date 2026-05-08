@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { mensajes } from "@/lib/db/schema";
 import { PanelSidebar } from "./_components/panel-sidebar";
 import { TrialBlocker } from "./_components/trial-blocker";
+import { TrialBanner } from "./_components/trial-banner";
 import { OnboardingTour } from "./_components/onboarding-tour";
 
 const PLANES_ACTIVOS = new Set(["basico", "solo", "studio", "pro"]);
@@ -16,9 +17,15 @@ function leerEstadoSuscripcion(salon: Record<string, unknown> | null): {
   trialExpirado: boolean;
   planActivo: boolean;
   sinSuscripcion: boolean;
+  diasRestantesTrial: number | null;
 } {
   if (!salon) {
-    return { trialExpirado: false, planActivo: false, sinSuscripcion: false };
+    return {
+      trialExpirado: false,
+      planActivo: false,
+      sinSuscripcion: false,
+      diasRestantesTrial: null,
+    };
   }
   const plan = typeof salon.plan === "string" ? salon.plan : null;
   const subscriptionId =
@@ -27,31 +34,45 @@ function leerEstadoSuscripcion(salon: Record<string, unknown> | null): {
     null;
   const trialUntilRaw = salon.trial_until ?? salon.trialUntil ?? null;
 
+  // Plan ya activo (Stripe pagando) → libre.
   const planActivo = plan != null && PLANES_ACTIVOS.has(plan);
   if (planActivo) {
-    return { trialExpirado: false, planActivo: true, sinSuscripcion: false };
+    return {
+      trialExpirado: false,
+      planActivo: true,
+      sinSuscripcion: false,
+      diasRestantesTrial: null,
+    };
   }
-  // Sin suscripción Stripe = el dueño aún no completó Checkout.
-  // Bloqueamos hasta que ponga tarjeta.
-  const sinSuscripcion = !subscriptionId;
-  if (sinSuscripcion) {
-    return { trialExpirado: false, planActivo: false, sinSuscripcion: true };
-  }
-  // Tiene sub_id pero plan != activo (cancelado, impagado, etc.).
+
+  // Plan trial: NO bloquear mientras `trial_until` esté en el futuro.
+  // Esto incluye trial sin tarjeta (sin subscriptionId) y trial Stripe.
   if (plan === "trial" && trialUntilRaw) {
     const fin =
       trialUntilRaw instanceof Date
         ? trialUntilRaw
         : new Date(String(trialUntilRaw));
     if (!isNaN(fin.getTime())) {
+      const ms = fin.getTime() - Date.now();
+      const expirado = ms <= 0;
+      const dias = expirado ? 0 : Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
       return {
-        trialExpirado: fin.getTime() <= Date.now(),
+        trialExpirado: expirado,
         planActivo: false,
         sinSuscripcion: false,
+        diasRestantesTrial: expirado ? 0 : dias,
       };
     }
   }
-  return { trialExpirado: true, planActivo: false, sinSuscripcion: false };
+
+  // Sin trial válido y sin Stripe activo → bloquear (caso edge: trial expirado
+  // sin trial_until válido o cuenta vieja sin migrar).
+  return {
+    trialExpirado: true,
+    planActivo: false,
+    sinSuscripcion: !subscriptionId,
+    diasRestantesTrial: 0,
+  };
 }
 
 export default async function PanelLayout({
@@ -82,7 +103,7 @@ export default async function PanelLayout({
       null
     : null;
 
-  const { trialExpirado, planActivo, sinSuscripcion } =
+  const { trialExpirado, planActivo, sinSuscripcion, diasRestantesTrial } =
     leerEstadoSuscripcion(salon);
 
   // Conversaciones únicas iniciadas hoy (cuenta sesiones distintas en `mensajes`).
@@ -120,7 +141,12 @@ export default async function PanelLayout({
         isSuperAdmin={superAdmin !== null}
         conversacionesHoy={conversacionesHoy}
       />
-      <main className="min-w-0 flex-1 pt-12 md:pt-0">{children}</main>
+      <main className="min-w-0 flex-1 pt-12 md:pt-0">
+        {diasRestantesTrial !== null && diasRestantesTrial > 0 && diasRestantesTrial <= 7 && (
+          <TrialBanner diasRestantes={diasRestantesTrial} />
+        )}
+        {children}
+      </main>
       <TrialBlocker
         sinSuscripcion={sinSuscripcion}
         trialExpirado={trialExpirado}
