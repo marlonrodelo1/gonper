@@ -1,8 +1,65 @@
 /**
  * Helpers para enviar notificaciones por Telegram al dueño del salón.
- * Tolerantes a fallos: si el envío falla, sólo logueamos. NUNCA romper el
- * flujo principal (creación de cita, etc.) por un fallo del bot.
+ * Tolerantes a fallos: si el envío falla, sólo logueamos y reportamos a
+ * Sentry. NUNCA romper el flujo principal (creación de cita, etc.) por un
+ * fallo del bot.
  */
+
+import { eq } from 'drizzle-orm';
+
+import { db } from '@/lib/db';
+import { salones } from '@/lib/db/schema';
+import { captureException } from '@/lib/observability';
+
+/**
+ * Envía un mensaje libre al dueño del salón. Lee el bot_token y chat_id
+ * directamente de la fila `salones`. Fire-and-forget: si falta config o
+ * Telegram falla, NO lanza — sólo logea y reporta a Sentry.
+ *
+ * Útil para notificaciones genéricas (nueva reserva, cancelación, etc.).
+ */
+export async function notificarDueno(
+  salonId: string,
+  mensajeHtml: string,
+): Promise<boolean> {
+  try {
+    const [s] = await db
+      .select({
+        botToken: salones.telegramBotToken,
+        chatId: salones.telegramChatIdDueno,
+      })
+      .from(salones)
+      .where(eq(salones.id, salonId))
+      .limit(1);
+
+    if (!s?.botToken || !s.chatId) return false;
+
+    const res = await fetch(
+      `https://api.telegram.org/bot${s.botToken}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: s.chatId,
+          text: mensajeHtml,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+        }),
+        signal: AbortSignal.timeout(8000),
+      },
+    );
+    if (!res.ok) {
+      const t = await res.text().catch(() => '');
+      console.warn('[notify:dueno:html] Telegram respondió no-OK', res.status, t);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('[notify:dueno:html] error', err);
+    captureException(err, { module: 'telegram/notify', salonId });
+    return false;
+  }
+}
 
 const ORIGEN_LABEL: Record<string, string> = {
   telegram: '💬 Telegram',

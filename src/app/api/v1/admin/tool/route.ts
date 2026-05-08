@@ -1,16 +1,8 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 import { requireApiToken } from '@/lib/api/auth';
-import {
-  cancelarCita,
-  getCitasHoy,
-  getCitasProximas,
-  getIngresos,
-  getNoShows,
-  getTopClientes,
-  marcarCita,
-  moverCita,
-} from '@/lib/admin/tools';
+import { getTool, TOOLS } from '@/lib/admin/tool-registry';
 
 /**
  * POST /api/v1/admin/tool
@@ -24,114 +16,84 @@ import {
  *
  * Auth: bearer INTERNAL_API_TOKEN.
  *
- * Tools disponibles:
- *   citas_hoy            args: {}
- *   citas_proximas       args: { dias?: number }
- *   top_clientes         args: { limite?: number }
- *   no_shows             args: { dias?: number }
- *   ingresos             args: { periodo?: 'hoy'|'semana'|'mes' }
- *   cancelar_cita        args: { cita_id, motivo? }
- *   mover_cita           args: { cita_id, nuevo_inicio_iso }
- *   marcar_cita          args: { cita_id, estado: 'no_show'|'completada'|'confirmada' }
+ * Las tools disponibles se declaran en `src/lib/admin/tool-registry.ts`.
+ * Para listarlas en runtime (útil para debug del workflow):
+ *   GET /api/v1/admin/tool
  */
+
+const Body = z.object({
+  salon_id: z.string().min(1, 'salon_id requerido'),
+  tool: z.string().min(1, 'tool requerido'),
+  args: z.record(z.string(), z.unknown()).optional(),
+});
+
 export async function POST(req: Request) {
   const authError = requireApiToken(req);
   if (authError) return authError;
 
-  let body: { salon_id?: unknown; tool?: unknown; args?: unknown };
+  let raw: unknown;
   try {
-    body = await req.json();
+    raw = await req.json();
   } catch {
     return NextResponse.json({ error: 'JSON inválido' }, { status: 400 });
   }
 
-  const salonId = typeof body.salon_id === 'string' ? body.salon_id.trim() : '';
-  const tool = typeof body.tool === 'string' ? body.tool.trim() : '';
-  const args = (body.args && typeof body.args === 'object'
-    ? (body.args as Record<string, unknown>)
-    : {}) as Record<string, unknown>;
-
-  if (!salonId) {
-    return NextResponse.json({ error: 'salon_id requerido' }, { status: 400 });
+  const parsed = Body.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: 'Body inválido', detalles: parsed.error.issues },
+      { status: 400 },
+    );
   }
+
+  const { salon_id: salonId, tool: toolName, args } = parsed.data;
+
+  const tool = getTool(toolName);
   if (!tool) {
-    return NextResponse.json({ error: 'tool requerido' }, { status: 400 });
+    return NextResponse.json(
+      { error: `Tool '${toolName}' no existe` },
+      { status: 400 },
+    );
+  }
+
+  const argsParse = tool.schema.safeParse(args ?? {});
+  if (!argsParse.success) {
+    return NextResponse.json(
+      {
+        error: `Args inválidos para '${toolName}'`,
+        detalles: argsParse.error.issues,
+      },
+      { status: 400 },
+    );
   }
 
   try {
-    let result: unknown;
-    switch (tool) {
-      case 'citas_hoy':
-        result = await getCitasHoy(salonId);
-        break;
-      case 'citas_proximas': {
-        const dias = typeof args.dias === 'number' ? args.dias : 7;
-        result = await getCitasProximas(salonId, dias);
-        break;
-      }
-      case 'top_clientes': {
-        const limite = typeof args.limite === 'number' ? args.limite : 5;
-        result = await getTopClientes(salonId, limite);
-        break;
-      }
-      case 'no_shows': {
-        const dias = typeof args.dias === 'number' ? args.dias : 30;
-        result = await getNoShows(salonId, dias);
-        break;
-      }
-      case 'ingresos': {
-        const periodo =
-          args.periodo === 'semana' || args.periodo === 'mes' ? args.periodo : 'hoy';
-        result = await getIngresos(salonId, periodo as 'hoy' | 'semana' | 'mes');
-        break;
-      }
-      case 'cancelar_cita': {
-        const citaId = typeof args.cita_id === 'string' ? args.cita_id : '';
-        const motivo = typeof args.motivo === 'string' ? args.motivo : undefined;
-        if (!citaId) {
-          return NextResponse.json({ error: 'cita_id requerido' }, { status: 400 });
-        }
-        result = await cancelarCita(salonId, citaId, motivo);
-        break;
-      }
-      case 'mover_cita': {
-        const citaId = typeof args.cita_id === 'string' ? args.cita_id : '';
-        const nuevoInicio =
-          typeof args.nuevo_inicio_iso === 'string' ? args.nuevo_inicio_iso : '';
-        if (!citaId || !nuevoInicio) {
-          return NextResponse.json(
-            { error: 'cita_id y nuevo_inicio_iso requeridos' },
-            { status: 400 },
-          );
-        }
-        result = await moverCita(salonId, citaId, nuevoInicio);
-        break;
-      }
-      case 'marcar_cita': {
-        const citaId = typeof args.cita_id === 'string' ? args.cita_id : '';
-        const estado = args.estado;
-        if (!citaId) {
-          return NextResponse.json({ error: 'cita_id requerido' }, { status: 400 });
-        }
-        if (estado !== 'no_show' && estado !== 'completada' && estado !== 'confirmada') {
-          return NextResponse.json(
-            { error: "estado debe ser 'no_show', 'completada' o 'confirmada'" },
-            { status: 400 },
-          );
-        }
-        result = await marcarCita(salonId, citaId, estado);
-        break;
-      }
-      default:
-        return NextResponse.json({ error: `Tool '${tool}' no existe` }, { status: 400 });
-    }
-
-    return NextResponse.json({ ok: true, tool, result });
+    const result = await tool.handler(salonId, argsParse.data);
+    return NextResponse.json({ ok: true, tool: toolName, result });
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Error interno';
-    console.error(`[admin/tool:${tool}]`, e);
+    console.error(`[admin/tool:${toolName}]`, e);
     return NextResponse.json({ ok: false, error: msg }, { status: 500 });
   }
+}
+
+/**
+ * GET — devuelve el catálogo de tools (sólo nombres + descripción + categoría).
+ * Útil para que el workflow n8n se autoconfigure y para debug.
+ */
+export async function GET(req: Request) {
+  const authError = requireApiToken(req);
+  if (authError) return authError;
+
+  return NextResponse.json({
+    ok: true,
+    tools: TOOLS.map((t) => ({
+      name: t.name,
+      categoria: t.categoria,
+      descripcion: t.descripcion,
+      ejemplos: t.ejemplos,
+    })),
+  });
 }
 
 export const dynamic = 'force-dynamic';
