@@ -705,3 +705,120 @@ export async function crearCita(
     mensaje,
   };
 }
+
+// ============================================================
+// CRECIMIENTO · COMPARTIR TIENDA
+// ============================================================
+
+export interface CompartirTiendaArgs {
+  numero_destino?: string;
+  mensaje_personalizado?: string;
+}
+
+export interface CompartirTiendaResult {
+  ok: boolean;
+  error?: string;
+  result?: {
+    url_publica: string;
+    mensaje_compartible: string;
+    whatsapp_link: string | null;
+    qr_url: string;
+    mensaje: string;
+  };
+}
+
+/**
+ * Normaliza un número a E.164 sin signos para wa.me.
+ *
+ * Acepta entradas como "+34 611 222 333", "0034611222333", "611222333",
+ * "34611222333". Si no detecta prefijo internacional, asume España (+34).
+ *
+ * Devuelve sólo dígitos, listo para concatenar tras `https://wa.me/`.
+ * Si el número resultante es muy corto, devuelve null.
+ */
+function normalizarNumeroE164(input: string): string | null {
+  const limpio = input.replace(/[^\d+]/g, '');
+  if (!limpio) return null;
+
+  let digitos: string;
+  if (limpio.startsWith('+')) {
+    digitos = limpio.slice(1);
+  } else if (limpio.startsWith('00')) {
+    digitos = limpio.slice(2);
+  } else if (limpio.length === 9) {
+    // móvil/fijo español sin prefijo → asumir +34
+    digitos = `34${limpio}`;
+  } else {
+    digitos = limpio;
+  }
+
+  // Sanity check: entre 8 y 15 dígitos (E.164 max 15)
+  if (digitos.length < 8 || digitos.length > 15) return null;
+  return digitos;
+}
+
+const PUBLIC_BASE_URL = 'https://gestori.es';
+
+/**
+ * Genera el material para que el dueño comparta la URL de su tienda
+ * pública. Devuelve URL, mensaje pre-formateado, deep-link de WhatsApp si
+ * pasaron un número, URL del QR y un mensaje natural listo para que el bot
+ * lo reenvíe tal cual al dueño en Telegram.
+ */
+export async function compartirTienda(
+  salonId: string,
+  args: CompartirTiendaArgs,
+): Promise<CompartirTiendaResult> {
+  const [salon] = await db
+    .select({ slug: salones.slug, nombre: salones.nombre })
+    .from(salones)
+    .where(eq(salones.id, salonId))
+    .limit(1);
+
+  if (!salon) {
+    return { ok: false, error: 'Salón no encontrado' };
+  }
+
+  const urlPublica = `${PUBLIC_BASE_URL}/s/${salon.slug}`;
+  const qrUrl = `${PUBLIC_BASE_URL}/api/v1/qr?text=${encodeURIComponent(urlPublica)}&size=512`;
+
+  const mensajeBase =
+    args.mensaje_personalizado?.trim() ||
+    `Hola! Te dejo el link para reservar tu cita en *${salon.nombre}*: ${urlPublica}\n\nEs muy fácil — eliges servicio, día y hora, y recibes confirmación por email.`;
+
+  let whatsappLink: string | null = null;
+  let mensaje: string;
+
+  if (args.numero_destino && args.numero_destino.trim() !== '') {
+    const numero = normalizarNumeroE164(args.numero_destino.trim());
+    if (!numero) {
+      return {
+        ok: false,
+        error: `Número "${args.numero_destino}" no válido. Usa formato +34611222333.`,
+      };
+    }
+    whatsappLink = `https://wa.me/${numero}?text=${encodeURIComponent(mensajeBase)}`;
+    mensaje =
+      `✅ Toca este link y WhatsApp se abrirá con un mensaje listo para +${numero}:\n${whatsappLink}\n\n` +
+      `Solo dale a "Enviar" en WhatsApp y listo. ✨`;
+  } else {
+    mensaje =
+      `🔗 *Aquí tienes tu link de reservas*:\n${urlPublica}\n\n` +
+      `📱 Compártelo con tus clientes:\n` +
+      `- Por WhatsApp: dime "comparte a +34..." y te preparo el deep-link.\n` +
+      `- Por SMS o email: copia el link de arriba.\n` +
+      `- En cartelería: descarga tu QR aquí: ${qrUrl}\n\n` +
+      `💬 Mensaje sugerido:\n${mensajeBase}`;
+  }
+
+  return {
+    ok: true,
+    result: {
+      url_publica: urlPublica,
+      mensaje_compartible: mensajeBase,
+      whatsapp_link: whatsappLink,
+      qr_url: qrUrl,
+      mensaje,
+    },
+  };
+}
