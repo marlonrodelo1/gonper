@@ -150,32 +150,41 @@ export async function enviarEmailBienvenida(params: {
   salonNombre: string;
   salonSlug: string;
 }): Promise<EmailResult> {
-  const subject = `Bienvenido a Gestori, ${params.salonNombre}`;
+  const subject = `Ya estás dentro, ${params.salonNombre}`;
   const panelUrl = `${siteUrl}/panel/hoy`;
+  const compartirUrl = `${siteUrl}/panel/compartir`;
+  const telegramUrl = `${siteUrl}/panel/config/bot`;
   const publicUrl = `${siteUrl}/s/${params.salonSlug}`;
   const cuerpoHtml = `
     <tr><td style="padding:8px 32px 16px">
       <h1 style="margin:0 0 12px;font-size:26px;font-weight:500;line-height:1.2;color:${COLOR_INK}">
-        Bienvenido a Gestori
+        Ya estás dentro
       </h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
-        Acabas de crear el salón <strong>${escapeHtml(params.salonNombre)}</strong>.
-        Tienes 30 días de prueba gratis para configurarlo todo y dejar que Juanita
-        atienda tus reservas 24/7.
+        Bienvenido a Gestori, <strong>${escapeHtml(params.salonNombre)}</strong>.
+        Tu cuenta está activa con 30 días gratis. A partir de ahora vas a llevar
+        tu negocio desde el móvil — sin abrir el ordenador.
       </p>
-      <p style="margin:0 0 24px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">
-        Tres cosas rápidas que recomendamos hacer ahora:
+      <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">
+        Tres pasos para empezar a recibir reservas hoy:
       </p>
-      <ol style="margin:0 0 24px;padding-left:20px;font-size:14px;line-height:1.7;color:${COLOR_INK}">
-        <li>Revisa los servicios y precios precargados.</li>
-        <li>Ajusta tus horarios reales en <em>Configuración</em>.</li>
-        <li>Conecta tu bot de Telegram para empezar a recibir reservas.</li>
+      <ol style="margin:0 0 24px;padding-left:20px;font-size:14px;line-height:1.75;color:${COLOR_INK}">
+        <li><strong>Configura tus servicios y horarios</strong> en el panel (5 minutos).</li>
+        <li><strong>Conecta Telegram</strong> para que tu asistente IA te avise de cada reserva en el móvil. Es gratis y se hace en 1 minuto.</li>
+        <li><strong>Comparte tu link</strong> por WhatsApp, Instagram o pega el QR en el mostrador. Tus clientes reservan solos.</li>
       </ol>
       <div style="margin:0 0 12px">
         ${botonHtml('Abrir mi panel', panelUrl)}
       </div>
-      <p style="margin:16px 0 0;font-size:13px;color:${COLOR_STONE}">
-        Tu web pública: <a href="${publicUrl}" style="color:${COLOR_TERRACOTTA};text-decoration:none">${escapeHtml(publicUrl)}</a>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 0">
+        <tr>
+          <td style="padding:0 8px 8px 0">${botonSecundarioHtml('Conectar Telegram', telegramUrl)}</td>
+          <td style="padding:0 0 8px 0">${botonSecundarioHtml('Compartir mi tienda', compartirUrl)}</td>
+        </tr>
+      </table>
+      <p style="margin:20px 0 0;font-size:13px;color:${COLOR_STONE}">
+        Tu web pública ya está activa:<br/>
+        <a href="${publicUrl}" style="color:${COLOR_TERRACOTTA};text-decoration:none">${escapeHtml(publicUrl)}</a>
       </p>
     </td></tr>
   `;

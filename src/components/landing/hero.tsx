@@ -55,7 +55,9 @@ export function Hero() {
             data-delay="120"
             style={{ fontSize: "clamp(48px, 7vw, 80px)", lineHeight: 0.98 }}
           >
-            Un{" "}
+            Gestiona tu negocio
+            <br />
+            desde tu{" "}
             <span
               className="font-serif-it"
               style={{
@@ -64,10 +66,9 @@ export function Hero() {
                 letterSpacing: "-0.02em",
               }}
             >
-              asistente
+              móvil
             </span>
-            <br />
-            que nunca descansa.
+            .
           </h1>
 
           <p
@@ -81,9 +82,9 @@ export function Hero() {
               maxWidth: "554px",
             }}
           >
-            Gestori atiende reservas por Telegram 24/7, confirma cada cita una
-            hora antes y libera el hueco si no hay respuesta. Para barberías,
-            peluquerías y centros de estética en España. Tú sigues cortando.
+            Tu asistente IA contesta a tus citas, te avisa cuando alguien
+            reserva y te dice cómo van tus números — todo desde el móvil. Sin
+            abrir el ordenador.
           </p>
 
           <div className="reveal flex flex-col gap-4" data-delay="360" id="cta">
@@ -121,7 +122,7 @@ export function Hero() {
                 type="submit"
                 className="gloss-btn px-5 py-3 rounded-full text-[14px] font-medium tracking-tight whitespace-nowrap shrink-0"
               >
-                {submitted ? "¡Listo! ✓" : "Empezar prueba gratis 30 días"}
+                {submitted ? "¡Listo! ✓" : "Empieza gratis 30 días"}
               </button>
             </form>
 

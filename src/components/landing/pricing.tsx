@@ -30,7 +30,8 @@ export function Pricing() {
             Cuota fija. <span className="font-serif-it">Sin</span> comisiones por reserva.
           </h2>
           <p className="text-stone text-[16px] max-w-[520px] mx-auto">
-            30 días gratis con tarjeta. Sin permanencia. Si no te convence, cierras y no pagas nada.
+            30 días gratis sin tarjeta. Sin permanencia. Si no te convence,
+            cierras y no pagas nada.
           </p>
         </div>
 

@@ -1,13 +1,13 @@
 export function Strip() {
   const items = [
-    "Reservas 24/7",
-    "Sin app que descargar",
-    "Confirmación 1h antes",
-    "Liberación automática del hueco",
-    "Lista de espera",
-    "Personaje configurable",
-    "Cuota fija sin comisiones",
-    "Hecho en España",
+    "Tu negocio desde el móvil",
+    "Avisos en tiempo real",
+    "Tus clientes reservan solos",
+    "Recordatorios automáticos",
+    "Link y QR para compartir",
+    "Asistente IA en español",
+    "30€/mes sin comisiones",
+    "30 días gratis sin tarjeta",
   ];
   const row = [...items, ...items];
   return (

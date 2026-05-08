@@ -43,6 +43,7 @@ const navOperacion: NavItem[] = [
 ];
 
 const navWeb: NavItem[] = [
+  { href: '/panel/compartir', label: 'Compartir', icon: Icon.Share },
   { href: '/panel/promociones', label: 'Promociones', icon: Icon.Sparkle },
   { href: '/panel/galeria', label: 'Galería', icon: Icon.Sparkle },
   { href: '/panel/resenas', label: 'Reseñas', icon: Icon.Sparkle },

@@ -5,24 +5,28 @@ import { Icon } from "@/components/landing/icons";
 
 const items = [
   {
+    q: "¿Cómo recibo los avisos en el móvil?",
+    a: "A través de Telegram. Es gratis y se instala en 1 minuto. Una vez conectado, tu asistente IA te avisa de cada reserva, te pasa los números del día y obedece tus órdenes en español como si fuera un empleado.",
+  },
+  {
     q: "¿Mis clientes tienen que descargar algo?",
-    a: "No. Solo abren Telegram (que ya usan o instalan en 30 segundos), buscan tu bot y reservan. Sin cuentas, sin formularios. WhatsApp llega después.",
+    a: "No. Tu link público (gestori.es/tu-salon) abre una web normal. Eligen servicio, día y hora, dejan su email y reciben confirmación. 30 segundos.",
   },
   {
     q: "¿Y si un cliente no responde al recordatorio?",
-    a: "A los 30 minutos sin respuesta, Gestori libera el hueco automáticamente y se lo ofrece a la lista de espera. Tú no haces nada.",
+    a: "El email de recordatorio llega 2 horas antes con botones para confirmar o cancelar. Si cancela, el hueco queda libre automáticamente para que reserve otro cliente.",
   },
   {
     q: '¿Puedo cambiar el nombre de "Juanita"?',
-    a: "Sí. Le pones el nombre que quieras, eliges género, tono (profesional/cercano/desenfadado) y hasta una frase de bienvenida. Es tu personaje.",
+    a: "Sí. Le pones el nombre que quieras, eliges género, tono (profesional/cercano/desenfadado) y hasta una frase de bienvenida. Es tu asistente.",
   },
   {
     q: "¿Qué pasa si me canso de pagar?",
     a: "Cancelas con un clic. Tus datos siguen siendo tuyos: te exportamos clientes y citas en CSV. Cero permanencia.",
   },
   {
-    q: "¿Funciona si solo soy yo?",
-    a: "Sí. El plan Solo está pensado para autónomos. 19,90 €/mes, una silla, todo lo importante.",
+    q: "¿Tengo que poner tarjeta para probar?",
+    a: "No. 30 días gratis sin tarjeta. Si después te convence, pagas 30€/mes. Si no, cierras y no debes nada.",
   },
   {
     q: "¿Soporte en español?",
