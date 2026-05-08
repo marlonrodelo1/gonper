@@ -9,8 +9,8 @@ import { requireApiToken } from '@/lib/api/auth';
  *
  * Pensado para que n8n lo invoque cada 5 minutos. Marca como "recordatorio
  * enviado" todas las citas pendientes cuyo inicio cae en la ventana
- * [now+50min, now+70min] y devuelve la info necesaria para componer el
- * mensaje (cliente, telegram_id, servicio, salón, hora).
+ * [now+110min, now+130min] (2h ± 10min) y devuelve la info necesaria para
+ * componer el email (cliente, servicio, salón, hora).
  *
  * El UPDATE es atómico via CTE con FOR UPDATE SKIP LOCKED para evitar que
  * dos invocaciones simultáneas envíen el mismo recordatorio dos veces.
@@ -29,8 +29,8 @@ export async function POST(request: Request) {
           select id from citas
           where estado = 'pendiente'
             and recordatorio_enviado_at is null
-            and inicio between now() + interval '50 minutes'
-                           and now() + interval '70 minutes'
+            and inicio between now() + interval '110 minutes'
+                           and now() + interval '130 minutes'
           for update skip locked
         )
         returning id, salon_id, cliente_id, profesional_id, servicio_id,

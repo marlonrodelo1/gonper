@@ -57,7 +57,7 @@ export function renderReservaConfirmadaEmail(p: ReservaConfirmadaParams): {
         }
         <tr><td style="padding:24px 32px;border-top:1px solid #f4f4f5">
           <p style="margin:0;font-size:13px;color:#71717a;line-height:1.5">
-            Te enviaré un recordatorio una hora antes para que confirmes la cita.<br>
+            Te enviaré un recordatorio dos horas antes para que confirmes la cita.<br>
             Si necesitas cancelar, responde a este email o contacta directamente con el salón.
           </p>
         </td></tr>

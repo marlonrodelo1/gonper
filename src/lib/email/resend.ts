@@ -273,7 +273,7 @@ export async function enviarConfirmacionReserva(params: {
       </table>
 
       <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">
-        Te enviaremos un recordatorio una hora antes para confirmar tu asistencia.
+        Te enviaremos un recordatorio dos horas antes para confirmar tu asistencia.
       </p>
 
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px">
@@ -373,7 +373,7 @@ export async function enviarRecordatorioCita(params: {
       </h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
         Hola ${escapeHtml(params.clienteNombre.split(' ')[0] ?? params.clienteNombre)}, tu cita en
-        <strong>${escapeHtml(params.salonNombre)}</strong> es en aproximadamente 1 hora.
+        <strong>${escapeHtml(params.salonNombre)}</strong> es en aproximadamente 2 horas.
       </p>
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;font-size:14px;color:${COLOR_INK}">
         <tr><td style="padding:4px 0;color:${COLOR_STONE};width:120px">📅 Fecha</td><td style="padding:4px 0"><strong>${escapeHtml(fechaFmt)}</strong></td></tr>
