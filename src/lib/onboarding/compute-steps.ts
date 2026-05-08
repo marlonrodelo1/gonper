@@ -27,17 +27,26 @@ type SalonInput = {
 export async function computeOnboardingSteps(
   salon: SalonInput,
 ): Promise<OnboardingStep[]> {
+  // Para servicios, horarios y profesionales sólo cuenta como "configurado"
+  // si el dueño ha creado o editado al menos uno propio. Las filas que vienen
+  // del seed automático de signup tienen `es_default = true` y no se cuentan.
   const [serviciosCount, horariosCount, galeriaCount, profesionalesCount] =
     await Promise.all([
       db
         .select({ n: sql<number>`count(*)::int` })
         .from(servicios)
-        .where(and(eq(servicios.salonId, salon.id), eq(servicios.activo, true)))
+        .where(
+          and(
+            eq(servicios.salonId, salon.id),
+            eq(servicios.activo, true),
+            eq(servicios.esDefault, false),
+          ),
+        )
         .then((r) => r[0]?.n ?? 0),
       db
         .select({ n: sql<number>`count(*)::int` })
         .from(horarios)
-        .where(eq(horarios.salonId, salon.id))
+        .where(and(eq(horarios.salonId, salon.id), eq(horarios.esDefault, false)))
         .then((r) => r[0]?.n ?? 0),
       db
         .select({ n: sql<number>`count(*)::int` })
@@ -56,6 +65,7 @@ export async function computeOnboardingSteps(
           and(
             eq(profesionales.salonId, salon.id),
             eq(profesionales.activo, true),
+            eq(profesionales.esDefault, false),
           ),
         )
         .then((r) => r[0]?.n ?? 0),
@@ -81,8 +91,8 @@ export async function computeOnboardingSteps(
       label: 'Servicios',
       hint:
         serviciosCount > 0
-          ? `${serviciosCount} servicio${serviciosCount === 1 ? '' : 's'} activo${serviciosCount === 1 ? '' : 's'}.`
-          : 'Añade al menos un servicio.',
+          ? `${serviciosCount} servicio${serviciosCount === 1 ? '' : 's'} propio${serviciosCount === 1 ? '' : 's'}.`
+          : 'Revisa los precios o añade los tuyos.',
       href: '/panel/servicios',
       done: serviciosCount > 0,
     },
@@ -91,8 +101,8 @@ export async function computeOnboardingSteps(
       label: 'Horario semanal',
       hint:
         horariosCount > 0
-          ? 'Horario configurado.'
-          : 'Define qué días y horas trabajas.',
+          ? 'Horario revisado.'
+          : 'Ajústalo a tus días y horas reales.',
       href: '/panel/config/horario',
       done: horariosCount > 0,
     },
@@ -118,8 +128,8 @@ export async function computeOnboardingSteps(
       label: 'Equipo',
       hint:
         profesionalesCount > 0
-          ? `${profesionalesCount} profesional${profesionalesCount === 1 ? '' : 'es'} en plantilla.`
-          : 'Añade al menos un profesional.',
+          ? `${profesionalesCount} profesional${profesionalesCount === 1 ? '' : 'es'} configurado${profesionalesCount === 1 ? '' : 's'}.`
+          : 'Edita el profesional por defecto o añade los tuyos.',
       href: '/panel/config/equipo',
       done: profesionalesCount > 0,
     },

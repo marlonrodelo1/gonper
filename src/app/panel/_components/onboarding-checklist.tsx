@@ -79,35 +79,35 @@ export function OnboardingChecklist({ steps }: Props) {
 
   return (
     <div
-      className="fixed bottom-4 right-4 z-40 w-[320px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-line bg-paper shadow-[0_20px_50px_-15px_rgba(26,24,21,0.25)]"
+      className="fixed bottom-4 right-4 z-40 w-[260px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-line bg-paper shadow-[0_15px_40px_-15px_rgba(26,24,21,0.25)]"
       role="region"
       aria-label="Checklist de configuración del salón"
     >
-      <div className="flex items-start gap-2 border-b border-line/70 bg-cream/40 px-4 py-3">
-        <div className="flex-1">
-          <div className="text-[10.5px] uppercase tracking-[0.22em] text-stone/70">
+      <div className="flex items-center gap-2 border-b border-line/70 bg-cream/40 px-3 py-2">
+        <div className="flex-1 leading-tight">
+          <div className="text-[9.5px] uppercase tracking-[0.18em] text-stone/70">
             Configuración
           </div>
-          <div className="tight mt-0.5 text-[14px] font-medium text-ink">
+          <div className="tight mt-0.5 text-[12px] font-medium text-ink">
             {completados} de {total} listos
           </div>
         </div>
         <button
           type="button"
           onClick={() => toggleMinimized(true)}
-          className="rounded-full p-1.5 text-stone transition hover:bg-line/40 hover:text-ink"
+          className="rounded-full p-1 text-stone transition hover:bg-line/40 hover:text-ink"
           aria-label="Minimizar checklist"
           title="Minimizar"
         >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 12h12" />
           </svg>
         </button>
       </div>
 
       {/* Barra de progreso */}
-      <div className="px-4 pt-3">
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-line/40">
+      <div className="px-3 pt-2">
+        <div className="h-1 w-full overflow-hidden rounded-full bg-line/40">
           <div
             className="h-full rounded-full transition-all"
             style={{
@@ -118,18 +118,19 @@ export function OnboardingChecklist({ steps }: Props) {
         </div>
       </div>
 
-      {/* Lista de pasos */}
-      <ul className="flex flex-col px-2 py-2">
+      {/* Lista de pasos — versión compacta */}
+      <ul className="flex flex-col px-1 py-1">
         {steps.map((s) => (
           <li key={s.id}>
             <Link
               href={s.href}
-              className={`group flex items-start gap-2.5 rounded-lg px-2 py-2 text-[13px] transition hover:bg-cream/60 ${
+              className={`group flex items-center gap-2 rounded-md px-2 py-1.5 text-[12px] transition hover:bg-cream/60 ${
                 s.done ? 'text-stone' : 'text-ink'
               }`}
+              title={s.hint}
             >
               <span
-                className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full ${
                   s.done
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'border border-line bg-paper'
@@ -137,24 +138,19 @@ export function OnboardingChecklist({ steps }: Props) {
                 aria-hidden
               >
                 {s.done && (
-                  <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <svg viewBox="0 0 24 24" width="9" height="9" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12l5 5L20 7" />
                   </svg>
                 )}
               </span>
-              <span className="flex-1 leading-tight">
-                <span
-                  className={`font-medium ${s.done ? 'line-through opacity-70' : ''}`}
-                >
-                  {s.label}
-                </span>
-                <span className="block text-[11.5px] text-stone/80">
-                  {s.hint}
-                </span>
+              <span
+                className={`flex-1 truncate font-medium ${s.done ? 'line-through opacity-60' : ''}`}
+              >
+                {s.label}
               </span>
               {!s.done && (
                 <span
-                  className="mt-0.5 text-stone transition group-hover:text-ink"
+                  className="text-[11px] text-stone transition group-hover:text-ink"
                   aria-hidden
                 >
                   →

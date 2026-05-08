@@ -57,6 +57,7 @@ export async function agregarTramo(formData: FormData) {
     diaSemana: diaNum,
     inicio: inicioVal,
     fin: finVal,
+    esDefault: false,
   });
 
   revalidatePath('/panel/config/horario');

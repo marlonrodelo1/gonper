@@ -184,6 +184,7 @@ export async function signup(formData: FormData) {
         duracion_min: s.duracion_min,
         precio_eur: s.precio_eur,
         orden: s.orden,
+        es_default: true,
       })),
     );
   } catch (err) {
@@ -197,6 +198,7 @@ export async function signup(formData: FormData) {
         dia_semana: h.dia_semana,
         inicio: h.inicio,
         fin: h.fin,
+        es_default: true,
       })),
     );
   } catch (err) {
@@ -209,6 +211,7 @@ export async function signup(formData: FormData) {
       nombre: salonNombre,
       color_hex: '#8B9D7A',
       orden: 0,
+      es_default: true,
     });
   } catch (err) {
     console.warn('[signup:seed] profesional:', err);

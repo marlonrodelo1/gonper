@@ -142,6 +142,7 @@ export async function crearProfesional(formData: FormData) {
     colorHex: data.colorHex,
     fotoUrl,
     orden: data.orden,
+    esDefault: false,
   });
 
   revalidatePath('/panel/config/equipo');
@@ -198,6 +199,7 @@ export async function actualizarProfesional(id: string, formData: FormData) {
       colorHex: data.colorHex,
       ...(fotoUrlNueva !== undefined ? { fotoUrl: fotoUrlNueva } : {}),
       orden: data.orden,
+      esDefault: false,
     })
     .where(
       and(eq(profesionales.id, id), eq(profesionales.salonId, salon.id)),

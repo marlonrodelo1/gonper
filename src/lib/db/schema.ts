@@ -226,6 +226,9 @@ export const profesionales = pgTable(
     fotoUrl: text('foto_url'),
     activo: boolean('activo').notNull().default(true),
     orden: integer('orden').notNull().default(0),
+    /** True si lo creó el seed automático de signup. Cualquier edición o
+     * creación posterior por parte del dueño debe ponerlo a false. */
+    esDefault: boolean('es_default').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -251,6 +254,9 @@ export const servicios = pgTable(
     precioEur: numeric('precio_eur', { precision: 10, scale: 2 }).notNull(),
     activo: boolean('activo').notNull().default(true),
     orden: integer('orden').notNull().default(0),
+    /** True si lo creó el seed automático de signup. Edición/creación
+     * posterior por parte del dueño debe ponerlo a false. */
+    esDefault: boolean('es_default').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -283,6 +289,9 @@ export const horarios = pgTable(
     diaSemana: integer('dia_semana').notNull(),
     inicio: time('inicio').notNull(),
     fin: time('fin').notNull(),
+    /** True si lo creó el seed automático de signup. Edición/creación
+     * posterior por parte del dueño debe ponerlo a false. */
+    esDefault: boolean('es_default').notNull().default(false),
   },
   (t) => ({
     idxSalon: index('idx_horarios_salon').on(t.salonId),

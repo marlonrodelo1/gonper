@@ -68,6 +68,7 @@ export async function crearServicio(formData: FormData) {
     descripcion: data.descripcion,
     duracionMin: data.duracionMin,
     precioEur: data.precioEur.toFixed(2),
+    esDefault: false,
   });
 
   revalidatePath('/panel/servicios');
@@ -101,6 +102,7 @@ export async function actualizarServicio(id: string, formData: FormData) {
       descripcion: data.descripcion,
       duracionMin: data.duracionMin,
       precioEur: data.precioEur.toFixed(2),
+      esDefault: false,
     })
     .where(and(eq(servicios.id, id), eq(servicios.salonId, salon.id)));
 
