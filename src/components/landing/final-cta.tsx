@@ -32,10 +32,10 @@ export function FinalCTA() {
                 Empezar gratis 30 días
               </Link>
               <Link
-                href="/panel/hoy"
+                href="/login"
                 className="px-7 py-4 rounded-full border border-cream/20 text-cream text-[15px] tight hover:bg-cream/5 transition text-center inline-flex items-center justify-center gap-2"
               >
-                Ver el panel <Icon.Arrow width="14" height="14" />
+                Iniciar sesión <Icon.Arrow width="14" height="14" />
               </Link>
             </div>
           </div>

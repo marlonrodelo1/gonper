@@ -51,12 +51,6 @@ export function TopNav() {
                 {l.label}
               </a>
             ))}
-            <Link
-              href="/panel/hoy"
-              className="px-3 py-1.5 rounded-full hover:bg-ink/[0.05] hover:text-ink transition-colors flex items-center gap-1"
-            >
-              Ver el panel <Icon.Arrow width="13" height="13" />
-            </Link>
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -126,14 +120,6 @@ export function TopNav() {
                 <Icon.Arrow width="14" height="14" />
               </a>
             ))}
-            <Link
-              href="/panel/hoy"
-              onClick={() => setOpen(false)}
-              className="px-4 py-3 rounded-xl text-[15px] text-ink hover:bg-ink/[0.05] transition-colors flex items-center justify-between"
-            >
-              <span>Ver el panel</span>
-              <Icon.Arrow width="14" height="14" />
-            </Link>
             <div className="h-px bg-line/70 my-2"></div>
             <Link
               href="/login"
