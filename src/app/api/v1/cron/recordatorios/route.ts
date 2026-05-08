@@ -14,6 +14,10 @@ import { requireApiToken } from '@/lib/api/auth';
  *
  * El UPDATE es atómico via CTE con FOR UPDATE SKIP LOCKED para evitar que
  * dos invocaciones simultáneas envíen el mismo recordatorio dos veces.
+ *
+ * NOTA: el bot Telegram para el cliente final se eliminó. Los recordatorios
+ * al cliente se envían por email/WhatsApp (a partir del campo
+ * `cliente.email` / `cliente.telefono` o `whatsapp_phone`).
  */
 export async function POST(request: Request) {
   const authError = requireApiToken(request);
@@ -47,7 +51,6 @@ export async function POST(request: Request) {
         s.slug          as salon_slug,
         s.nombre        as salon_nombre,
         s.timezone      as salon_timezone,
-        s.telegram_bot_token as salon_telegram_bot_token,
         srv.id          as servicio_id,
         srv.nombre      as servicio_nombre,
         srv.duracion_min as servicio_duracion_min,
@@ -57,7 +60,7 @@ export async function POST(request: Request) {
         cli.nombre      as cliente_nombre,
         cli.telefono    as cliente_telefono,
         cli.email       as cliente_email,
-        cli.telegram_id as cliente_telegram_id
+        cli.whatsapp_phone as cliente_whatsapp_phone
       from marcadas m
       join salones s        on s.id = m.salon_id
       join servicios srv    on srv.id = m.servicio_id
@@ -77,7 +80,6 @@ export async function POST(request: Request) {
       salon_slug: string;
       salon_nombre: string;
       salon_timezone: string;
-      salon_telegram_bot_token: string | null;
       servicio_id: string;
       servicio_nombre: string;
       servicio_duracion_min: number;
@@ -87,7 +89,7 @@ export async function POST(request: Request) {
       cliente_nombre: string;
       cliente_telefono: string | null;
       cliente_email: string | null;
-      cliente_telegram_id: string | bigint | null;
+      cliente_whatsapp_phone: string | null;
     };
 
     // postgres-js devuelve el array directamente en `result` (driver postgres).
@@ -98,7 +100,6 @@ export async function POST(request: Request) {
       const inicioIso =
         r.inicio instanceof Date ? r.inicio.toISOString() : String(r.inicio);
       const finIso = r.fin instanceof Date ? r.fin.toISOString() : String(r.fin);
-      const tg = r.cliente_telegram_id;
       return {
         citaId: r.cita_id,
         inicio: inicioIso,
@@ -111,7 +112,6 @@ export async function POST(request: Request) {
           slug: r.salon_slug,
           nombre: r.salon_nombre,
           timezone: r.salon_timezone,
-          telegramBotToken: r.salon_telegram_bot_token,
         },
         servicio: {
           id: r.servicio_id,
@@ -127,12 +127,7 @@ export async function POST(request: Request) {
           nombre: r.cliente_nombre,
           telefono: r.cliente_telefono,
           email: r.cliente_email,
-          telegramId:
-            tg === null || tg === undefined
-              ? null
-              : typeof tg === 'bigint'
-                ? tg.toString()
-                : String(tg),
+          whatsappPhone: r.cliente_whatsapp_phone,
         },
       };
     });
