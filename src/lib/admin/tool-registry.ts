@@ -11,6 +11,7 @@ import { z } from 'zod';
 
 import {
   cancelarCita,
+  compartirTienda,
   crearCita,
   getCitasHoy,
   getCitasProximas,
@@ -21,16 +22,28 @@ import {
   moverCita,
 } from './tools';
 
-export type ToolCategoria = 'citas' | 'clientes' | 'numeros' | 'sistema';
+export type ToolCategoria =
+  | 'citas'
+  | 'clientes'
+  | 'numeros'
+  | 'crecimiento'
+  | 'sistema';
 
 export const CATEGORIA_LABEL: Record<ToolCategoria, string> = {
   citas: '📅 *Citas*',
   clientes: '👥 *Clientes*',
   numeros: '💰 *Números*',
+  crecimiento: '🚀 *Crecimiento*',
   sistema: '⚙️ *Opciones*',
 };
 
-const CATEGORIA_ORDEN: ToolCategoria[] = ['citas', 'clientes', 'numeros', 'sistema'];
+const CATEGORIA_ORDEN: ToolCategoria[] = [
+  'citas',
+  'clientes',
+  'numeros',
+  'crecimiento',
+  'sistema',
+];
 
 /** Definición pública de una tool. */
 export interface ToolDef<S extends z.ZodTypeAny = z.ZodTypeAny> {
@@ -182,6 +195,25 @@ export const TOOLS: AnyToolDef[] = [
       })
       .strict(),
     handler: (salonId, args) => getNoShows(salonId, args.dias ?? 30),
+  }),
+
+  // ---------- CRECIMIENTO ----------
+  defineTool({
+    name: 'compartir_tienda',
+    categoria: 'crecimiento',
+    descripcion: 'Comparte tu link de reservas con clientes (WhatsApp, copy, QR).',
+    ejemplos: [
+      '"comparte mi link"',
+      '"manda el link a +34611222333"',
+      '"comparte tienda a María 611222333"',
+    ],
+    schema: z
+      .object({
+        numero_destino: z.string().min(3).max(30).optional(),
+        mensaje_personalizado: z.string().max(300).optional(),
+      })
+      .strict(),
+    handler: (salonId, args) => compartirTienda(salonId, args),
   }),
 
   // ---------- SISTEMA ----------
