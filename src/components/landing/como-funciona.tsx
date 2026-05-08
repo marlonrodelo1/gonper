@@ -10,20 +10,20 @@ export function ComoFunciona() {
     {
       n: "01",
       icon: <Icon.Telegram width="20" height="20" />,
-      title: "Tu cliente reserva por Telegram",
-      body: "Sin app, sin formularios, sin llamadas. Abre el chat con tu bot y reserva en 30 segundos. Botones grandes, español natural.",
+      title: "Te registras en 1 minuto",
+      body: "Sin tarjeta. 30 días gratis. Eliges nombre del salón, servicios y horarios. Estás listo para vender.",
     },
     {
       n: "02",
       icon: <Icon.Bell width="20" height="20" />,
-      title: "Juanita confirma 1h antes",
-      body: "Recordatorio automático con botón Confirmar/Cancelar. Si en 30 minutos no hay respuesta, libera el hueco y se lo ofrece a la lista de espera.",
+      title: "Conectas tu asistente al móvil",
+      body: "Te explicamos cómo enlazar tu Telegram (gratis, 1 minuto). Desde ahí tu asistente IA te avisa de cada reserva y obedece tus órdenes en español.",
     },
     {
       n: "03",
       icon: <Icon.Calendar width="20" height="20" />,
-      title: "Tú lo ves todo en tu panel",
-      body: "Hoy, agenda semanal, clientes, métricas. Panel limpio en español. Una vista por pantalla, cero ruido.",
+      title: "Compartes tu link y empiezan a reservar",
+      body: "Tu web pública con link y QR descargable. Mándalo por WhatsApp, pégalo en Instagram. Tus clientes reservan solos en 30 segundos.",
     },
   ];
 
@@ -57,8 +57,8 @@ export function ComoFunciona() {
             </h2>
           </div>
           <p className="text-stone max-w-[360px] text-[15px] leading-relaxed">
-            Conecta una vez, configura tus servicios y horarios. Gestori hace el
-            resto. La media de un salón Studio: 12 minutos de setup.
+            Configuras los servicios y horarios una vez. Gestori hace el resto:
+            atiende, recuerda, te avisa. Tú llevas el negocio en el bolsillo.
           </p>
         </div>
 

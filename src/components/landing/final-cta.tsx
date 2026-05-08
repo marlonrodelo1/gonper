@@ -15,19 +15,21 @@ export function FinalCTA() {
               className="tight font-medium"
               style={{ fontSize: "clamp(40px, 6vw, 72px)", lineHeight: 0.98 }}
             >
-              Deja de coger
+              Tu negocio,
               <br />
-              el <span className="font-serif-it text-terracotta">teléfono</span>.
+              en el{" "}
+              <span className="font-serif-it text-terracotta">bolsillo</span>.
             </h2>
             <p className="text-cream/70 text-[17px] mt-6 max-w-[480px] leading-relaxed">
-              30 días gratis. Tarjeta obligatoria, hoy 0€. Setup en 12 minutos. Si después de probarlo no quieres seguir, cierras y no pagas nada.
+              30 días gratis, sin tarjeta. Setup en 12 minutos. Si después de
+              probarlo no te convence, cierras la cuenta y no debes nada.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-3">
               <Link
                 href="/signup"
                 className="px-7 py-4 rounded-full bg-cream text-ink text-[15px] font-medium tight hover:bg-paper transition text-center"
               >
-                Crear cuenta gratis
+                Empezar gratis 30 días
               </Link>
               <Link
                 href="/panel/hoy"

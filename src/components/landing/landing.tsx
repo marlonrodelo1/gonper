@@ -3,6 +3,7 @@
 import { useReveal } from "@/lib/hooks/use-reveal";
 import { Hero } from "./hero";
 import { Strip } from "./strip";
+import { Beneficios } from "./beneficios";
 import { ComoFunciona } from "./como-funciona";
 import { Juanita } from "./juanita";
 import { Comparativa } from "./comparativa";
@@ -28,6 +29,7 @@ export function Landing() {
     <>
       <Hero />
       <Strip />
+      <Beneficios />
       <ComoFunciona />
       <Juanita />
       <Comparativa />
