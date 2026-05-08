@@ -405,6 +405,18 @@
 }
 .swiper-card.dragging { transition: none; }
 
+/* Hint flotante que sugiere al usuario que la card es deslizable */
+.swipe-hint {
+  animation: swipe-hint-pulse 2.4s ease-in-out infinite;
+}
+@keyframes swipe-hint-pulse {
+  0%, 100% { transform: translateX(0); opacity: 0.85; }
+  50% { transform: translateX(-6px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swipe-hint { animation: none; }
+}
+
 .ba-clip { clip-path: inset(0 var(--clip, 50%) 0 0); }
 
 .day-cell { transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease; }

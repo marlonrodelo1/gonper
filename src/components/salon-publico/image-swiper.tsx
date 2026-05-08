@@ -13,6 +13,12 @@ export function ImageSwiper({ images }: { images: SwiperImage[] }) {
   const currentX = useRef(0);
   const rafId = useRef<number | null>(null);
   const [order, setOrder] = useState<number[]>(() => images.map((_, i) => i));
+  // Hint visual que aparece sólo hasta la primera interacción
+  const [showHint, setShowHint] = useState(true);
+
+  function dismissHint() {
+    if (showHint) setShowHint(false);
+  }
 
   const applyStyles = useCallback((deltaX: number) => {
     if (!stackRef.current) return;
@@ -28,6 +34,7 @@ export function ImageSwiper({ images }: { images: SwiperImage[] }) {
     isSwiping.current = true;
     startX.current = clientX;
     currentX.current = clientX;
+    dismissHint();
     const card = stackRef.current?.querySelector<HTMLElement>(
       '.swiper-card[data-active="true"]',
     );
@@ -95,7 +102,10 @@ export function ImageSwiper({ images }: { images: SwiperImage[] }) {
     });
   }, [order]);
 
-  const skip = () => setOrder((prev) => [...prev.slice(1), prev[0]]);
+  const skip = () => {
+    dismissHint();
+    setOrder((prev) => [...prev.slice(1), prev[0]]);
+  };
 
   return (
     <div className="flex flex-col items-center gap-6">
@@ -124,6 +134,15 @@ export function ImageSwiper({ images }: { images: SwiperImage[] }) {
                 className="w-full h-full object-cover pointer-events-none"
                 draggable={false}
               />
+              {isActive && showHint && images.length > 1 && (
+                <div
+                  className="swipe-hint pointer-events-none absolute top-3 right-3 flex items-center gap-1.5 rounded-full bg-ink/70 px-2.5 py-1 text-[11px] font-medium text-paper backdrop-blur-sm"
+                  aria-hidden
+                >
+                  <Icon.Drag width="12" height="12" />
+                  <span>Desliza</span>
+                </div>
+              )}
               <div
                 className="absolute bottom-0 inset-x-0 p-5 text-paper"
                 style={{
