@@ -5,8 +5,12 @@ import { db } from '@/lib/db';
 import { citas, clientes, profesionales, servicios } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 
-import { estadoMeta, type EstadoCita } from '@/app/panel/_components/cita-row';
+import { type EstadoCita } from '@/app/panel/_components/cita-row';
 import { Icon } from '@/app/panel/_components/icons';
+
+import { CitaCard } from './_components/cita-card';
+import { DiaHeader } from './_components/dia-header';
+import { EmptyDia } from './_components/empty-dia';
 
 const NOMBRES_DIAS_CORTOS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -60,11 +64,6 @@ function mismoDia(a: Date, b: Date): boolean {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
-}
-
-function formatearDiaCorto(d: Date): string {
-  const idx = d.getDay() === 0 ? 6 : d.getDay() - 1;
-  return `${NOMBRES_DIAS_CORTOS[idx]} ${d.getDate()}`;
 }
 
 function formatearRango(lunes: Date, domingo: Date): string {
@@ -330,67 +329,76 @@ export default async function AgendaPage({
         </form>
       </div>
 
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-7">
+      {/* Mobile (<md): lista vertical agrupada por día */}
+      <section className="flex flex-col gap-5 md:hidden">
         {dias.map((dia, idx) => {
           const esHoy = mismoDia(dia, hoy);
           const items = citasPorDia[idx];
           return (
-            <div key={idx} className="card flex flex-col overflow-hidden">
-              <div
-                className={`tight border-b border-line bg-cream/40 px-3 py-2.5 text-[13px] font-medium ${
-                  esHoy ? 'text-terracotta' : 'text-ink'
-                }`}
-              >
-                {formatearDiaCorto(dia)}
-              </div>
-              <div className="flex flex-1 flex-col gap-2 p-2">
+            <div key={idx} className="flex flex-col gap-2">
+              <DiaHeader
+                fecha={dia}
+                esHoy={esHoy}
+                variant="section"
+                countCitas={items.length}
+              />
+              {items.length === 0 ? (
+                <EmptyDia variant="section" />
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {items.map(({ cita, cliente, servicio, profesional }) => (
+                    <CitaCard
+                      key={cita.id}
+                      citaId={cita.id}
+                      hora={formatearHora(cita.inicio, timezone)}
+                      estado={cita.estado as EstadoCita}
+                      clienteNombre={cliente.nombre}
+                      servicioNombre={servicio.nombre}
+                      profesionalColor={profesional.colorHex}
+                      variant="full"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </section>
+
+      {/* Tablet/Desktop (md+): grid 7 columnas */}
+      <section className="hidden grid-cols-7 gap-3 md:grid lg:gap-4">
+        {dias.map((dia, idx) => {
+          const esHoy = mismoDia(dia, hoy);
+          const items = citasPorDia[idx];
+          return (
+            <div
+              key={idx}
+              className={`card flex min-h-[280px] flex-col overflow-hidden transition ${
+                esHoy ? 'ring-1 ring-terracotta/25' : ''
+              }`}
+            >
+              <DiaHeader
+                fecha={dia}
+                esHoy={esHoy}
+                variant="grid"
+                countCitas={items.length}
+              />
+              <div className="flex flex-1 flex-col gap-2 p-2 lg:gap-2.5 lg:p-2.5">
                 {items.length === 0 ? (
-                  <p className="px-1 py-2 text-[12px] italic text-stone/60">
-                    Sin citas
-                  </p>
+                  <EmptyDia variant="grid" />
                 ) : (
-                  items.map(({ cita, cliente, servicio, profesional }) => {
-                    const m =
-                      estadoMeta[cita.estado as EstadoCita] ??
-                      estadoMeta.pendiente;
-                    const hora = formatearHora(cita.inicio, timezone);
-                    const colorProfesional =
-                      profesional.colorHex ?? '#3b82f6';
-                    return (
-                      <Link
-                        key={cita.id}
-                        href={`/panel/citas/${cita.id}`}
-                        className="block rounded-xl border border-line bg-paper p-2.5 transition hover:bg-cream"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="tabular font-mono text-[13px] text-ink">
-                            {hora}
-                          </span>
-                          <span
-                            className="pill"
-                            style={{ background: m.bg, color: m.fg }}
-                          >
-                            <span
-                              className="pill-dot"
-                              style={{ background: m.dot }}
-                            />
-                            {m.label}
-                          </span>
-                        </div>
-                        <div className="tight mt-1 truncate text-[13px] text-ink">
-                          {cliente.nombre}
-                        </div>
-                        <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-stone">
-                          <span
-                            className="inline-block size-2 shrink-0 rounded-full"
-                            style={{ backgroundColor: colorProfesional }}
-                            aria-hidden
-                          />
-                          <span className="truncate">{servicio.nombre}</span>
-                        </div>
-                      </Link>
-                    );
-                  })
+                  items.map(({ cita, cliente, servicio, profesional }) => (
+                    <CitaCard
+                      key={cita.id}
+                      citaId={cita.id}
+                      hora={formatearHora(cita.inicio, timezone)}
+                      estado={cita.estado as EstadoCita}
+                      clienteNombre={cliente.nombre}
+                      servicioNombre={servicio.nombre}
+                      profesionalColor={profesional.colorHex}
+                      variant="compact"
+                    />
+                  ))
                 )}
               </div>
             </div>
