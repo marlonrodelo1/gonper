@@ -7,9 +7,11 @@ import { agentes } from '@/lib/db/schema';
 import {
   CATEGORIAS_MARKETPLACE,
   categoriaBy,
+  type TipoNegocio,
+} from '@/lib/marketplace/categorias';
+import {
   getMarketplaceFiltros,
   listMarketplaceSalones,
-  type TipoNegocio,
 } from '@/lib/marketplace/query';
 import { MarketplaceHero } from '@/components/marketplace/hero';
 import { MarketplaceSidebar } from '@/components/marketplace/sidebar';

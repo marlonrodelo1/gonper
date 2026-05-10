@@ -1,54 +1,18 @@
 /**
- * Queries del marketplace público.
+ * Queries del marketplace público — SOLO server (importa Drizzle).
  *
- * No usa endpoint REST: la página `/marketplace` es Server Component
- * y consume estas funciones directamente vía Drizzle.
+ * No importar desde un Client Component: arrastra `postgres`/`net`/`tls`
+ * al bundle del cliente y rompe el build. Para constantes/types usables
+ * desde el cliente, importar `./categorias.ts`.
  */
 
+import 'server-only';
 import { and, asc, eq, ilike, ne, or, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { salones, salonesRatingCache } from '@/lib/db/schema';
 
-export type TipoNegocio =
-  | 'peluqueria'
-  | 'barberia'
-  | 'manicura'
-  | 'estetica'
-  | 'otro';
-
-export const CATEGORIAS_MARKETPLACE: Array<{
-  key: TipoNegocio;
-  label: string;
-  /** CSS var con el color del dot del chip. */
-  dot: string;
-  /** Soft de fondo para banner placeholder. */
-  soft: string;
-  /** Color profundo para texto sobre fondo soft. */
-  deep: string;
-}> = [
-  { key: 'peluqueria', label: 'Peluquería', dot: '#C58E2C', soft: '#F2E4C7', deep: '#A87217' },
-  { key: 'barberia', label: 'Barbería', dot: '#C5562C', soft: '#F1D9CC', deep: '#A8451F' },
-  { key: 'manicura', label: 'Manicura', dot: '#D88EA0', soft: '#F3DEE3', deep: '#B66E80' },
-  { key: 'estetica', label: 'Estética', dot: '#8B9D7A', soft: '#DDE3D3', deep: '#6B7C5A' },
-  { key: 'otro', label: 'Otro', dot: '#8A8174', soft: '#EFE9DD', deep: '#6B6356' },
-];
-
-export function categoriaBy(key: string | null | undefined) {
-  return CATEGORIAS_MARKETPLACE.find((c) => c.key === key) ?? CATEGORIAS_MARKETPLACE[4];
-}
-
-export type SalonCard = {
-  slug: string;
-  nombre: string;
-  tipoNegocio: TipoNegocio;
-  ciudad: string | null;
-  descripcionCorta: string | null;
-  logoUrl: string | null;
-  bannerUrl: string | null;
-  ratingAvg: number | null;
-  totalResenas: number;
-};
+import { CATEGORIAS_MARKETPLACE, type SalonCard, type TipoNegocio } from './categorias';
 
 export type MarketplaceFilters = {
   categoria?: TipoNegocio | null;
@@ -128,14 +92,12 @@ export async function getMarketplaceFiltros(): Promise<{
   categorias: Array<{ key: TipoNegocio; count: number }>;
   ciudades: Array<{ value: string; count: number }>;
 }> {
-  // Total global
   const totalRows = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(salones)
     .where(MARKETPLACE_VISIBLE);
   const total = totalRows[0]?.count ?? 0;
 
-  // Por categoría
   const catRows = await db
     .select({
       key: salones.tipoNegocio,
@@ -151,7 +113,6 @@ export async function getMarketplaceFiltros(): Promise<{
     count: catMap.get(c.key) ?? 0,
   }));
 
-  // Ciudades (con al menos 1 salón)
   const ciudadRows = await db
     .select({
       value: salones.ciudad,

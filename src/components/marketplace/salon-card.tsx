@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import { Icon } from './icons';
-import { categoriaBy, type SalonCard as SalonCardData } from '@/lib/marketplace/query';
+import { categoriaBy, type SalonCard as SalonCardData } from '@/lib/marketplace/categorias';
 
 type Props = { s: SalonCardData };
 

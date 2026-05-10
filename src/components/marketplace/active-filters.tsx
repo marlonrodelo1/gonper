@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 
 import { Icon } from './icons';
 import { buildMarketplaceHref } from './href';
-import { categoriaBy } from '@/lib/marketplace/query';
+import { categoriaBy } from '@/lib/marketplace/categorias';
 
 type Props = {
   categoria: string;

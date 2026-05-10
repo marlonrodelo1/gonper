@@ -5,7 +5,7 @@ import { type FormEvent, useState } from 'react';
 
 import { Icon } from './icons';
 import { buildMarketplaceHref } from './href';
-import { CATEGORIAS_MARKETPLACE, type TipoNegocio } from '@/lib/marketplace/query';
+import { CATEGORIAS_MARKETPLACE, type TipoNegocio } from '@/lib/marketplace/categorias';
 
 type Props = {
   open: boolean;
