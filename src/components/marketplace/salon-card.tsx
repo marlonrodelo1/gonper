@@ -38,7 +38,7 @@ export function SalonCard({ s, distanciaKm }: Props) {
     <Link
       href={`/s/${s.slug}`}
       className="salon-card group relative block overflow-hidden rounded-[22px] focus:outline-none focus:ring-2 focus:ring-ink/20"
-      style={{ aspectRatio: '4/5' }}
+      style={{ aspectRatio: '16/9' }}
     >
       {/* Banner ocupa toda la card */}
       <div className="absolute inset-0">
