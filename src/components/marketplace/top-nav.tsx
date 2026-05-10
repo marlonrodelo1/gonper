@@ -1,98 +1,163 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { type FormEvent, useEffect, useState } from 'react';
 
 import { Icon } from './icons';
+import { buildMarketplaceHref } from './href';
 
 type Props = {
   filtersCount: number;
   onOpenFilters: () => void;
   q: string;
-  onSearch: (v: string) => void;
+  ciudad: string;
+  categoria: string;
+  ciudades: string[];
 };
 
+/**
+ * TopNav del marketplace con buscador y selector de ciudad permanentes.
+ *
+ * El buscador vive dentro del nav flotante (no aparece sólo al scroll).
+ * En mobile el nav muestra solo logo + botón "Filtros" que abre el sheet
+ * (donde está el input de búsqueda completo).
+ */
 export function MarketplaceTopNav({
   filtersCount,
   onOpenFilters,
   q,
-  onSearch,
+  ciudad,
+  categoria,
+  ciudades,
 }: Props) {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
+  const [draftQ, setDraftQ] = useState(q);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 80);
+    setDraftQ(q);
+  }, [q]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    router.push(
+      buildMarketplaceHref(
+        { categoria, ciudad, q },
+        { q: draftQ.trim() || null },
+      ),
+    );
+  }
+
+  function onCity(value: string) {
+    router.push(
+      buildMarketplaceHref(
+        { categoria, ciudad, q },
+        { ciudad: value || null },
+      ),
+    );
+  }
+
   return (
     <div className="fixed top-0 left-0 right-0 z-40 pointer-events-none px-3 sm:px-4 pt-3 sm:pt-4">
       <header
-        className={`floating-nav pointer-events-auto mx-auto w-full max-w-[1240px] flex items-center gap-2 transition-all duration-300 ${scrolled ? 'is-scrolled' : ''}`}
-        style={{ padding: '8px 8px 8px 16px', borderRadius: '999px' }}
+        className={`floating-nav pointer-events-auto mx-auto w-full max-w-[1240px] flex items-center gap-2 sm:gap-3 transition-all duration-300 ${scrolled ? 'is-scrolled' : ''}`}
+        style={{ padding: '8px 8px 8px 14px', borderRadius: '999px' }}
       >
+        {/* Logo */}
         <Link
           href="/"
           className="flex items-center gap-2 text-ink shrink-0 pr-1"
         >
           <span
-            className="w-7 h-7 rounded-full grid place-items-center"
+            className="w-8 h-8 rounded-full grid place-items-center"
             style={{ background: 'var(--ink)', color: 'var(--paper)' }}
           >
-            <span className="font-serif-it text-[15px] leading-none translate-y-[-1px]">
+            <span className="font-serif-it text-[16px] leading-none translate-y-[-1px]">
               G
             </span>
           </span>
-          <span className="text-[15.5px] tight font-medium hidden sm:inline">
-            Gestori
-          </span>
-          <span className="hidden md:flex items-center gap-1.5 text-[12px] text-stone/80 ml-2 pl-2.5 border-l border-line/80">
-            <span>Marketplace</span>
+          <span className="hidden sm:flex flex-col leading-tight">
+            <span className="text-[14px] tight font-medium">Gestori</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-stone/70 -mt-0.5">
+              Marketplace
+            </span>
           </span>
         </Link>
 
-        {/* Compressed search appears when scrolled */}
-        <div
-          className={`flex-1 min-w-0 transition-all duration-300 ${scrolled ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 pointer-events-none'} hidden md:block`}
+        {/* Search shell — desktop / tablet */}
+        <form
+          onSubmit={onSubmit}
+          className="hidden md:flex flex-1 min-w-0 items-center gap-2 px-3.5 py-1.5 rounded-full bg-cream/80 border border-line"
         >
-          <div className="relative max-w-[420px] ml-2">
-            <Icon.Search
-              width="14"
-              height="14"
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-stone/70"
-            />
-            <input
-              type="text"
-              value={q}
-              onChange={(e) => onSearch(e.target.value)}
-              placeholder="Buscar salón..."
-              className="w-full bg-cream/70 border border-line rounded-full pl-9 pr-4 py-2 text-[13px] tight text-ink placeholder:text-stone/60 focus:outline-none focus:bg-paper focus:border-line-2"
-            />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 ml-auto shrink-0">
+          <Icon.Search width="14" height="14" className="text-stone/70 shrink-0" />
+          <input
+            type="text"
+            value={draftQ}
+            onChange={(e) => setDraftQ(e.target.value)}
+            placeholder="¿Qué buscas? · 'barbería en Madrid', 'manicura rusa'…"
+            className="flex-1 min-w-0 bg-transparent text-[13.5px] tight text-ink placeholder:text-stone/55 focus:outline-none py-1.5"
+          />
+          <span className="hidden lg:flex items-center gap-1.5 pl-2.5 ml-1 border-l border-line">
+            <Icon.Pin width="12" height="12" className="text-stone/70 shrink-0" />
+            <select
+              value={ciudad}
+              onChange={(e) => onCity(e.target.value)}
+              className="bg-transparent text-[12.5px] tight text-ink focus:outline-none cursor-pointer max-w-[140px]"
+              aria-label="Ciudad"
+            >
+              <option value="">Todas las ciudades</option>
+              {ciudades.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </span>
           <button
-            type="button"
-            onClick={onOpenFilters}
-            className="lg:hidden inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12.5px] font-medium border border-line bg-paper/70 text-ink"
+            type="submit"
+            aria-label="Buscar"
+            className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-full gloss-btn shrink-0"
           >
-            <Icon.Sliders width="14" height="14" />
-            <span>Filtros</span>
-            {filtersCount > 0 && (
-              <span
-                className="ml-0.5 min-w-[18px] h-[18px] grid place-items-center px-1 rounded-full text-[10.5px] font-medium"
-                style={{ background: 'var(--terracotta)', color: 'var(--paper)' }}
-              >
-                {filtersCount}
-              </span>
-            )}
+            <Icon.Search width="12" height="12" />
           </button>
+        </form>
+
+        {/* Mobile: ocupa todo el espacio con búsqueda compacta */}
+        <button
+          type="button"
+          onClick={onOpenFilters}
+          className="md:hidden flex flex-1 min-w-0 items-center gap-2 px-3.5 py-2 rounded-full bg-cream/80 border border-line text-left"
+        >
+          <Icon.Search width="14" height="14" className="text-stone/70 shrink-0" />
+          <span className="flex-1 min-w-0 truncate text-[13px] tight text-stone/70">
+            {q || ciudad || categoria
+              ? [q, ciudad, categoria].filter(Boolean).join(' · ')
+              : '¿Qué buscas? Filtra y descubre'}
+          </span>
+          <Icon.Sliders width="13" height="13" className="text-stone/70 shrink-0" />
+        </button>
+
+        {/* Right: filtros mobile + soy un salón */}
+        <div className="flex items-center gap-2 shrink-0">
+          {filtersCount > 0 && (
+            <span
+              className="hidden md:inline-flex lg:hidden items-center justify-center min-w-[22px] h-[22px] rounded-full text-[10.5px] font-medium px-1.5"
+              style={{ background: 'var(--terracotta)', color: 'var(--paper)' }}
+            >
+              {filtersCount}
+            </span>
+          )}
           <Link
             href="/"
-            className="hidden sm:inline-flex text-[12.5px] font-medium px-4 py-2 rounded-full gloss-btn"
+            className="hidden sm:inline-flex text-[12.5px] font-medium px-4 py-2 rounded-full gloss-btn shrink-0"
           >
             Soy un salón
           </Link>

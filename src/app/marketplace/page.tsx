@@ -127,7 +127,6 @@ export default async function MarketplacePage({
         q={q}
         ciudad={ciudad}
         categoria={categoria}
-        ciudades={ciudadesNombres}
         categorias={heroCategorias}
         total={total}
       />
