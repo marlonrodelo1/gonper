@@ -142,6 +142,17 @@ export const salones = pgTable(
     logoUrl: text('logo_url'),
     bannerUrl: text('banner_url'),
 
+    // Marketplace público
+    marketplaceVisible: boolean('marketplace_visible').notNull().default(true),
+    ciudad: text('ciudad'),
+    provincia: text('provincia'),
+    descripcionCorta: text('descripcion_corta'),
+    /** Geocoding (OpenStreetMap / Nominatim) */
+    lat: numeric('lat', { precision: 10, scale: 7 }),
+    lng: numeric('lng', { precision: 10, scale: 7 }),
+    direccionFormateada: text('direccion_formateada'),
+    osmPlaceId: text('osm_place_id'),
+
     // Plan
     plan: text('plan').notNull().default('trial'),
     trialUntil: timestamp('trial_until', { withTimezone: true }),
@@ -792,6 +803,230 @@ export const trialAvisosEnviados = pgTable(
 );
 
 // ============================================
+// TABLA: salones_rating_cache (marketplace)
+// ============================================
+export const salonesRatingCache = pgTable('salones_rating_cache', {
+  salonId: uuid('salon_id')
+    .primaryKey()
+    .references(() => salones.id, { onDelete: 'cascade' }),
+  ratingAvg: numeric('rating_avg', { precision: 3, scale: 2 }),
+  totalResenas: integer('total_resenas').notNull().default(0),
+  actualizadoAt: timestamp('actualizado_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ============================================
+// TABLA: agentes (Royce + futuros agentes)
+// ============================================
+export const agentes = pgTable(
+  'agentes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    slug: text('slug').notNull().unique(),
+    nombre: text('nombre').notNull(),
+    descripcion: text('descripcion'),
+    systemPrompt: text('system_prompt').notNull(),
+    modelo: text('modelo').notNull().default('deepseek-chat'),
+    temperatura: numeric('temperatura', { precision: 3, scale: 2 })
+      .notNull()
+      .default('0.40'),
+    maxTokens: integer('max_tokens').notNull().default(600),
+    bienvenida: text('bienvenida'),
+    /** NULL = agente global (Royce). UUID = agente futuro por tenant. */
+    salonId: uuid('salon_id').references(() => salones.id, {
+      onDelete: 'cascade',
+    }),
+    activo: boolean('activo').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxSlug: index('idx_agentes_slug').on(t.slug),
+    idxSalon: index('idx_agentes_salon')
+      .on(t.salonId)
+      .where(sql`${t.salonId} is not null`),
+    idxActivos: index('idx_agentes_activos')
+      .on(t.activo)
+      .where(sql`${t.activo} = true`),
+    chkTemp: check(
+      'agentes_temperatura_check',
+      sql`${t.temperatura} >= 0 and ${t.temperatura} <= 2`,
+    ),
+    chkMaxTokens: check(
+      'agentes_max_tokens_check',
+      sql`${t.maxTokens} > 0 and ${t.maxTokens} <= 4000`,
+    ),
+  }),
+);
+
+// ============================================
+// TABLA: agentes_versiones (audit / rollback)
+// ============================================
+export const agentesVersiones = pgTable(
+  'agentes_versiones',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    agenteId: uuid('agente_id')
+      .notNull()
+      .references(() => agentes.id, { onDelete: 'cascade' }),
+    systemPrompt: text('system_prompt').notNull(),
+    modelo: text('modelo').notNull(),
+    temperatura: numeric('temperatura', { precision: 3, scale: 2 }).notNull(),
+    maxTokens: integer('max_tokens').notNull(),
+    bienvenida: text('bienvenida'),
+    /** auth.users.id, nullable para versiones generadas por seed. */
+    editadoPor: uuid('editado_por'),
+    comentario: text('comentario'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxAgenteCreated: index('idx_agentes_versiones_agente').on(
+      t.agenteId,
+      t.createdAt.desc(),
+    ),
+  }),
+);
+
+// ============================================
+// TABLA: agente_sesiones
+// ============================================
+export const agenteSesiones = pgTable(
+  'agente_sesiones',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    agenteId: uuid('agente_id')
+      .notNull()
+      .references(() => agentes.id, { onDelete: 'cascade' }),
+    sessionId: text('session_id').notNull(),
+    surface: text('surface').notNull().default('landing'),
+    visitorEmail: text('visitor_email'),
+    visitorNombre: text('visitor_nombre'),
+    metadata: jsonb('metadata').notNull().default(sql`'{}'::jsonb`),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uqAgenteSession: unique('agente_sesiones_agente_session_unique').on(
+      t.agenteId,
+      t.sessionId,
+    ),
+    idxAgenteCreated: index('idx_agente_sesiones_agente_created').on(
+      t.agenteId,
+      t.createdAt.desc(),
+    ),
+    idxSession: index('idx_agente_sesiones_session').on(t.sessionId),
+    chkSurface: check(
+      'agente_sesiones_surface_check',
+      sql`${t.surface} in ('landing','marketplace','admin_test')`,
+    ),
+  }),
+);
+
+// ============================================
+// TABLA: agente_mensajes
+// ============================================
+export const agenteMensajes = pgTable(
+  'agente_mensajes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    sesionId: uuid('sesion_id')
+      .notNull()
+      .references(() => agenteSesiones.id, { onDelete: 'cascade' }),
+    direccion: text('direccion').notNull(),
+    contenido: text('contenido').notNull(),
+    metadata: jsonb('metadata'),
+    llmModelo: text('llm_modelo'),
+    llmTokensIn: integer('llm_tokens_in'),
+    llmTokensOut: integer('llm_tokens_out'),
+    llmCosteEur: numeric('llm_coste_eur', { precision: 10, scale: 6 }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxSesionCreated: index('idx_agente_mensajes_sesion_created').on(
+      t.sesionId,
+      t.createdAt,
+    ),
+    chkDireccion: check(
+      'agente_mensajes_direccion_check',
+      sql`${t.direccion} in ('in','out')`,
+    ),
+  }),
+);
+
+// ============================================
+// TABLA: agente_tools_catalogo (catálogo global de tools)
+// ============================================
+export const agenteToolsCatalogo = pgTable(
+  'agente_tools_catalogo',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    nombre: text('nombre').notNull().unique(),
+    categoria: text('categoria').notNull(),
+    descripcion: text('descripcion').notNull(),
+    schemaJson: jsonb('schema_json').notNull(),
+    requiereCredenciales: boolean('requiere_credenciales')
+      .notNull()
+      .default(false),
+    activo: boolean('activo').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxActivo: index('idx_agente_tools_catalogo_activo')
+      .on(t.activo)
+      .where(sql`${t.activo} = true`),
+    chkCategoria: check(
+      'agente_tools_catalogo_categoria_check',
+      sql`${t.categoria} in ('lead','crm','email','mensajeria','automatizacion')`,
+    ),
+  }),
+);
+
+// ============================================
+// TABLA: agente_tools_asignaciones
+// ============================================
+export const agenteToolsAsignaciones = pgTable(
+  'agente_tools_asignaciones',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    agenteId: uuid('agente_id')
+      .notNull()
+      .references(() => agentes.id, { onDelete: 'cascade' }),
+    toolNombre: text('tool_nombre')
+      .notNull()
+      .references(() => agenteToolsCatalogo.nombre, {
+        onUpdate: 'cascade',
+        onDelete: 'restrict',
+      }),
+    activo: boolean('activo').notNull().default(true),
+    configJson: jsonb('config_json').notNull().default(sql`'{}'::jsonb`),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uqAgenteTool: unique('agente_tools_asignaciones_agente_tool_unique').on(
+      t.agenteId,
+      t.toolNombre,
+    ),
+    idxAgenteActivo: index('idx_agente_tools_asignaciones_agente')
+      .on(t.agenteId)
+      .where(sql`${t.activo} = true`),
+  }),
+);
+
+// ============================================
 // TIPOS INFERIDOS
 // ============================================
 export type Salon = typeof salones.$inferSelect;
@@ -844,3 +1079,24 @@ export type NewRateLimit = typeof rateLimits.$inferInsert;
 
 export type AdminUser = typeof adminUsers.$inferSelect;
 export type NewAdminUser = typeof adminUsers.$inferInsert;
+
+export type Agente = typeof agentes.$inferSelect;
+export type NewAgente = typeof agentes.$inferInsert;
+
+export type AgenteVersion = typeof agentesVersiones.$inferSelect;
+export type NewAgenteVersion = typeof agentesVersiones.$inferInsert;
+
+export type AgenteSesion = typeof agenteSesiones.$inferSelect;
+export type NewAgenteSesion = typeof agenteSesiones.$inferInsert;
+
+export type AgenteMensaje = typeof agenteMensajes.$inferSelect;
+export type NewAgenteMensaje = typeof agenteMensajes.$inferInsert;
+
+export type AgenteToolCatalogo = typeof agenteToolsCatalogo.$inferSelect;
+export type NewAgenteToolCatalogo = typeof agenteToolsCatalogo.$inferInsert;
+
+export type AgenteToolAsignacion = typeof agenteToolsAsignaciones.$inferSelect;
+export type NewAgenteToolAsignacion = typeof agenteToolsAsignaciones.$inferInsert;
+
+export type SalonRatingCache = typeof salonesRatingCache.$inferSelect;
+export type NewSalonRatingCache = typeof salonesRatingCache.$inferInsert;

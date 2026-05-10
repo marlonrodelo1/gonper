@@ -11,19 +11,27 @@ import { Pricing } from "./pricing";
 import { FAQ } from "./faq";
 import { FinalCTA } from "./final-cta";
 import { Footer } from "./footer";
+import { RoyceChatWidget } from "./royce-chat-widget";
+
+type Props = {
+  /** Mensaje de bienvenida de Royce, server-fetched desde `agentes.bienvenida`. */
+  royceBienvenida: string;
+};
 
 /**
  * Landing pública de Gestori.
  *
  * Este wrapper es un Client Component porque tiene que llamar `useReveal()`
  * para que IntersectionObserver active las animaciones de cada `.reveal`.
- * Cada sección decide internamente si necesita estado/efectos: las que sí
- * (Hero, ChatDemo, ComoFunciona, Juanita, FAQ, TopNav) declaran su propio
- * `"use client"`. Strip, Comparativa, Pricing, FinalCta y Footer son server.
+ * Cada sección decide internamente si necesita estado/efectos.
  *
  * El TopNav se renderiza dentro de `<Hero />` (igual que en el prototipo).
+ *
+ * Royce vive como widget flotante en la esquina inferior derecha (igual
+ * que el chat-widget de los salones). El mockup `<ChatDemo />` dentro de
+ * `<Juanita />` se mantiene — es marketing visual, no el chat real.
  */
-export function Landing() {
+export function Landing({ royceBienvenida }: Props) {
   useReveal();
   return (
     <>
@@ -37,6 +45,7 @@ export function Landing() {
       <FAQ />
       <FinalCTA />
       <Footer />
+      <RoyceChatWidget bienvenida={royceBienvenida} surface="landing" />
     </>
   );
 }

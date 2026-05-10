@@ -3,7 +3,14 @@ import Image from 'next/image';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 import { Icon } from '@/app/panel/_components/icons';
 
-import { eliminarAssetSalon, subirAssetSalon } from './actions';
+import { AddressAutocomplete } from '@/components/panel/address-autocomplete';
+
+import {
+  actualizarDatosMarketplace,
+  eliminarAssetSalon,
+  subirAssetSalon,
+  toggleMarketplaceVisible,
+} from './actions';
 
 type SalonRow = {
   id: string;
@@ -13,6 +20,19 @@ type SalonRow = {
   logoUrl?: string | null;
   banner_url?: string | null;
   bannerUrl?: string | null;
+  marketplace_visible?: boolean | null;
+  marketplaceVisible?: boolean | null;
+  ciudad?: string | null;
+  provincia?: string | null;
+  descripcion_corta?: string | null;
+  descripcionCorta?: string | null;
+  direccion?: string | null;
+  direccion_formateada?: string | null;
+  direccionFormateada?: string | null;
+  lat?: string | number | null;
+  lng?: string | number | null;
+  osm_place_id?: string | null;
+  osmPlaceId?: string | null;
 };
 
 const labelClass =
@@ -41,6 +61,21 @@ export default async function ConfigWebPage({
 
   const logoUrl = salon.logo_url ?? salon.logoUrl ?? null;
   const bannerUrl = salon.banner_url ?? salon.bannerUrl ?? null;
+  const marketplaceVisible =
+    salon.marketplace_visible ?? salon.marketplaceVisible ?? true;
+  const ciudad = salon.ciudad ?? '';
+  const provincia = salon.provincia ?? '';
+  const descripcionCorta =
+    salon.descripcion_corta ?? salon.descripcionCorta ?? '';
+  const direccion = salon.direccion ?? '';
+  const direccionFormateada =
+    salon.direccion_formateada ?? salon.direccionFormateada ?? '';
+  const latStr =
+    salon.lat !== null && salon.lat !== undefined ? String(salon.lat) : null;
+  const lngStr =
+    salon.lng !== null && salon.lng !== undefined ? String(salon.lng) : null;
+  const osmPlaceId = salon.osm_place_id ?? salon.osmPlaceId ?? '';
+  const tieneCoordenadas = !!latStr && !!lngStr;
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -279,6 +314,134 @@ export default async function ConfigWebPage({
               className="gloss-btn tight rounded-full px-5 py-2.5 text-[13px] font-medium"
             >
               {bannerUrl ? 'Reemplazar' : 'Subir banner'}
+            </button>
+          </div>
+        </form>
+      </section>
+
+      {/* ====== Marketplace público ====== */}
+      <section className="card flex flex-col gap-5 p-5 md:p-7">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
+              Paso 3
+            </span>
+            <h3 className="tight mt-0.5 text-[17px] font-medium text-ink">
+              Marketplace público de Gestori
+            </h3>
+            <p className="mt-0.5 text-[12.5px] text-stone">
+              Listamos tu salón en{' '}
+              <span className="font-mono text-ink">gestori.es/marketplace</span>{' '}
+              para que clientes nuevos te descubran. Tu web pública{' '}
+              <span className="font-mono text-ink">/{salon.slug}</span> sigue
+              funcionando aunque desactives esto.
+            </p>
+          </div>
+          {marketplaceVisible ? (
+            <span
+              className="pill"
+              style={{ background: 'rgba(139,157,122,0.15)', color: '#5A6B4D' }}
+            >
+              <span className="pill-dot" style={{ background: '#8B9D7A' }} />
+              Visible
+            </span>
+          ) : (
+            <span
+              className="pill"
+              style={{ background: 'rgba(107,99,86,0.10)', color: '#6B6356' }}
+            >
+              <span className="pill-dot" style={{ background: '#8A8174' }} />
+              Oculto
+            </span>
+          )}
+        </header>
+
+        <form action={toggleMarketplaceVisible} className="flex justify-end">
+          <input
+            type="hidden"
+            name="visible"
+            value={marketplaceVisible ? 'false' : 'true'}
+          />
+          <button
+            type="submit"
+            className="tight rounded-full border border-line bg-paper px-5 py-2.5 text-[13px] font-medium text-ink hover:bg-cream"
+          >
+            {marketplaceVisible ? 'Ocultar del marketplace' : 'Mostrar en el marketplace'}
+          </button>
+        </form>
+
+        <form action={actualizarDatosMarketplace} className="flex flex-col gap-4">
+          <AddressAutocomplete
+            label="Dirección del salón"
+            defaultDireccion={direccion}
+            defaultDireccionFormateada={direccionFormateada}
+            defaultLat={latStr}
+            defaultLng={lngStr}
+            defaultCiudad={ciudad}
+            defaultProvincia={provincia}
+            defaultOsmPlaceId={osmPlaceId}
+          />
+
+          {/* Estado de geocoding (visual, no editable) */}
+          <div className="flex flex-wrap items-center gap-2">
+            {tieneCoordenadas ? (
+              <span
+                className="pill"
+                style={{
+                  background: 'rgba(139,157,122,0.15)',
+                  color: '#5A6B4D',
+                }}
+              >
+                <span className="pill-dot" style={{ background: '#8B9D7A' }} />
+                Ubicación exacta guardada
+              </span>
+            ) : (
+              <span
+                className="pill"
+                style={{
+                  background: 'rgba(197,142,44,0.15)',
+                  color: '#7A5A1B',
+                }}
+              >
+                <span className="pill-dot" style={{ background: '#C58E2C' }} />
+                Sin ubicación exacta — elige una sugerencia para guardarla
+              </span>
+            )}
+            {ciudad && (
+              <span
+                className="pill"
+                style={{
+                  background: 'rgba(107,99,86,0.10)',
+                  color: '#6B6356',
+                }}
+              >
+                {ciudad}
+                {provincia ? ` · ${provincia}` : ''}
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="descripcion_corta" className={labelClass}>
+              Descripción corta (máx. 160 caracteres)
+            </label>
+            <textarea
+              id="descripcion_corta"
+              name="descripcion_corta"
+              defaultValue={descripcionCorta}
+              maxLength={160}
+              rows={2}
+              placeholder="Una línea que enganche: tu especialidad, qué te diferencia."
+              className="rounded-2xl border border-line bg-paper px-4 py-3 text-[13.5px] text-ink placeholder:text-stone/55 focus:outline-none focus:border-line-2 resize-none"
+            />
+          </div>
+
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="submit"
+              className="gloss-btn tight rounded-full px-5 py-2.5 text-[13px] font-medium"
+            >
+              Guardar datos del marketplace
             </button>
           </div>
         </form>

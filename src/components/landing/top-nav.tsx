@@ -18,6 +18,7 @@ export function TopNav() {
 
   const links = [
     { label: "Cómo funciona", href: "#como" },
+    { label: "Marketplace", href: "/marketplace" },
     { label: "Juanita", href: "#juanita" },
     { label: "Planes", href: "#planes" },
     { label: "FAQ", href: "#faq" },
