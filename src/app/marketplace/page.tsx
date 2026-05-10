@@ -15,9 +15,8 @@ import {
 } from '@/lib/marketplace/query';
 import { MarketplaceHero } from '@/components/marketplace/hero';
 import { MarketplaceSidebar } from '@/components/marketplace/sidebar';
-import { SalonCard } from '@/components/marketplace/salon-card';
+import { MarketplaceGrid } from '@/components/marketplace/grid';
 import { ActiveFilters } from '@/components/marketplace/active-filters';
-import { MarketplaceEmptyState } from '@/components/marketplace/empty-state';
 import { MarketplaceShell } from '@/components/marketplace/shell';
 import { MarketplaceReveal } from '@/components/marketplace/reveal';
 import { MarketplaceFooter } from '@/components/marketplace/footer';
@@ -153,21 +152,10 @@ export default async function MarketplacePage({
               />
             </div>
 
-            {salones.length === 0 ? (
-              <MarketplaceEmptyState />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {salones.map((s, i) => (
-                  <div
-                    key={s.slug}
-                    className="reveal"
-                    data-delay={Math.min(i * 40, 320)}
-                  >
-                    <SalonCard s={s} />
-                  </div>
-                ))}
-              </div>
-            )}
+            <MarketplaceGrid
+              salones={salones}
+              hasExplicitFilters={hasFilters}
+            />
 
             {salones.length > 0 && (
               <div className="reveal mt-12 mb-4 px-6 py-7 rounded-3xl bg-paper border border-line text-center">

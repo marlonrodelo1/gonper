@@ -3,7 +3,11 @@ import Link from 'next/link';
 import { Icon } from './icons';
 import { categoriaBy, type SalonCard as SalonCardData } from '@/lib/marketplace/categorias';
 
-type Props = { s: SalonCardData };
+type Props = {
+  s: SalonCardData;
+  /** Distancia en km del usuario al salón (si hay geolocalización). */
+  distanciaKm?: number | null;
+};
 
 /** Oscurece/clarea un hex en una cantidad. Para fondos del banner placeholder. */
 function shade(hex: string, amt: number): string {
@@ -18,27 +22,32 @@ function shade(hex: string, amt: number): string {
   return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
 }
 
-export function SalonCard({ s }: Props) {
+function formatDistancia(km: number): string {
+  if (km < 1) return `${Math.round(km * 1000)} m`;
+  if (km < 10) return `${km.toFixed(1)} km`;
+  return `${Math.round(km)} km`;
+}
+
+export function SalonCard({ s, distanciaKm }: Props) {
   const c = categoriaBy(s.tipoNegocio);
   const initial = s.nombre.charAt(0).toUpperCase();
   const ratingText =
-    s.ratingAvg !== null && s.totalResenas > 0
-      ? s.ratingAvg.toFixed(1)
-      : '—';
+    s.ratingAvg !== null && s.totalResenas > 0 ? s.ratingAvg.toFixed(1) : null;
 
   return (
     <Link
       href={`/s/${s.slug}`}
-      className="salon-card group block bg-paper border border-line rounded-[24px] overflow-hidden focus:outline-none focus:ring-2 focus:ring-ink/20"
+      className="salon-card group relative block overflow-hidden rounded-[22px] focus:outline-none focus:ring-2 focus:ring-ink/20"
+      style={{ aspectRatio: '4/5' }}
     >
-      {/* Banner */}
-      <div className="relative" style={{ aspectRatio: '5/3' }}>
+      {/* Banner ocupa toda la card */}
+      <div className="absolute inset-0">
         {s.bannerUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={s.bannerUrl}
             alt={s.nombre}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
             loading="lazy"
           />
         ) : (
@@ -48,12 +57,11 @@ export function SalonCard({ s }: Props) {
               background: `linear-gradient(135deg, ${c.soft} 0%, ${c.soft} 60%, ${shade(c.soft, -6)} 100%)`,
             }}
           >
-            <div className="absolute inset-0 banner-pattern" />
             <div className="absolute inset-0 grid place-items-center">
               <div
                 className="font-serif-it select-none"
                 style={{
-                  fontSize: 'clamp(110px, 18vw, 200px)',
+                  fontSize: 'clamp(110px, 22vw, 220px)',
                   color: c.deep,
                   opacity: 0.18,
                   lineHeight: 1,
@@ -64,87 +72,117 @@ export function SalonCard({ s }: Props) {
             </div>
           </div>
         )}
-        {/* Categoría chip top-right */}
-        <div className="absolute top-3 right-3">
+      </div>
+
+      {/* Gradient legibilidad — oscurece la mitad inferior */}
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'linear-gradient(to bottom, rgba(0,0,0,0) 35%, rgba(0,0,0,0.35) 65%, rgba(0,0,0,0.78) 100%)',
+        }}
+      />
+
+      {/* Top-left: logo glassmorphism */}
+      <div
+        className="absolute left-3 top-3 h-10 w-10 overflow-hidden rounded-full grid place-items-center"
+        style={{
+          background: 'rgba(255,255,255,0.28)',
+          backdropFilter: 'saturate(160%) blur(10px)',
+          WebkitBackdropFilter: 'saturate(160%) blur(10px)',
+          border: '1px solid rgba(255,255,255,0.45)',
+          boxShadow: '0 6px 16px -6px rgba(0,0,0,0.25)',
+        }}
+      >
+        {s.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={s.logoUrl}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <span
+            className="font-serif-it text-[18px]"
+            style={{ color: c.deep }}
+          >
+            {initial}
+          </span>
+        )}
+      </div>
+
+      {/* Top-right: chips glassmorphism (categoría + distancia opcional) */}
+      <div className="absolute right-3 top-3 flex flex-col items-end gap-1.5">
+        <span
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] tight font-medium"
+          style={{
+            background: 'rgba(255,255,255,0.32)',
+            backdropFilter: 'saturate(160%) blur(10px)',
+            WebkitBackdropFilter: 'saturate(160%) blur(10px)',
+            border: '1px solid rgba(255,255,255,0.5)',
+            color: '#1A1815',
+          }}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full"
+            style={{ background: c.dot }}
+          />
+          {c.label}
+        </span>
+        {distanciaKm !== null && distanciaKm !== undefined && (
           <span
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] tight font-medium"
             style={{
-              background: 'rgba(251,248,242,0.92)',
-              color: c.deep,
-              backdropFilter: 'blur(6px)',
+              background: 'rgba(0,0,0,0.42)',
+              backdropFilter: 'saturate(160%) blur(10px)',
+              WebkitBackdropFilter: 'saturate(160%) blur(10px)',
+              border: '1px solid rgba(255,255,255,0.18)',
+              color: '#FBF8F2',
             }}
           >
-            <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: c.dot }}
-            />
-            {c.label}
+            <Icon.Pin width="11" height="11" />
+            {formatDistancia(distanciaKm)}
           </span>
-        </div>
+        )}
       </div>
 
-      {/* Content */}
-      <div className="px-5 pt-3 pb-5 relative">
-        {/* Logo solapando */}
-        <div
-          className="absolute -top-7 left-5 w-14 h-14 rounded-full overflow-hidden border-[3px] border-paper bg-cream-2 shrink-0 grid place-items-center"
-          style={{ boxShadow: '0 8px 16px -8px rgba(26,24,21,0.18)' }}
+      {/* Bottom: nombre + ciudad + rating + CTA, todo sobre el gradient */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 text-paper">
+        <h3
+          className="font-playfair leading-tight"
+          style={{
+            fontSize: '20px',
+            letterSpacing: '-0.01em',
+            textShadow: '0 1px 6px rgba(0,0,0,0.45)',
+          }}
         >
-          {s.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={s.logoUrl}
-              alt=""
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div
-              className="w-full h-full grid place-items-center font-serif-it text-[24px]"
-              style={{ background: c.soft, color: c.deep }}
-            >
-              {initial}
-            </div>
-          )}
-        </div>
+          {s.nombre}
+        </h3>
+        {s.ciudad && (
+          <div className="mt-0.5 flex items-center gap-1 text-[12px] text-paper/85">
+            <Icon.Pin width="11" height="11" />
+            <span className="truncate">{s.ciudad}</span>
+          </div>
+        )}
 
-        <div className="pt-7">
-          <h3
-            className="font-playfair text-ink leading-tight"
-            style={{ fontSize: '21px', letterSpacing: '-0.01em' }}
-          >
-            {s.nombre}
-          </h3>
-          {s.ciudad && (
-            <div className="mt-1 flex items-center gap-1.5 text-[12.5px] text-stone">
-              <Icon.Pin width="11" height="11" className="text-stone/70" />
-              <span>{s.ciudad}</span>
-            </div>
-          )}
-          {s.descripcionCorta && (
-            <p
-              className="mt-3 text-[13.5px] text-stone leading-relaxed line-clamp-2"
-              style={{ textWrap: 'pretty' }}
-            >
-              {s.descripcionCorta}
-            </p>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="mt-4 pt-4 border-t border-line/80 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 text-[13px] tight">
-            <Icon.Star
-              width="13"
-              height="13"
-              style={{ color: 'var(--sage-deep)' }}
-            />
-            <span className="text-ink font-medium">{ratingText}</span>
-            {s.totalResenas > 0 && (
-              <span className="text-stone/70">({s.totalResenas})</span>
+        <div className="mt-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1 text-[12.5px] tight">
+            {ratingText ? (
+              <>
+                <Icon.Star
+                  width="12"
+                  height="12"
+                  style={{ color: '#F2C24A' }}
+                />
+                <span className="font-medium">{ratingText}</span>
+                <span className="text-paper/65">({s.totalResenas})</span>
+              </>
+            ) : (
+              <span className="text-paper/55 text-[11.5px]">Sin reseñas aún</span>
             )}
           </div>
-          <span className="card-cta inline-flex items-center gap-1.5 px-4 py-2 rounded-full terra-btn text-[12.5px] font-medium tight">
-            Ver salón <Icon.Arrow width="12" height="12" />
+          <span className="card-cta inline-flex items-center gap-1 px-3 py-1.5 rounded-full terra-btn text-[11.5px] font-medium tight">
+            Ver salón <Icon.Arrow width="11" height="11" />
           </span>
         </div>
       </div>

@@ -51,4 +51,7 @@ export type SalonCard = {
   bannerUrl: string | null;
   ratingAvg: number | null;
   totalResenas: number;
+  /** Coordenadas (OpenStreetMap) — null si el dueño no las ha guardado. */
+  lat: number | null;
+  lng: number | null;
 };

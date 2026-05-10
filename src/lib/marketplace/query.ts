@@ -61,6 +61,8 @@ export async function listMarketplaceSalones(
       descripcionCorta: salones.descripcionCorta,
       logoUrl: salones.logoUrl,
       bannerUrl: salones.bannerUrl,
+      lat: salones.lat,
+      lng: salones.lng,
       ratingAvg: salonesRatingCache.ratingAvg,
       totalResenas: salonesRatingCache.totalResenas,
     })
@@ -78,6 +80,8 @@ export async function listMarketplaceSalones(
     descripcionCorta: r.descripcionCorta,
     logoUrl: r.logoUrl,
     bannerUrl: r.bannerUrl,
+    lat: r.lat !== null ? Number(r.lat) : null,
+    lng: r.lng !== null ? Number(r.lng) : null,
     ratingAvg: r.ratingAvg !== null ? Number(r.ratingAvg) : null,
     totalResenas: r.totalResenas ?? 0,
   }));
