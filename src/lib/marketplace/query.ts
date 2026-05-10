@@ -21,10 +21,19 @@ export type MarketplaceFilters = {
   limit?: number;
 };
 
+/**
+ * Filtro base de salones que pueden aparecer en el marketplace público.
+ *
+ * REQUERIMOS lat/lng geocodificados con OpenStreetMap: si el dueño no ha
+ * configurado la dirección con autocompletado, su salón NO aparece en el
+ * listado público hasta que lo haga. Forzamos buena higiene de datos.
+ */
 const MARKETPLACE_VISIBLE = and(
   eq(salones.activo, true),
   eq(salones.marketplaceVisible, true),
   ne(salones.plan, 'cancelado'),
+  sql`${salones.lat} is not null`,
+  sql`${salones.lng} is not null`,
 );
 
 /**

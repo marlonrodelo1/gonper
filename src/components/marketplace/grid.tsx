@@ -125,7 +125,7 @@ export function MarketplaceGrid({
       {filtered.length === 0 ? (
         <MarketplaceEmptyState />
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {filtered.map(({ s, dist }, i) => (
             <div
               key={s.slug}

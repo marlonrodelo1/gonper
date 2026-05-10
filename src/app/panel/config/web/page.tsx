@@ -324,13 +324,21 @@ export default async function ConfigWebPage({
               funcionando aunque desactives esto.
             </p>
           </div>
-          {marketplaceVisible ? (
+          {marketplaceVisible && tieneCoordenadas ? (
             <span
               className="pill"
               style={{ background: 'rgba(139,157,122,0.15)', color: '#5A6B4D' }}
             >
               <span className="pill-dot" style={{ background: '#8B9D7A' }} />
               Visible
+            </span>
+          ) : marketplaceVisible && !tieneCoordenadas ? (
+            <span
+              className="pill"
+              style={{ background: 'rgba(197,142,44,0.18)', color: '#7A5A1B' }}
+            >
+              <span className="pill-dot" style={{ background: '#C58E2C' }} />
+              Pendiente · falta ubicación
             </span>
           ) : (
             <span
@@ -342,6 +350,28 @@ export default async function ConfigWebPage({
             </span>
           )}
         </header>
+
+        {marketplaceVisible && !tieneCoordenadas ? (
+          <div
+            className="rounded-2xl border px-4 py-3 text-[13px]"
+            style={{
+              borderColor: 'rgba(197,142,44,0.45)',
+              background: 'rgba(197,142,44,0.10)',
+              color: '#7A5A1B',
+            }}
+          >
+            <strong>Tu salón aún NO aparece en el marketplace.</strong> Para que
+            los clientes te encuentren, edita la dirección con el autocompletado
+            de OpenStreetMap en{' '}
+            <a
+              href="/panel/config"
+              className="underline underline-offset-4 decoration-[#7A5A1B]/40 hover:decoration-[#7A5A1B]"
+            >
+              Datos del salón
+            </a>{' '}
+            y elige una sugerencia. Es obligatorio para listar tu negocio.
+          </div>
+        ) : null}
 
         <form action={toggleMarketplaceVisible} className="flex justify-end">
           <input
