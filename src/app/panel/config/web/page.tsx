@@ -3,8 +3,6 @@ import Image from 'next/image';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 import { Icon } from '@/app/panel/_components/icons';
 
-import { AddressAutocomplete } from '@/components/panel/address-autocomplete';
-
 import {
   actualizarDatosMarketplace,
   eliminarAssetSalon,
@@ -26,13 +24,8 @@ type SalonRow = {
   provincia?: string | null;
   descripcion_corta?: string | null;
   descripcionCorta?: string | null;
-  direccion?: string | null;
-  direccion_formateada?: string | null;
-  direccionFormateada?: string | null;
   lat?: string | number | null;
   lng?: string | number | null;
-  osm_place_id?: string | null;
-  osmPlaceId?: string | null;
 };
 
 const labelClass =
@@ -67,15 +60,9 @@ export default async function ConfigWebPage({
   const provincia = salon.provincia ?? '';
   const descripcionCorta =
     salon.descripcion_corta ?? salon.descripcionCorta ?? '';
-  const direccion = salon.direccion ?? '';
-  const direccionFormateada =
-    salon.direccion_formateada ?? salon.direccionFormateada ?? '';
-  const latStr =
-    salon.lat !== null && salon.lat !== undefined ? String(salon.lat) : null;
-  const lngStr =
-    salon.lng !== null && salon.lng !== undefined ? String(salon.lng) : null;
-  const osmPlaceId = salon.osm_place_id ?? salon.osmPlaceId ?? '';
-  const tieneCoordenadas = !!latStr && !!lngStr;
+  const tieneCoordenadas =
+    salon.lat !== null && salon.lat !== undefined && salon.lat !== '' &&
+    salon.lng !== null && salon.lng !== undefined && salon.lng !== '';
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -370,57 +357,52 @@ export default async function ConfigWebPage({
           </button>
         </form>
 
+        {/* Indicador del estado de la ubicación, que se edita en Datos del salón */}
+        <div className="flex flex-wrap items-center gap-2">
+          {tieneCoordenadas ? (
+            <span
+              className="pill"
+              style={{
+                background: 'rgba(139,157,122,0.15)',
+                color: '#5A6B4D',
+              }}
+            >
+              <span className="pill-dot" style={{ background: '#8B9D7A' }} />
+              Ubicación exacta guardada
+            </span>
+          ) : (
+            <span
+              className="pill"
+              style={{
+                background: 'rgba(197,142,44,0.15)',
+                color: '#7A5A1B',
+              }}
+            >
+              <span className="pill-dot" style={{ background: '#C58E2C' }} />
+              Sin ubicación exacta
+            </span>
+          )}
+          {ciudad && (
+            <span
+              className="pill"
+              style={{
+                background: 'rgba(107,99,86,0.10)',
+                color: '#6B6356',
+              }}
+            >
+              {ciudad}
+              {provincia ? ` · ${provincia}` : ''}
+            </span>
+          )}
+          <a
+            href="/panel/config"
+            className="text-[12px] text-terracotta hover:text-terracotta-2 underline underline-offset-4 decoration-terracotta/40"
+          >
+            Editar dirección en Datos del salón →
+          </a>
+        </div>
+
         <form action={actualizarDatosMarketplace} className="flex flex-col gap-4">
-          <AddressAutocomplete
-            label="Dirección del salón"
-            defaultDireccion={direccion}
-            defaultDireccionFormateada={direccionFormateada}
-            defaultLat={latStr}
-            defaultLng={lngStr}
-            defaultCiudad={ciudad}
-            defaultProvincia={provincia}
-            defaultOsmPlaceId={osmPlaceId}
-          />
-
-          {/* Estado de geocoding (visual, no editable) */}
-          <div className="flex flex-wrap items-center gap-2">
-            {tieneCoordenadas ? (
-              <span
-                className="pill"
-                style={{
-                  background: 'rgba(139,157,122,0.15)',
-                  color: '#5A6B4D',
-                }}
-              >
-                <span className="pill-dot" style={{ background: '#8B9D7A' }} />
-                Ubicación exacta guardada
-              </span>
-            ) : (
-              <span
-                className="pill"
-                style={{
-                  background: 'rgba(197,142,44,0.15)',
-                  color: '#7A5A1B',
-                }}
-              >
-                <span className="pill-dot" style={{ background: '#C58E2C' }} />
-                Sin ubicación exacta — elige una sugerencia para guardarla
-              </span>
-            )}
-            {ciudad && (
-              <span
-                className="pill"
-                style={{
-                  background: 'rgba(107,99,86,0.10)',
-                  color: '#6B6356',
-                }}
-              >
-                {ciudad}
-                {provincia ? ` · ${provincia}` : ''}
-              </span>
-            )}
-          </div>
-
           <div className="flex flex-col gap-1.5">
             <label htmlFor="descripcion_corta" className={labelClass}>
               Descripción corta (máx. 160 caracteres)
@@ -441,7 +423,7 @@ export default async function ConfigWebPage({
               type="submit"
               className="gloss-btn tight rounded-full px-5 py-2.5 text-[13px] font-medium"
             >
-              Guardar datos del marketplace
+              Guardar descripción
             </button>
           </div>
         </form>

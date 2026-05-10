@@ -154,65 +154,25 @@ export async function toggleMarketplaceVisible(formData: FormData) {
 }
 
 /**
- * Actualiza los datos públicos del salón usados por el marketplace:
- * dirección + geocoding (ciudad/provincia/lat/lng vía OpenStreetMap) y
- * descripción corta. Los campos de geocoding los rellena el componente
- * `<AddressAutocomplete />` cuando el dueño elige una sugerencia.
+ * Actualiza la descripción corta que se muestra en la card del marketplace.
+ * La dirección + geocoding se editan desde /panel/config (Datos del salón)
+ * con `<AddressAutocomplete />` para mantener UN solo punto de verdad.
  */
 export async function actualizarDatosMarketplace(formData: FormData) {
   const salon = await requireSalon();
-  const direccionRaw = String(formData.get('direccion') || '').trim();
-  const direccionFormateadaRaw = String(
-    formData.get('direccion_formateada') || '',
-  ).trim();
-  const ciudadRaw = String(formData.get('ciudad') || '').trim();
-  const provinciaRaw = String(formData.get('provincia') || '').trim();
   const descripcionRaw = String(formData.get('descripcion_corta') || '').trim();
-  const latRaw = String(formData.get('lat') || '').trim();
-  const lngRaw = String(formData.get('lng') || '').trim();
-  const osmPlaceIdRaw = String(formData.get('osm_place_id') || '').trim();
 
   if (descripcionRaw.length > 160) {
     redirectError('La descripción corta no puede pasar de 160 caracteres');
   }
 
-  // Validar que lat/lng son numéricas y están en rango si vienen.
-  let lat: string | null = null;
-  let lng: string | null = null;
-  if (latRaw && lngRaw) {
-    const latNum = Number(latRaw);
-    const lngNum = Number(lngRaw);
-    if (
-      !Number.isFinite(latNum) ||
-      !Number.isFinite(lngNum) ||
-      latNum < -90 ||
-      latNum > 90 ||
-      lngNum < -180 ||
-      lngNum > 180
-    ) {
-      redirectError('Coordenadas inválidas');
-    }
-    lat = latNum.toFixed(7);
-    lng = lngNum.toFixed(7);
-  }
-
   await db
     .update(salones)
-    .set({
-      direccion: direccionRaw || null,
-      direccionFormateada: direccionFormateadaRaw || null,
-      ciudad: ciudadRaw || null,
-      provincia: provinciaRaw || null,
-      descripcionCorta: descripcionRaw || null,
-      lat,
-      lng,
-      osmPlaceId: osmPlaceIdRaw || null,
-    })
+    .set({ descripcionCorta: descripcionRaw || null })
     .where(eq(salones.id, salon.id));
 
   revalidatePath('/panel/config/web');
   revalidatePath('/marketplace');
-  revalidarWebPublica(salon.slug);
   redirect('/panel/config/web?ok=1');
 }
 

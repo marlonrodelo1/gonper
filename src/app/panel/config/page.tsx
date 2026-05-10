@@ -1,18 +1,30 @@
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 import { Icon } from '@/app/panel/_components/icons';
+import { AddressAutocomplete } from '@/components/panel/address-autocomplete';
 import { actualizarDatosSalon } from './actions';
 
 type Salon = {
   id: string;
   nombre: string;
   slug: string;
-  tipoNegocio: string;
+  tipo_negocio?: string;
+  tipoNegocio?: string;
   direccion: string | null;
   telefono: string | null;
   email: string | null;
   timezone: string;
   plan: string;
-  trialUntil: string | Date | null;
+  trial_until?: string | Date | null;
+  trialUntil?: string | Date | null;
+  // Marketplace + geocoding
+  ciudad?: string | null;
+  provincia?: string | null;
+  lat?: string | number | null;
+  lng?: string | number | null;
+  direccion_formateada?: string | null;
+  direccionFormateada?: string | null;
+  osm_place_id?: string | null;
+  osmPlaceId?: string | null;
 } | null;
 
 const TIPOS_NEGOCIO: { value: string; label: string }[] = [
@@ -83,7 +95,22 @@ export default async function ConfigPage({
   }
 
   const planKey = salon.plan in PLAN_LABEL ? salon.plan : 'trial';
-  const trialFormatted = formatTrialUntil(salon.trialUntil);
+  const trialFormatted = formatTrialUntil(
+    salon.trialUntil ?? salon.trial_until ?? null,
+  );
+  const tipoNegocio = salon.tipoNegocio ?? salon.tipo_negocio ?? 'otro';
+
+  const direccion = salon.direccion ?? '';
+  const direccionFormateada =
+    salon.direccionFormateada ?? salon.direccion_formateada ?? '';
+  const ciudad = salon.ciudad ?? '';
+  const provincia = salon.provincia ?? '';
+  const latStr =
+    salon.lat !== null && salon.lat !== undefined ? String(salon.lat) : null;
+  const lngStr =
+    salon.lng !== null && salon.lng !== undefined ? String(salon.lng) : null;
+  const osmPlaceId = salon.osmPlaceId ?? salon.osm_place_id ?? '';
+  const tieneCoordenadas = !!latStr && !!lngStr;
 
   return (
     <div className="flex w-full flex-col gap-5">
@@ -137,7 +164,7 @@ export default async function ConfigPage({
             <select
               id="tipo_negocio"
               name="tipo_negocio"
-              defaultValue={salon.tipoNegocio}
+              defaultValue={tipoNegocio}
               className={selectClass}
             >
               {TIPOS_NEGOCIO.map((t) => (
@@ -148,17 +175,54 @@ export default async function ConfigPage({
             </select>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="direccion" className={labelClass}>
-              Dirección
-            </label>
-            <input
-              id="direccion"
-              name="direccion"
-              defaultValue={salon.direccion ?? ''}
-              placeholder="Calle, número, ciudad"
-              className={inputClass}
+          <div className="flex flex-col gap-2">
+            <AddressAutocomplete
+              label="Dirección"
+              defaultDireccion={direccion}
+              defaultDireccionFormateada={direccionFormateada}
+              defaultLat={latStr}
+              defaultLng={lngStr}
+              defaultCiudad={ciudad}
+              defaultProvincia={provincia}
+              defaultOsmPlaceId={osmPlaceId}
             />
+            <div className="flex flex-wrap items-center gap-2">
+              {tieneCoordenadas ? (
+                <span
+                  className="pill"
+                  style={{
+                    background: 'rgba(139,157,122,0.15)',
+                    color: '#5A6B4D',
+                  }}
+                >
+                  <span className="pill-dot" style={{ background: '#8B9D7A' }} />
+                  Ubicación exacta guardada
+                </span>
+              ) : (
+                <span
+                  className="pill"
+                  style={{
+                    background: 'rgba(197,142,44,0.15)',
+                    color: '#7A5A1B',
+                  }}
+                >
+                  <span className="pill-dot" style={{ background: '#C58E2C' }} />
+                  Sin ubicación exacta — elige una sugerencia
+                </span>
+              )}
+              {ciudad && (
+                <span
+                  className="pill"
+                  style={{
+                    background: 'rgba(107,99,86,0.10)',
+                    color: '#6B6356',
+                  }}
+                >
+                  {ciudad}
+                  {provincia ? ` · ${provincia}` : ''}
+                </span>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">

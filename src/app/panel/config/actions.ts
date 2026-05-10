@@ -48,6 +48,14 @@ export async function actualizarDatosSalon(formData: FormData) {
   const nombre = String(formData.get('nombre') || '').trim();
   const tipoNegocio = String(formData.get('tipo_negocio') || '').trim();
   const direccionRaw = String(formData.get('direccion') || '').trim();
+  const direccionFormateadaRaw = String(
+    formData.get('direccion_formateada') || '',
+  ).trim();
+  const ciudadRaw = String(formData.get('ciudad') || '').trim();
+  const provinciaRaw = String(formData.get('provincia') || '').trim();
+  const latRaw = String(formData.get('lat') || '').trim();
+  const lngRaw = String(formData.get('lng') || '').trim();
+  const osmPlaceIdRaw = String(formData.get('osm_place_id') || '').trim();
   const telefonoRaw = String(formData.get('telefono') || '').trim();
   const emailRaw = String(formData.get('email') || '').trim();
   const timezoneRaw = String(formData.get('timezone') || '').trim();
@@ -57,6 +65,26 @@ export async function actualizarDatosSalon(formData: FormData) {
   }
   if (!TIPOS_NEGOCIO.includes(tipoNegocio as (typeof TIPOS_NEGOCIO)[number])) {
     redirectError('/panel/config', 'Tipo de negocio inválido');
+  }
+
+  // Validar coordenadas si vienen.
+  let lat: string | null = null;
+  let lng: string | null = null;
+  if (latRaw && lngRaw) {
+    const latNum = Number(latRaw);
+    const lngNum = Number(lngRaw);
+    if (
+      !Number.isFinite(latNum) ||
+      !Number.isFinite(lngNum) ||
+      latNum < -90 ||
+      latNum > 90 ||
+      lngNum < -180 ||
+      lngNum > 180
+    ) {
+      redirectError('/panel/config', 'Coordenadas inválidas');
+    }
+    lat = latNum.toFixed(7);
+    lng = lngNum.toFixed(7);
   }
 
   const timezone = TIMEZONES.includes(timezoneRaw as (typeof TIMEZONES)[number])
@@ -70,6 +98,12 @@ export async function actualizarDatosSalon(formData: FormData) {
         nombre,
         tipoNegocio,
         direccion: direccionRaw === '' ? null : direccionRaw,
+        direccionFormateada: direccionFormateadaRaw === '' ? null : direccionFormateadaRaw,
+        ciudad: ciudadRaw === '' ? null : ciudadRaw,
+        provincia: provinciaRaw === '' ? null : provinciaRaw,
+        lat,
+        lng,
+        osmPlaceId: osmPlaceIdRaw === '' ? null : osmPlaceIdRaw,
         telefono: telefonoRaw === '' ? null : telefonoRaw,
         email: emailRaw === '' ? null : emailRaw,
         timezone,
@@ -87,8 +121,10 @@ export async function actualizarDatosSalon(formData: FormData) {
   }
 
   revalidatePath('/panel/config');
+  revalidatePath('/panel/config/web');
   revalidatePath('/panel/config/reservas');
   revalidatePath('/panel', 'layout');
+  revalidatePath('/marketplace');
   revalidarWebPublica(salon.slug);
   redirect('/panel/config?ok=1');
 }
