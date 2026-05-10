@@ -255,6 +255,20 @@
 }
 .accent-btn:hover { filter: brightness(1.05); }
 
+/* ==== Royce hook bubble (mensaje gancho landing) ==== */
+@keyframes royce-hook-in {
+  0% { opacity: 0; transform: translateY(8px) scale(0.96); }
+  60% { opacity: 1; transform: translateY(0) scale(1.02); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.royce-hook {
+  animation: royce-hook-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transform-origin: bottom right;
+}
+@media (prefers-reduced-motion: reduce) {
+  .royce-hook { animation: none !important; }
+}
+
 /* ==== Burbuja flotante del chat (Juanita) ==== */
 .juanita-bubble {
   animation: juanita-float 3.5s ease-in-out infinite;

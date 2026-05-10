@@ -32,7 +32,10 @@ type Props = {
 };
 
 const STORAGE_KEY = 'gestori_royce_session';
+const HOOK_DISMISSED_KEY = 'gestori_royce_hook_dismissed';
 const AGENT_NAME = 'Royce';
+const HOOK_MESSAGE = '¡Hola! ¿Te explico qué hace Gestori?';
+const HOOK_DELAY_MS = 1500;
 
 const SUGERENCIAS_LANDING = [
   '¿Qué es Gestori?',
@@ -62,6 +65,7 @@ export function RoyceChatWidget({
   const [draft, setDraft] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hookVisible, setHookVisible] = useState(false);
   const bodyRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const idCounter = useRef(0);
@@ -81,6 +85,26 @@ export function RoyceChatWidget({
     }
     setSessionId(sid);
   }, []);
+
+  // Mostrar mensaje gancho a los HOOK_DELAY_MS — solo en landing,
+  // solo si el chat está cerrado y el visitante no lo descartó antes
+  // en esta sesión.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (surface !== 'landing') return;
+    if (open) return;
+    if (window.sessionStorage.getItem(HOOK_DISMISSED_KEY) === '1') return;
+    const t = window.setTimeout(() => setHookVisible(true), HOOK_DELAY_MS);
+    return () => window.clearTimeout(t);
+  }, [open, surface]);
+
+  function dismissHook(e?: React.MouseEvent) {
+    e?.stopPropagation();
+    setHookVisible(false);
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(HOOK_DISMISSED_KEY, '1');
+    }
+  }
 
   // Auto-scroll al último mensaje
   useEffect(() => {
@@ -172,31 +196,81 @@ export function RoyceChatWidget({
 
   if (!open) {
     return (
-      <div className="fixed bottom-5 right-5 z-50">
-        <span
-          aria-hidden
-          className="juanita-ping pointer-events-none absolute inset-0 rounded-full"
-          style={{ backgroundColor: 'var(--gestori-accent, #C5562C)' }}
-        />
-        <button
-          type="button"
-          aria-label={`Abrir chat con ${AGENT_NAME}`}
-          onClick={() => setOpen(true)}
-          className="juanita-bubble relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full text-white shadow-2xl transition-transform hover:scale-105 active:scale-95"
-          style={{ backgroundColor: 'var(--gestori-accent, #C5562C)' }}
-        >
-          {avatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={avatarUrl}
-              alt={AGENT_NAME}
-              className="h-full w-full object-cover"
-              draggable={false}
-            />
-          ) : (
-            <span className="text-lg font-semibold">R</span>
-          )}
-        </button>
+      <div className="fixed bottom-5 right-5 z-50 flex items-end gap-3">
+        {/* Mensaje gancho — solo landing, dismissable por sesión */}
+        {hookVisible && (
+          <button
+            type="button"
+            onClick={() => {
+              dismissHook();
+              setOpen(true);
+            }}
+            className="royce-hook group relative max-w-[260px] rounded-2xl rounded-br-sm bg-white px-4 py-3 pr-9 text-left shadow-2xl ring-1 ring-black/5 transition hover:scale-[1.02]"
+            aria-label="Abrir chat con Royce"
+          >
+            <span className="block text-[13px] font-medium leading-snug text-neutral-900">
+              {HOOK_MESSAGE}
+            </span>
+            <span className="mt-1 block text-[11px] text-neutral-500">
+              Pulsa para hablar conmigo
+            </span>
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="Cerrar mensaje"
+              onClick={(e) => dismissHook(e)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  dismissHook();
+                }
+              }}
+              className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full text-neutral-400 transition hover:bg-black/5 hover:text-neutral-700"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-3 w-3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                strokeLinecap="round"
+              >
+                <path d="M6 6l12 12" />
+                <path d="M18 6L6 18" />
+              </svg>
+            </span>
+          </button>
+        )}
+
+        <div className="relative">
+          <span
+            aria-hidden
+            className="juanita-ping pointer-events-none absolute inset-0 rounded-full"
+            style={{ backgroundColor: 'var(--gestori-accent, #C5562C)' }}
+          />
+          <button
+            type="button"
+            aria-label={`Abrir chat con ${AGENT_NAME}`}
+            onClick={() => {
+              dismissHook();
+              setOpen(true);
+            }}
+            className="juanita-bubble relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full text-white shadow-2xl transition-transform hover:scale-105 active:scale-95"
+            style={{ backgroundColor: 'var(--gestori-accent, #C5562C)' }}
+          >
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={avatarUrl}
+                alt={AGENT_NAME}
+                className="h-full w-full object-cover"
+                draggable={false}
+              />
+            ) : (
+              <span className="text-lg font-semibold">R</span>
+            )}
+          </button>
+        </div>
       </div>
     );
   }
