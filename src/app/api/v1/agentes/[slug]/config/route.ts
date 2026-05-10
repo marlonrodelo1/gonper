@@ -42,6 +42,7 @@ export async function GET(
       temperatura: agentes.temperatura,
       maxTokens: agentes.maxTokens,
       bienvenida: agentes.bienvenida,
+      avatarUrl: agentes.avatarUrl,
       activo: agentes.activo,
     })
     .from(agentes)
@@ -86,6 +87,7 @@ export async function GET(
     temperatura: Number(agente.temperatura),
     max_tokens: agente.maxTokens,
     bienvenida: agente.bienvenida,
+    avatar_url: agente.avatarUrl,
     tools,
   });
 

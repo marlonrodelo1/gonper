@@ -14,23 +14,38 @@ export const revalidate = 60;
 const ROYCE_BIENVENIDA_FALLBACK =
   '¡Hola! Soy Royce, el agente de Gestori. Cuéntame, ¿qué tipo de negocio llevas?';
 
-async function getRoyceBienvenida(): Promise<string> {
+async function getRoyceConfig(): Promise<{
+  bienvenida: string;
+  avatarUrl: string | null;
+}> {
   try {
     const [row] = await db
-      .select({ bienvenida: agentes.bienvenida, activo: agentes.activo })
+      .select({
+        bienvenida: agentes.bienvenida,
+        avatarUrl: agentes.avatarUrl,
+        activo: agentes.activo,
+      })
       .from(agentes)
       .where(eq(agentes.slug, 'royce'))
       .limit(1);
-    if (!row || !row.activo || !row.bienvenida) {
-      return ROYCE_BIENVENIDA_FALLBACK;
+    if (!row || !row.activo) {
+      return { bienvenida: ROYCE_BIENVENIDA_FALLBACK, avatarUrl: null };
     }
-    return row.bienvenida;
+    return {
+      bienvenida: row.bienvenida ?? ROYCE_BIENVENIDA_FALLBACK,
+      avatarUrl: row.avatarUrl ?? null,
+    };
   } catch {
-    return ROYCE_BIENVENIDA_FALLBACK;
+    return { bienvenida: ROYCE_BIENVENIDA_FALLBACK, avatarUrl: null };
   }
 }
 
 export default async function Home() {
-  const royceBienvenida = await getRoyceBienvenida();
-  return <Landing royceBienvenida={royceBienvenida} />;
+  const royce = await getRoyceConfig();
+  return (
+    <Landing
+      royceBienvenida={royce.bienvenida}
+      royceAvatarUrl={royce.avatarUrl}
+    />
+  );
 }

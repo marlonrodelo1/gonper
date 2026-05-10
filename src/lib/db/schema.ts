@@ -833,6 +833,7 @@ export const agentes = pgTable(
       .default('0.40'),
     maxTokens: integer('max_tokens').notNull().default(600),
     bienvenida: text('bienvenida'),
+    avatarUrl: text('avatar_url'),
     /** NULL = agente global (Royce). UUID = agente futuro por tenant. */
     salonId: uuid('salon_id').references(() => salones.id, {
       onDelete: 'cascade',

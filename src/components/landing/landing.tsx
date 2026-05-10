@@ -16,6 +16,8 @@ import { RoyceChatWidget } from "./royce-chat-widget";
 type Props = {
   /** Mensaje de bienvenida de Royce, server-fetched desde `agentes.bienvenida`. */
   royceBienvenida: string;
+  /** URL del avatar del agente, o null si no se ha configurado. */
+  royceAvatarUrl: string | null;
 };
 
 /**
@@ -31,7 +33,7 @@ type Props = {
  * que el chat-widget de los salones). El mockup `<ChatDemo />` dentro de
  * `<Juanita />` se mantiene — es marketing visual, no el chat real.
  */
-export function Landing({ royceBienvenida }: Props) {
+export function Landing({ royceBienvenida, royceAvatarUrl }: Props) {
   useReveal();
   return (
     <>
@@ -45,7 +47,11 @@ export function Landing({ royceBienvenida }: Props) {
       <FAQ />
       <FinalCTA />
       <Footer />
-      <RoyceChatWidget bienvenida={royceBienvenida} surface="landing" />
+      <RoyceChatWidget
+        bienvenida={royceBienvenida}
+        avatarUrl={royceAvatarUrl}
+        surface="landing"
+      />
     </>
   );
 }

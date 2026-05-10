@@ -5,16 +5,15 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 /**
  * Widget flotante de Royce para la landing y el marketplace.
  *
- * Reutiliza el patrón de `src/components/salon-publico/chat-widget.tsx`
- * (mismo styling con var(--gestori-accent), misma UX), pero simplificado:
- * Royce solo conversa y puede llamar a la tool `capturar_lead`. No reserva
- * citas, así que no hay UI inline de slots ni de "reserva confirmada".
+ * Reusa el patrón de `salon-publico/chat-widget.tsx` (mismo styling con
+ * var(--gestori-accent), misma UX), pero simplificado: Royce solo
+ * conversa y puede llamar a la tool `capturar_lead`.
  *
- * Props:
- *   - bienvenida: mensaje inicial mostrado al abrir el widget vacío.
- *     Lo provee el server (page.tsx hace fetch de la fila `agentes` de
- *     Royce y se lo pasa). Así, cuando edites el campo `bienvenida`
- *     desde el super-admin, la landing lo refleja en <60s (revalidate).
+ * Diferencias por surface:
+ *   - landing: muestra sugerencias clickables debajo de la bienvenida
+ *     ("¿Qué es Gestori?", "Cuánto cuesta", etc.) para enganchar al
+ *     visitante. Al hacer click se envía como mensaje.
+ *   - marketplace: solo bienvenida + input. Sin sugerencias proactivas.
  */
 
 type Mensaje = {
@@ -26,12 +25,21 @@ type Mensaje = {
 type Props = {
   /** Texto del primer mensaje pre-cargado (de `agentes.bienvenida`). */
   bienvenida: string;
-  /** Surface desde la que el visitante habla — afecta tono del agente. */
+  /** URL del avatar de Royce. Si null/vacío, se renderiza la inicial "R". */
+  avatarUrl?: string | null;
+  /** Surface desde la que el visitante habla. */
   surface?: 'landing' | 'marketplace';
 };
 
 const STORAGE_KEY = 'gestori_royce_session';
 const AGENT_NAME = 'Royce';
+
+const SUGERENCIAS_LANDING = [
+  '¿Qué es Gestori?',
+  '¿Cuánto cuesta?',
+  'Quiero ver cómo funciona',
+  '¿Cómo me ayuda con mi salón?',
+];
 
 function genUUID(): string {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
@@ -44,7 +52,11 @@ function genUUID(): string {
   });
 }
 
-export function RoyceChatWidget({ bienvenida, surface = 'landing' }: Props) {
+export function RoyceChatWidget({
+  bienvenida,
+  avatarUrl,
+  surface = 'landing',
+}: Props) {
   const [open, setOpen] = useState(false);
   const [mensajes, setMensajes] = useState<Mensaje[]>([]);
   const [draft, setDraft] = useState('');
@@ -151,6 +163,13 @@ export function RoyceChatWidget({ bienvenida, surface = 'landing' }: Props) {
     await enviarTexto(texto);
   }
 
+  function elegirSugerencia(texto: string) {
+    void enviarTexto(texto);
+  }
+
+  const showSugerencias =
+    surface === 'landing' && mensajes.length === 0 && !isLoading;
+
   if (!open) {
     return (
       <div className="fixed bottom-5 right-5 z-50">
@@ -166,7 +185,17 @@ export function RoyceChatWidget({ bienvenida, surface = 'landing' }: Props) {
           className="juanita-bubble relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-full text-white shadow-2xl transition-transform hover:scale-105 active:scale-95"
           style={{ backgroundColor: 'var(--gestori-accent, #C5562C)' }}
         >
-          <span className="text-lg font-semibold">R</span>
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt={AGENT_NAME}
+              className="h-full w-full object-cover"
+              draggable={false}
+            />
+          ) : (
+            <span className="text-lg font-semibold">R</span>
+          )}
         </button>
       </div>
     );
@@ -190,13 +219,23 @@ export function RoyceChatWidget({ bienvenida, surface = 'landing' }: Props) {
         }}
       >
         <div
-          className="flex h-9 w-9 items-center justify-center rounded-full font-semibold"
+          className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full font-semibold"
           style={{
             backgroundColor: 'var(--gestori-accent-soft, #F1D9CC)',
             color: 'var(--gestori-accent, #C5562C)',
           }}
         >
-          R
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt={AGENT_NAME}
+              className="h-full w-full object-cover"
+              draggable={false}
+            />
+          ) : (
+            'R'
+          )}
         </div>
         <div className="flex-1 leading-tight">
           <div className="text-sm font-semibold text-neutral-900">
@@ -236,11 +275,29 @@ export function RoyceChatWidget({ bienvenida, surface = 'landing' }: Props) {
         className="flex-1 space-y-2 overflow-y-auto px-3 py-3 text-sm"
         style={{ backgroundColor: '#FBF8F4' }}
       >
-        {/* Bienvenida estática (no se persiste como mensaje) */}
+        {/* Bienvenida estática */}
         {mensajes.length === 0 && !isLoading && (
           <div className="flex justify-start">
             <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-white px-3 py-2 leading-snug text-neutral-800 shadow-sm">
               {bienvenida}
+            </div>
+          </div>
+        )}
+
+        {/* Sugerencias clickables — solo en landing antes del primer mensaje */}
+        {showSugerencias && (
+          <div className="flex justify-start">
+            <div className="flex max-w-[90%] flex-wrap gap-1.5 pt-0.5">
+              {SUGERENCIAS_LANDING.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => elegirSugerencia(s)}
+                  className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-[12px] text-neutral-800 transition hover:border-[color:var(--gestori-accent)] hover:text-[color:var(--gestori-accent)]"
+                >
+                  {s}
+                </button>
+              ))}
             </div>
           </div>
         )}

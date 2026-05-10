@@ -37,17 +37,29 @@ type SearchParams = {
   q?: string;
 };
 
-async function getRoyceBienvenida(): Promise<string> {
+async function getRoyceConfig(): Promise<{
+  bienvenida: string;
+  avatarUrl: string | null;
+}> {
   try {
     const [row] = await db
-      .select({ bienvenida: agentes.bienvenida, activo: agentes.activo })
+      .select({
+        bienvenida: agentes.bienvenida,
+        avatarUrl: agentes.avatarUrl,
+        activo: agentes.activo,
+      })
       .from(agentes)
       .where(eq(agentes.slug, 'royce'))
       .limit(1);
-    if (!row || !row.activo || !row.bienvenida) return ROYCE_BIENVENIDA_FALLBACK;
-    return row.bienvenida;
+    if (!row || !row.activo) {
+      return { bienvenida: ROYCE_BIENVENIDA_FALLBACK, avatarUrl: null };
+    }
+    return {
+      bienvenida: row.bienvenida ?? ROYCE_BIENVENIDA_FALLBACK,
+      avatarUrl: row.avatarUrl ?? null,
+    };
   } catch {
-    return ROYCE_BIENVENIDA_FALLBACK;
+    return { bienvenida: ROYCE_BIENVENIDA_FALLBACK, avatarUrl: null };
   }
 }
 
@@ -90,7 +102,7 @@ export default async function MarketplacePage({
   const ciudad = sp.ciudad ?? '';
   const q = sp.q ?? '';
 
-  const [{ total, categorias, ciudades }, salones, royceBienvenida] =
+  const [{ total, categorias, ciudades }, salones, royce] =
     await Promise.all([
       getMarketplaceFiltros(),
       listMarketplaceSalones({
@@ -98,7 +110,7 @@ export default async function MarketplacePage({
         ciudad: ciudad || undefined,
         q: q || undefined,
       }),
-      getRoyceBienvenida(),
+      getRoyceConfig(),
     ]);
 
   const ciudadesNombres = ciudades.map((c) => c.value);
@@ -189,7 +201,11 @@ export default async function MarketplacePage({
       </section>
 
       <MarketplaceFooter />
-      <RoyceChatWidget bienvenida={royceBienvenida} surface="marketplace" />
+      <RoyceChatWidget
+        bienvenida={royce.bienvenida}
+        avatarUrl={royce.avatarUrl}
+        surface="marketplace"
+      />
     </div>
   );
 }
