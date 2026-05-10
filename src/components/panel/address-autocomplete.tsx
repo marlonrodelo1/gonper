@@ -9,9 +9,13 @@ import { useEffect, useRef, useState } from 'react';
  * `provincia` y `osm_place_id` para que el form padre los envíe al server
  * action.
  *
- * Pensado para `/panel/config/web` cuando el dueño edita los datos del
- * marketplace. Si el dueño no usa el autocomplete, los hidden inputs llevan
- * los valores actuales del salón (de los defaults), así no rompemos el form.
+ * Reglas de coords:
+ *   - Si el dueño edita el texto y se separa de la última sugerencia
+ *     elegida, las coords se LIMPIAN (no queremos guardar lat/lng obsoletas
+ *     apuntando a una dirección anterior).
+ *   - Si la página carga con dirección guardada SIN coords (texto antiguo
+ *     pre-OSM), buscamos sugerencias automáticamente al montar para que el
+ *     dueño las vea sin tener que reescribir.
  */
 
 type Sugerencia = {
@@ -55,15 +59,15 @@ export function AddressAutocomplete({
   const [sugerencias, setSugerencias] = useState<Sugerencia[]>([]);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [seleccion, setSeleccion] = useState<{
-    direccion: string;
-    direccionFormateada: string;
-    lat: string;
-    lng: string;
-    ciudad: string;
-    provincia: string;
-    osmPlaceId: string;
-  }>({
+  /** Texto exacto de la última sugerencia elegida — sirve para detectar
+   *  ediciones manuales que invalidan las coords. */
+  const ultimaElegida = useRef<string | null>(
+    defaultLat && defaultLng ? defaultDireccion : null,
+  );
+  /** Marca para saltarse la próxima búsqueda automática (justo tras elegir). */
+  const skipNextFetch = useRef(false);
+
+  const [seleccion, setSeleccion] = useState({
     direccion: defaultDireccion,
     direccionFormateada: defaultDireccionFormateada,
     lat: defaultLat ?? '',
@@ -75,7 +79,7 @@ export function AddressAutocomplete({
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  // Cerrar dropdown al hacer click fuera
+  // Cerrar dropdown al click fuera
   useEffect(() => {
     function onDocClick(e: MouseEvent) {
       if (!containerRef.current) return;
@@ -85,17 +89,29 @@ export function AddressAutocomplete({
     return () => document.removeEventListener('mousedown', onDocClick);
   }, []);
 
+  // Auto-buscar al montar si hay texto guardado SIN coords (texto antiguo
+  // pre-OSM): así el dueño ve sugerencias sin tener que reescribir.
+  useEffect(() => {
+    if (defaultDireccion.trim().length >= MIN_CHARS && !defaultLat && !defaultLng) {
+      // No marcamos skipNextFetch — queremos que el efecto de [query] dispare
+      // la búsqueda. Como query ya = defaultDireccion al montar, el efecto
+      // siguiente correrá con normalidad.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Debounced fetch a /api/v1/geocode/search
   useEffect(() => {
+    if (skipNextFetch.current) {
+      skipNextFetch.current = false;
+      return;
+    }
     const q = query.trim();
     if (q.length < MIN_CHARS) {
       setSugerencias([]);
       setLoading(false);
       return;
     }
-    // Si la query coincide exactamente con la dirección ya seleccionada,
-    // no buscamos otra vez.
-    if (q === seleccion.direccion && sugerencias.length === 0) return;
 
     setLoading(true);
     const ctrl = new AbortController();
@@ -110,10 +126,9 @@ export function AddressAutocomplete({
           return;
         }
         const data = (await res.json()) as { results?: Sugerencia[] };
-        setSugerencias(Array.isArray(data.results) ? data.results : []);
-        if (Array.isArray(data.results) && data.results.length > 0) {
-          setOpen(true);
-        }
+        const list = Array.isArray(data.results) ? data.results : [];
+        setSugerencias(list);
+        if (list.length > 0) setOpen(true);
       } catch (e) {
         if ((e as Error).name !== 'AbortError') setSugerencias([]);
       } finally {
@@ -125,10 +140,11 @@ export function AddressAutocomplete({
       clearTimeout(t);
       ctrl.abort();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
   function elegir(s: Sugerencia) {
+    skipNextFetch.current = true;
+    ultimaElegida.current = s.direccion_corta;
     setSeleccion({
       direccion: s.direccion_corta,
       direccionFormateada: s.display_name,
@@ -144,11 +160,26 @@ export function AddressAutocomplete({
 
   function onInputChange(value: string) {
     setQuery(value);
-    // Si el usuario edita el texto, dejamos los hidden inputs como están
-    // (con la última selección válida) para que el form siga teniendo
-    // datos coherentes hasta que elija una nueva sugerencia.
-    setSeleccion((prev) => ({ ...prev, direccion: value }));
+    // Si el texto se separa de la última sugerencia elegida, las coords
+    // dejan de ser válidas — las limpiamos para no guardar valores obsoletos.
+    const trimmed = value.trim();
+    if (ultimaElegida.current && trimmed !== ultimaElegida.current) {
+      ultimaElegida.current = null;
+      setSeleccion({
+        direccion: value,
+        direccionFormateada: '',
+        lat: '',
+        lng: '',
+        ciudad: '',
+        provincia: '',
+        osmPlaceId: '',
+      });
+    } else {
+      setSeleccion((prev) => ({ ...prev, direccion: value }));
+    }
   }
+
+  const tieneCoords = !!seleccion.lat && !!seleccion.lng;
 
   return (
     <div className="relative" ref={containerRef}>
@@ -201,9 +232,26 @@ export function AddressAutocomplete({
         </ul>
       )}
 
+      {/* Mensaje contextual debajo del input según estado */}
       <p className="mt-1.5 text-[11.5px] text-stone/70">
-        Buscamos vía OpenStreetMap. Elige una sugerencia para guardar la
-        ubicación exacta.
+        {tieneCoords ? (
+          <>
+            Buscamos vía OpenStreetMap.{' '}
+            <span style={{ color: '#5A6B4D' }}>Ubicación exacta guardada.</span>
+          </>
+        ) : query.trim().length >= MIN_CHARS && sugerencias.length === 0 && !loading ? (
+          <>
+            No hay sugerencias para esto. Prueba con calle + número + ciudad
+            (ej. &ldquo;Carretera General 36, La Victoria&rdquo;).
+          </>
+        ) : query.trim().length >= MIN_CHARS && sugerencias.length > 0 ? (
+          <>Elige una sugerencia para guardar la ubicación exacta.</>
+        ) : (
+          <>
+            Escribe tu dirección. Te sugerimos coincidencias para guardar la
+            ubicación exacta.
+          </>
+        )}
       </p>
 
       {/* Hidden inputs que envía el form padre */}
