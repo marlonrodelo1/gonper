@@ -7,10 +7,14 @@
  */
 
 import 'server-only';
-import { and, asc, eq, ilike, ne, or, sql } from 'drizzle-orm';
+import { and, asc, eq, ilike, inArray, ne, or, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { salones, salonesRatingCache } from '@/lib/db/schema';
+import {
+  galeriaImagenes,
+  salones,
+  salonesRatingCache,
+} from '@/lib/db/schema';
 
 import { CATEGORIAS_MARKETPLACE, type SalonCard, type TipoNegocio } from './categorias';
 
@@ -63,6 +67,7 @@ export async function listMarketplaceSalones(
 
   const rows = await db
     .select({
+      id: salones.id,
       slug: salones.slug,
       nombre: salones.nombre,
       tipoNegocio: salones.tipoNegocio,
@@ -81,19 +86,56 @@ export async function listMarketplaceSalones(
     .orderBy(asc(salones.nombre))
     .limit(filters.limit ?? 60);
 
-  return rows.map((r) => ({
-    slug: r.slug,
-    nombre: r.nombre,
-    tipoNegocio: r.tipoNegocio as TipoNegocio,
-    ciudad: r.ciudad,
-    descripcionCorta: r.descripcionCorta,
-    logoUrl: r.logoUrl,
-    bannerUrl: r.bannerUrl,
-    lat: r.lat !== null ? Number(r.lat) : null,
-    lng: r.lng !== null ? Number(r.lng) : null,
-    ratingAvg: r.ratingAvg !== null ? Number(r.ratingAvg) : null,
-    totalResenas: r.totalResenas ?? 0,
-  }));
+  // Cargar imágenes de galería para todos los salones devueltos en una
+  // sola query y agrupar por salonId. Limit 5 imágenes por salón es
+  // suficiente para el slider.
+  const galeriaPorSalon = new Map<string, string[]>();
+  if (rows.length > 0) {
+    const ids = rows.map((r) => r.id);
+    const galeriaRows = await db
+      .select({
+        salonId: galeriaImagenes.salonId,
+        url: galeriaImagenes.url,
+        orden: galeriaImagenes.orden,
+        createdAt: galeriaImagenes.createdAt,
+      })
+      .from(galeriaImagenes)
+      .where(
+        and(
+          inArray(galeriaImagenes.salonId, ids),
+          eq(galeriaImagenes.activa, true),
+        ),
+      )
+      .orderBy(asc(galeriaImagenes.orden), asc(galeriaImagenes.createdAt));
+
+    for (const g of galeriaRows) {
+      const arr = galeriaPorSalon.get(g.salonId) ?? [];
+      if (arr.length < 5) arr.push(g.url);
+      galeriaPorSalon.set(g.salonId, arr);
+    }
+  }
+
+  return rows.map((r) => {
+    const galeria = galeriaPorSalon.get(r.id) ?? [];
+    const imagenes = [
+      ...(r.bannerUrl ? [r.bannerUrl] : []),
+      ...galeria.filter((u) => u !== r.bannerUrl),
+    ];
+    return {
+      slug: r.slug,
+      nombre: r.nombre,
+      tipoNegocio: r.tipoNegocio as TipoNegocio,
+      ciudad: r.ciudad,
+      descripcionCorta: r.descripcionCorta,
+      logoUrl: r.logoUrl,
+      bannerUrl: r.bannerUrl,
+      imagenes,
+      lat: r.lat !== null ? Number(r.lat) : null,
+      lng: r.lng !== null ? Number(r.lng) : null,
+      ratingAvg: r.ratingAvg !== null ? Number(r.ratingAvg) : null,
+      totalResenas: r.totalResenas ?? 0,
+    };
+  });
 }
 
 /**

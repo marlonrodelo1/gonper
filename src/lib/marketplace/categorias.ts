@@ -49,6 +49,13 @@ export type SalonCard = {
   descripcionCorta: string | null;
   logoUrl: string | null;
   bannerUrl: string | null;
+  /**
+   * Imágenes para el slider de la card: empieza por `bannerUrl` y sigue
+   * con las imágenes de la galería del salón ordenadas por `orden`. Si
+   * el dueño no tiene banner ni galería, este array viene vacío y la
+   * card pinta un placeholder con el color de la categoría.
+   */
+  imagenes: string[];
   ratingAvg: number | null;
   totalResenas: number;
   /** Coordenadas (OpenStreetMap) — null si el dueño no las ha guardado. */
