@@ -34,7 +34,11 @@ export default async function CheckoutPage({
         <CheckoutClient
           salonSlug={salon.slug}
           salonNombre={salon.nombre}
-          aceptaPagos={salon.aceptaPagos}
+          salonDireccion={salon.direccion}
+          aceptaPagoOnline={salon.aceptaPagoOnline}
+          aceptaEfectivo={salon.aceptaEfectivo}
+          costeEnvioEur={salon.costeEnvioEur}
+          zonaEnvio={salon.zonaEnvio}
         />
       </main>
     </div>

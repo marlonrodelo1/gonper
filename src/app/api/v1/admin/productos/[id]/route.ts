@@ -34,6 +34,7 @@ const PatchBody = z.object({
   categoria: z.enum(Categorias).optional(),
   tipo_negocio_target: z.array(z.enum(TiposNegocio)).optional(),
   imagenes: z.array(z.string().url().max(500)).optional(),
+  coste_mayorista_eur: z.number().min(0).nullable().optional(),
   precio_mayorista_eur: z.number().min(0).optional(),
   precio_publico_recomendado_eur: z.number().min(0).optional(),
   unidad_medida: z.string().max(40).optional(),
@@ -69,6 +70,9 @@ export async function PATCH(
   if (d.categoria !== undefined) update.categoria = d.categoria;
   if (d.tipo_negocio_target !== undefined) update.tipoNegocioTarget = d.tipo_negocio_target;
   if (d.imagenes !== undefined) update.imagenes = d.imagenes;
+  if (d.coste_mayorista_eur !== undefined)
+    update.costeMayoristaEur =
+      d.coste_mayorista_eur !== null ? d.coste_mayorista_eur.toFixed(2) : null;
   if (d.precio_mayorista_eur !== undefined) update.precioMayoristaEur = d.precio_mayorista_eur.toFixed(2);
   if (d.precio_publico_recomendado_eur !== undefined) update.precioPublicoRecomendadoEur = d.precio_publico_recomendado_eur.toFixed(2);
   if (d.unidad_medida !== undefined) update.unidadMedida = d.unidad_medida;

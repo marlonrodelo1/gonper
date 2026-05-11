@@ -16,6 +16,12 @@ const ESTADO_LABELS: Record<
     fg: '#6B6356',
     dot: '#8A8174',
   },
+  pendiente_pago_efectivo: {
+    label: 'Pagará al recoger',
+    bg: 'rgba(197,142,44,0.15)',
+    fg: '#7A5A1B',
+    dot: '#C58E2C',
+  },
   pagada: {
     label: 'Pagada',
     bg: 'rgba(43,82,120,0.12)',
@@ -152,7 +158,9 @@ export default async function PanelVentasPage({
                         {Number(v.totalEur).toFixed(2)} €
                       </div>
                       <div className="text-[11px] text-stone/70">
-                        comisión {Number(v.comisionGestoriEur).toFixed(2)} €
+                        {v.metodoPago === 'online' ? 'online' : 'efectivo'}
+                        {' · '}
+                        {v.metodoEntrega === 'envio' ? 'envío' : 'recogida'}
                       </div>
                     </div>
                   </Link>

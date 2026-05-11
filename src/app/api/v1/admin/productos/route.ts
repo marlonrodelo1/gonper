@@ -66,6 +66,9 @@ const CreateBody = z.object({
   categoria: z.enum(Categorias),
   tipo_negocio_target: z.array(z.enum(TiposNegocio)).default([]),
   imagenes: z.array(z.string().url().max(500)).default([]),
+  /** Lo que paga Gestori a la marca (info interna). */
+  coste_mayorista_eur: z.number().min(0).nullable().optional(),
+  /** Lo que paga el salón a Gestori (precio de reventa). */
   precio_mayorista_eur: z.number().min(0),
   precio_publico_recomendado_eur: z.number().min(0),
   unidad_medida: z.string().max(40).default('unidad'),
@@ -106,6 +109,10 @@ export async function POST(req: Request) {
       categoria: d.categoria,
       tipoNegocioTarget: d.tipo_negocio_target,
       imagenes: d.imagenes,
+      costeMayoristaEur:
+        d.coste_mayorista_eur !== undefined && d.coste_mayorista_eur !== null
+          ? d.coste_mayorista_eur.toFixed(2)
+          : null,
       precioMayoristaEur: d.precio_mayorista_eur.toFixed(2),
       precioPublicoRecomendadoEur: d.precio_publico_recomendado_eur.toFixed(2),
       unidadMedida: d.unidad_medida,

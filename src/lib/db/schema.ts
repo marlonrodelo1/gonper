@@ -157,6 +157,19 @@ export const salones = pgTable(
     /** Stripe Connect Express (para cobrar ventas B2C de productos) */
     stripeConnectAccountId: text('stripe_connect_account_id'),
     stripeConnectOnboarded: boolean('stripe_connect_onboarded').notNull().default(false),
+    /** Config de la tienda pública del salón */
+    tiendaAceptaPagoOnline: boolean('tienda_acepta_pago_online')
+      .notNull()
+      .default(false),
+    tiendaAceptaEfectivo: boolean('tienda_acepta_efectivo')
+      .notNull()
+      .default(true),
+    /** Coste fijo de envío en €. Si null o 0, no se ofrece envío (solo recogida). */
+    tiendaCosteEnvioEur: numeric('tienda_coste_envio_eur', {
+      precision: 10,
+      scale: 2,
+    }),
+    tiendaZonaEnvio: text('tienda_zona_envio'),
 
     // Plan
     plan: text('plan').notNull().default('trial'),
@@ -1099,6 +1112,12 @@ export const productos = pgTable(
       .notNull()
       .default(sql`'{}'::text[]`),
     imagenes: jsonb('imagenes').notNull().default(sql`'[]'::jsonb`),
+    /** Lo que paga Gestori a la marca (coste de compra del distribuidor) — interno. */
+    costeMayoristaEur: numeric('coste_mayorista_eur', {
+      precision: 10,
+      scale: 2,
+    }),
+    /** Lo que paga el salón a Gestori (precio de reventa). */
     precioMayoristaEur: numeric('precio_mayorista_eur', {
       precision: 10,
       scale: 2,
@@ -1282,6 +1301,12 @@ export const ventasB2c = pgTable(
     stripePaymentIntentId: text('stripe_payment_intent_id').unique(),
     stripeChargeId: text('stripe_charge_id'),
     estado: text('estado').notNull().default('pendiente_pago'),
+    metodoPago: text('metodo_pago').notNull().default('online'),
+    metodoEntrega: text('metodo_entrega').notNull().default('recogida'),
+    costeEnvioEur: numeric('coste_envio_eur', { precision: 10, scale: 2 })
+      .notNull()
+      .default('0'),
+    direccionEnvio: text('direccion_envio'),
     pagadoAt: timestamp('pagado_at', { withTimezone: true }),
     listaRecogidaAt: timestamp('lista_recogida_at', { withTimezone: true }),
     recogidaAt: timestamp('recogida_at', { withTimezone: true }),
@@ -1300,12 +1325,20 @@ export const ventasB2c = pgTable(
     idxClienteEmail: index('idx_ventas_b2c_cliente_email').on(t.clienteEmail),
     chkEstado: check(
       'ventas_b2c_estado_check',
-      sql`${t.estado} in ('pendiente_pago','pagada','lista_recogida','recogida','cancelada','reembolsada')`,
+      sql`${t.estado} in ('pendiente_pago','pendiente_pago_efectivo','pagada','lista_recogida','recogida','cancelada','reembolsada')`,
     ),
     chkTotal: check('ventas_b2c_total_check', sql`${t.totalEur} >= 0`),
     chkComision: check(
       'ventas_b2c_comision_check',
       sql`${t.comisionGestoriEur} >= 0 and ${t.comisionGestoriEur} <= ${t.totalEur}`,
+    ),
+    chkMetodoPago: check(
+      'ventas_b2c_metodo_pago_check',
+      sql`${t.metodoPago} in ('online','efectivo')`,
+    ),
+    chkMetodoEntrega: check(
+      'ventas_b2c_metodo_entrega_check',
+      sql`${t.metodoEntrega} in ('recogida','envio')`,
     ),
   }),
 );

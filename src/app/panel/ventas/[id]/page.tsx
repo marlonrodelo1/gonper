@@ -5,10 +5,16 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { ventasB2c, ventasB2cItems } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
-import { marcarListaRecogida, marcarRecogida, reembolsarVenta } from '../actions';
+import {
+  marcarListaRecogida,
+  marcarPagadaEfectivo,
+  marcarRecogida,
+  reembolsarVenta,
+} from '../actions';
 
 const ESTADO_LABELS: Record<string, { label: string; bg: string; fg: string; dot: string }> = {
   pendiente_pago: { label: 'Pendiente de pago', bg: 'rgba(107,99,86,0.12)', fg: '#6B6356', dot: '#8A8174' },
+  pendiente_pago_efectivo: { label: 'Pagará al recoger', bg: 'rgba(197,142,44,0.15)', fg: '#7A5A1B', dot: '#C58E2C' },
   pagada: { label: 'Pagada', bg: 'rgba(43,82,120,0.12)', fg: '#2B5278', dot: '#2B5278' },
   lista_recogida: { label: 'Lista para recoger', bg: 'rgba(197,142,44,0.18)', fg: '#7A5A1B', dot: '#C58E2C' },
   recogida: { label: 'Recogida', bg: 'rgba(139,157,122,0.18)', fg: '#5A6B4D', dot: '#8B9D7A' },
@@ -122,9 +128,49 @@ export default async function PanelVentaDetallePage({
         </footer>
       </section>
 
+      {/* Info adicional: método pago/entrega */}
+      <section className="card grid gap-3 p-5 md:p-7 md:grid-cols-2">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-stone/70">
+            Método de pago
+          </div>
+          <div className="mt-0.5 text-[14px] tight text-ink">
+            {venta.metodoPago === 'online' ? 'Online (tarjeta vía Stripe)' : 'Efectivo / al recoger'}
+          </div>
+        </div>
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-stone/70">
+            Entrega
+          </div>
+          <div className="mt-0.5 text-[14px] tight text-ink">
+            {venta.metodoEntrega === 'envio'
+              ? `Envío a domicilio (+${Number(venta.costeEnvioEur).toFixed(2)} €)`
+              : 'Recogida en salón'}
+          </div>
+          {venta.metodoEntrega === 'envio' && venta.direccionEnvio && (
+            <div className="mt-1 text-[12.5px] text-stone">
+              {venta.direccionEnvio}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Acciones según estado */}
-      {(venta.estado === 'pagada' || venta.estado === 'lista_recogida') && (
+      {(venta.estado === 'pendiente_pago_efectivo' ||
+        venta.estado === 'pagada' ||
+        venta.estado === 'lista_recogida') && (
         <section className="flex flex-wrap items-center gap-2">
+          {venta.estado === 'pendiente_pago_efectivo' && (
+            <form action={marcarPagadaEfectivo}>
+              <input type="hidden" name="venta_id" value={venta.id} />
+              <button
+                type="submit"
+                className="gloss-btn tight rounded-full px-5 py-2.5 text-[13px] font-medium"
+              >
+                Marcar como pagada (recibí el dinero)
+              </button>
+            </form>
+          )}
           {venta.estado === 'pagada' && (
             <form action={marcarListaRecogida}>
               <input type="hidden" name="venta_id" value={venta.id} />
@@ -132,7 +178,7 @@ export default async function PanelVentaDetallePage({
                 type="submit"
                 className="gloss-btn tight rounded-full px-5 py-2.5 text-[13px] font-medium"
               >
-                Marcar lista para recoger
+                {venta.metodoEntrega === 'envio' ? 'Marcar enviada' : 'Marcar lista para recoger'}
               </button>
             </form>
           )}
@@ -143,19 +189,21 @@ export default async function PanelVentaDetallePage({
                 type="submit"
                 className="gloss-btn tight rounded-full px-5 py-2.5 text-[13px] font-medium"
               >
-                Marcar como recogida
+                {venta.metodoEntrega === 'envio' ? 'Marcar entregada' : 'Marcar como recogida'}
               </button>
             </form>
           )}
-          <form action={reembolsarVenta}>
-            <input type="hidden" name="venta_id" value={venta.id} />
-            <button
-              type="submit"
-              className="tight rounded-full border border-line bg-paper px-4 py-2 text-[12.5px] text-stone hover:bg-cream hover:text-terracotta-2"
-            >
-              Cancelar y reembolsar
-            </button>
-          </form>
+          {venta.metodoPago === 'online' && venta.estado !== 'pendiente_pago_efectivo' && (
+            <form action={reembolsarVenta}>
+              <input type="hidden" name="venta_id" value={venta.id} />
+              <button
+                type="submit"
+                className="tight rounded-full border border-line bg-paper px-4 py-2 text-[12.5px] text-stone hover:bg-cream hover:text-terracotta-2"
+              >
+                Cancelar y reembolsar
+              </button>
+            </form>
+          )}
         </section>
       )}
     </div>

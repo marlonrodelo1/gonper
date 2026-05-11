@@ -36,6 +36,25 @@ async function requireVenta(formData: FormData) {
   return { venta, ventaId };
 }
 
+/**
+ * Marca una venta en efectivo como pagada (el cliente pagó al recoger/recibir).
+ * Solo aplica a ventas `pendiente_pago_efectivo`.
+ */
+export async function marcarPagadaEfectivo(formData: FormData) {
+  const { venta, ventaId } = await requireVenta(formData);
+  if (venta.estado !== 'pendiente_pago_efectivo') {
+    redirectError(ventaId, 'Esta acción solo aplica a ventas en efectivo pendientes');
+  }
+  await db
+    .update(ventasB2c)
+    .set({ estado: 'pagada', pagadoAt: new Date() })
+    .where(eq(ventasB2c.id, ventaId));
+
+  revalidatePath('/panel/ventas');
+  revalidatePath(`/panel/ventas/${ventaId}`);
+  redirect(`/panel/ventas/${ventaId}?ok=1`);
+}
+
 export async function marcarListaRecogida(formData: FormData) {
   const { venta, ventaId } = await requireVenta(formData);
   if (venta.estado !== 'pagada') {

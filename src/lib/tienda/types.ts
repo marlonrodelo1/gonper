@@ -27,8 +27,14 @@ export type TiendaSalon = {
   nombre: string;
   tipoNegocio: string;
   ciudad: string | null;
+  direccion: string | null;
   logoUrl: string | null;
   bannerUrl: string | null;
-  /** Si false, el visitante NO puede pagar (no hay Connect onboarded). */
+  /** true si el visitante puede pagar (online o efectivo, alguno activo). */
   aceptaPagos: boolean;
+  aceptaPagoOnline: boolean;
+  aceptaEfectivo: boolean;
+  /** Coste de envío en € o null si no hace envíos. */
+  costeEnvioEur: number | null;
+  zonaEnvio: string | null;
 };

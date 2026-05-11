@@ -20,25 +20,43 @@ export async function getTiendaSalonBySlug(
       nombre: salones.nombre,
       tipoNegocio: salones.tipoNegocio,
       ciudad: salones.ciudad,
+      direccion: salones.direccion,
       logoUrl: salones.logoUrl,
       bannerUrl: salones.bannerUrl,
       activo: salones.activo,
       stripeConnectOnboarded: salones.stripeConnectOnboarded,
+      tiendaAceptaPagoOnline: salones.tiendaAceptaPagoOnline,
+      tiendaAceptaEfectivo: salones.tiendaAceptaEfectivo,
+      tiendaCosteEnvioEur: salones.tiendaCosteEnvioEur,
+      tiendaZonaEnvio: salones.tiendaZonaEnvio,
     })
     .from(salones)
     .where(eq(salones.slug, slug))
     .limit(1);
 
   if (!row || !row.activo) return null;
+
+  const onlineDisponible =
+    row.tiendaAceptaPagoOnline && row.stripeConnectOnboarded;
+  const efectivoDisponible = row.tiendaAceptaEfectivo;
+  const costeEnvio = row.tiendaCosteEnvioEur
+    ? Number(row.tiendaCosteEnvioEur)
+    : null;
+
   return {
     id: row.id,
     slug: row.slug,
     nombre: row.nombre,
     tipoNegocio: row.tipoNegocio,
     ciudad: row.ciudad,
+    direccion: row.direccion,
     logoUrl: row.logoUrl,
     bannerUrl: row.bannerUrl,
-    aceptaPagos: row.stripeConnectOnboarded,
+    aceptaPagos: onlineDisponible || efectivoDisponible,
+    aceptaPagoOnline: onlineDisponible,
+    aceptaEfectivo: efectivoDisponible,
+    costeEnvioEur: costeEnvio && costeEnvio > 0 ? costeEnvio : null,
+    zonaEnvio: row.tiendaZonaEnvio,
   };
 }
 
