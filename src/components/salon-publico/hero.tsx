@@ -86,26 +86,42 @@ export function Hero({
             )}
           </div>
 
-          {/* bottom info: solo botones */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10 flex items-end justify-end gap-6 flex-wrap">
-            <div className="flex flex-col sm:flex-row gap-2.5 w-full sm:w-auto">
+          {/* Bottom CTA bar — glassmorphism, un botón a cada lado */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 flex items-center justify-between gap-3">
+            <a
+              href="#reservar"
+              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(197,86,44,0.78) 0%, rgba(168,69,31,0.82) 100%)',
+                backdropFilter: 'saturate(160%) blur(12px)',
+                WebkitBackdropFilter: 'saturate(160%) blur(12px)',
+                border: '1px solid rgba(255,255,255,0.25)',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 25px -10px rgba(168,69,31,0.45)',
+              }}
+            >
+              Reservar cita
+            </a>
+            {urlTelegram && (
               <a
-                href="#reservar"
-                className="px-6 py-3.5 rounded-full text-[15px] font-medium accent-btn text-center"
+                href={urlTelegram}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
+                style={{
+                  background: 'rgba(255,255,255,0.14)',
+                  backdropFilter: 'saturate(160%) blur(14px)',
+                  WebkitBackdropFilter: 'saturate(160%) blur(14px)',
+                  border: '1px solid rgba(255,255,255,0.28)',
+                  boxShadow:
+                    'inset 0 1px 0 rgba(255,255,255,0.20), 0 8px 24px -10px rgba(0,0,0,0.35)',
+                }}
               >
-                Reservar cita
+                <Icon.Telegram width="13" height="13" />
+                Chatear con {agenteNombre}
               </a>
-              {urlTelegram && (
-                <a
-                  href={urlTelegram}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-6 py-3.5 rounded-full text-[15px] font-medium bg-paper/95 hover:bg-paper text-ink border border-line/40 transition flex items-center justify-center gap-2"
-                >
-                  <Icon.Telegram width="14" height="14" /> Chatear con {agenteNombre}
-                </a>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
