@@ -49,6 +49,11 @@ const navWeb: NavItem[] = [
   { href: '/panel/resenas', label: 'Reseñas', icon: Icon.Sparkle },
 ];
 
+const navTienda: NavItem[] = [
+  { href: '/panel/catalogo', label: 'Catálogo', icon: Icon.Sparkle },
+  { href: '/panel/pedidos', label: 'Pedidos', icon: Icon.Sparkle, activeMatch: '/panel/pedidos' },
+];
+
 // Una sola entrada en sidebar — el detalle (Datos, Agente, Bot, Equipo,
 // Horario, Cierres, Suscripción) vive en las tabs horizontales del
 // layout de /panel/config para no duplicar.
@@ -197,6 +202,33 @@ export function PanelSidebar({
               Web del salón
             </div>
             {navWeb.map((it) => {
+              const active = isActive(it);
+              const IconCmp = it.icon;
+              return (
+                <Link
+                  key={it.href}
+                  href={it.href}
+                  onClick={cerrar}
+                  data-tour={it.tour}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition ${
+                    active
+                      ? 'bg-ink text-cream'
+                      : 'text-stone hover:bg-paper hover:text-ink'
+                  }`}
+                >
+                  <span className={active ? 'text-cream' : 'text-terracotta'}>
+                    <IconCmp width="18" height="18" />
+                  </span>
+                  <span className="tight">{it.label}</span>
+                </Link>
+              );
+            })}
+
+            {/* Tienda (B2B + B2C) */}
+            <div className="mt-4 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-stone/60">
+              Tienda
+            </div>
+            {navTienda.map((it) => {
               const active = isActive(it);
               const IconCmp = it.icon;
               return (
