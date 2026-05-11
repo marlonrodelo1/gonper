@@ -6,6 +6,7 @@ import { salones, usuariosSalon } from '@/lib/db/schema';
 import { createClient } from '@/lib/supabase/server';
 import { signOut } from '@/app/(auth)/actions';
 import { Icon } from '@/app/panel/_components/icons';
+import { StripeConnectCard } from '@/components/panel/stripe-connect-card';
 
 const PLAN_LABELS: Record<string, string> = {
   trial: 'Prueba gratis',
@@ -29,7 +30,12 @@ function fmtFecha(d: Date): string {
   }).format(d);
 }
 
-export default async function CuentaPage() {
+export default async function CuentaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ connect?: string }>;
+}) {
+  const sp = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -63,6 +69,8 @@ export default async function CuentaPage() {
       salonSlug: salones.slug,
       salonPlan: salones.plan,
       salonLogoUrl: salones.logoUrl,
+      stripeConnectAccountId: salones.stripeConnectAccountId,
+      stripeConnectOnboarded: salones.stripeConnectOnboarded,
     })
     .from(usuariosSalon)
     .innerJoin(salones, eq(salones.id, usuariosSalon.salonId))
@@ -234,6 +242,17 @@ export default async function CuentaPage() {
             Tu cuenta está creada pero todavía no hay un salón asociado.
           </p>
         </section>
+      )}
+
+      {/* ============================================
+          STRIPE CONNECT (cobros B2C de productos)
+          ============================================ */}
+      {vinculo && (
+        <StripeConnectCard
+          hasAccount={!!vinculo.stripeConnectAccountId}
+          onboarded={vinculo.stripeConnectOnboarded}
+          justReturned={sp.connect === 'ok'}
+        />
       )}
 
       {/* ============================================
