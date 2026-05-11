@@ -139,6 +139,92 @@ export async function listMarketplaceSalones(
 }
 
 /**
+ * Devuelve los salones marcados como destacados desde el super-admin,
+ * ordenados por `marketplace_destacado_orden asc nulls last`. Reutiliza
+ * el filtro base del marketplace (activo + visible + lat/lng).
+ */
+export async function listMarketplaceDestacados(
+  limit = 8,
+): Promise<SalonCard[]> {
+  const conds = and(
+    MARKETPLACE_VISIBLE,
+    eq(salones.marketplaceDestacado, true),
+  );
+
+  const rows = await db
+    .select({
+      id: salones.id,
+      slug: salones.slug,
+      nombre: salones.nombre,
+      tipoNegocio: salones.tipoNegocio,
+      ciudad: salones.ciudad,
+      descripcionCorta: salones.descripcionCorta,
+      logoUrl: salones.logoUrl,
+      bannerUrl: salones.bannerUrl,
+      lat: salones.lat,
+      lng: salones.lng,
+      orden: salones.marketplaceDestacadoOrden,
+      ratingAvg: salonesRatingCache.ratingAvg,
+      totalResenas: salonesRatingCache.totalResenas,
+    })
+    .from(salones)
+    .leftJoin(salonesRatingCache, eq(salonesRatingCache.salonId, salones.id))
+    .where(conds)
+    .orderBy(
+      sql`${salones.marketplaceDestacadoOrden} asc nulls last`,
+      asc(salones.nombre),
+    )
+    .limit(limit);
+
+  if (rows.length === 0) return [];
+
+  // Galería igual que la query principal
+  const galeriaPorSalon = new Map<string, string[]>();
+  const ids = rows.map((r) => r.id);
+  const galeriaRows = await db
+    .select({
+      salonId: galeriaImagenes.salonId,
+      url: galeriaImagenes.url,
+    })
+    .from(galeriaImagenes)
+    .where(
+      and(
+        inArray(galeriaImagenes.salonId, ids),
+        eq(galeriaImagenes.activa, true),
+      ),
+    )
+    .orderBy(asc(galeriaImagenes.orden), asc(galeriaImagenes.createdAt));
+
+  for (const g of galeriaRows) {
+    const arr = galeriaPorSalon.get(g.salonId) ?? [];
+    if (arr.length < 5) arr.push(g.url);
+    galeriaPorSalon.set(g.salonId, arr);
+  }
+
+  return rows.map((r) => {
+    const galeria = galeriaPorSalon.get(r.id) ?? [];
+    const imagenes = [
+      ...(r.bannerUrl ? [r.bannerUrl] : []),
+      ...galeria.filter((u) => u !== r.bannerUrl),
+    ];
+    return {
+      slug: r.slug,
+      nombre: r.nombre,
+      tipoNegocio: r.tipoNegocio as TipoNegocio,
+      ciudad: r.ciudad,
+      descripcionCorta: r.descripcionCorta,
+      logoUrl: r.logoUrl,
+      bannerUrl: r.bannerUrl,
+      imagenes,
+      lat: r.lat !== null ? Number(r.lat) : null,
+      lng: r.lng !== null ? Number(r.lng) : null,
+      ratingAvg: r.ratingAvg !== null ? Number(r.ratingAvg) : null,
+      totalResenas: r.totalResenas ?? 0,
+    };
+  });
+}
+
+/**
  * Devuelve los conteos de filtros (cuántos salones hay por categoría y por
  * ciudad, considerando solo los visibles en marketplace) más el total global.
  */

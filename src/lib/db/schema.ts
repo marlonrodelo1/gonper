@@ -144,6 +144,8 @@ export const salones = pgTable(
 
     // Marketplace público
     marketplaceVisible: boolean('marketplace_visible').notNull().default(true),
+    marketplaceDestacado: boolean('marketplace_destacado').notNull().default(false),
+    marketplaceDestacadoOrden: integer('marketplace_destacado_orden'),
     ciudad: text('ciudad'),
     provincia: text('provincia'),
     descripcionCorta: text('descripcion_corta'),
@@ -152,6 +154,9 @@ export const salones = pgTable(
     lng: numeric('lng', { precision: 10, scale: 7 }),
     direccionFormateada: text('direccion_formateada'),
     osmPlaceId: text('osm_place_id'),
+    /** Stripe Connect Express (para cobrar ventas B2C de productos) */
+    stripeConnectAccountId: text('stripe_connect_account_id'),
+    stripeConnectOnboarded: boolean('stripe_connect_onboarded').notNull().default(false),
 
     // Plan
     plan: text('plan').notNull().default('trial'),
@@ -1028,6 +1033,316 @@ export const agenteToolsAsignaciones = pgTable(
 );
 
 // ============================================
+// TIENDA — Catálogo central + B2B + B2C
+// ============================================
+
+// marcas: catálogo central, gestionado desde super-admin
+export const marcas = pgTable(
+  'marcas',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    slug: text('slug').notNull().unique(),
+    nombre: text('nombre').notNull(),
+    descripcion: text('descripcion'),
+    logoUrl: text('logo_url'),
+    webUrl: text('web_url'),
+    contactoEmail: text('contacto_email'),
+    contactoTelefono: text('contacto_telefono'),
+    comisionPorcentaje: numeric('comision_porcentaje', { precision: 5, scale: 2 })
+      .notNull()
+      .default('15.00'),
+    condicionesB2bMinimoEur: numeric('condiciones_b2b_minimo_eur', {
+      precision: 10,
+      scale: 2,
+    })
+      .notNull()
+      .default('0'),
+    activa: boolean('activa').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxSlug: index('idx_marcas_slug').on(t.slug),
+    idxActiva: index('idx_marcas_activa')
+      .on(t.activa)
+      .where(sql`${t.activa} = true`),
+    chkComision: check(
+      'marcas_comision_check',
+      sql`${t.comisionPorcentaje} >= 0 and ${t.comisionPorcentaje} <= 100`,
+    ),
+    chkMinimo: check(
+      'marcas_minimo_check',
+      sql`${t.condicionesB2bMinimoEur} >= 0`,
+    ),
+  }),
+);
+
+// productos: catálogo central por marca
+export const productos = pgTable(
+  'productos',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    marcaId: uuid('marca_id')
+      .notNull()
+      .references(() => marcas.id, { onDelete: 'cascade' }),
+    slug: text('slug').notNull(),
+    sku: text('sku'),
+    nombre: text('nombre').notNull(),
+    descripcion: text('descripcion'),
+    categoria: text('categoria').notNull(),
+    tipoNegocioTarget: text('tipo_negocio_target')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    imagenes: jsonb('imagenes').notNull().default(sql`'[]'::jsonb`),
+    precioMayoristaEur: numeric('precio_mayorista_eur', {
+      precision: 10,
+      scale: 2,
+    }).notNull(),
+    precioPublicoRecomendadoEur: numeric('precio_publico_recomendado_eur', {
+      precision: 10,
+      scale: 2,
+    }).notNull(),
+    unidadMedida: text('unidad_medida').notNull().default('unidad'),
+    pesoG: integer('peso_g'),
+    stockDisponibleMarca: integer('stock_disponible_marca'),
+    activo: boolean('activo').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uqMarcaSlug: unique('productos_marca_slug_unique').on(t.marcaId, t.slug),
+    idxMarca: index('idx_productos_marca').on(t.marcaId),
+    idxCategoria: index('idx_productos_categoria')
+      .on(t.categoria)
+      .where(sql`${t.activo} = true`),
+    idxActivo: index('idx_productos_activo')
+      .on(t.activo)
+      .where(sql`${t.activo} = true`),
+    chkCategoria: check(
+      'productos_categoria_check',
+      sql`${t.categoria} in ('capilar','barba','unas','estetica','accesorio','otro')`,
+    ),
+    chkPrecioMayorista: check(
+      'productos_precio_mayorista_check',
+      sql`${t.precioMayoristaEur} >= 0`,
+    ),
+    chkPrecioPublico: check(
+      'productos_precio_publico_check',
+      sql`${t.precioPublicoRecomendadoEur} >= 0`,
+    ),
+  }),
+);
+
+// stock_salon: lo que el salón tiene físicamente
+export const stockSalon = pgTable(
+  'stock_salon',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salones.id, { onDelete: 'cascade' }),
+    productoId: uuid('producto_id')
+      .notNull()
+      .references(() => productos.id, { onDelete: 'restrict' }),
+    cantidadDisponible: integer('cantidad_disponible').notNull().default(0),
+    precioPublicoEur: numeric('precio_publico_eur', {
+      precision: 10,
+      scale: 2,
+    }),
+    activoEnTiendaPublica: boolean('activo_en_tienda_publica')
+      .notNull()
+      .default(false),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uq: unique('stock_salon_unique').on(t.salonId, t.productoId),
+    idxDisponible: index('idx_stock_salon_disponible')
+      .on(t.salonId)
+      .where(
+        sql`${t.activoEnTiendaPublica} = true and ${t.cantidadDisponible} > 0`,
+      ),
+    idxProducto: index('idx_stock_salon_producto').on(t.productoId),
+    chkCantidad: check(
+      'stock_salon_cantidad_check',
+      sql`${t.cantidadDisponible} >= 0`,
+    ),
+    chkPrecio: check(
+      'stock_salon_precio_check',
+      sql`${t.precioPublicoEur} is null or ${t.precioPublicoEur} >= 0`,
+    ),
+  }),
+);
+
+// pedidos_b2b: salón pide stock a marca (notificación, sin pago en plataforma)
+export const pedidosB2b = pgTable(
+  'pedidos_b2b',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salones.id, { onDelete: 'cascade' }),
+    marcaId: uuid('marca_id')
+      .notNull()
+      .references(() => marcas.id, { onDelete: 'restrict' }),
+    /** Generado por trigger BEFORE INSERT si viene NULL (formato PED-YYYY-NNNN). */
+    numero: text('numero').notNull().unique(),
+    estado: text('estado').notNull().default('pendiente'),
+    totalEur: numeric('total_eur', { precision: 10, scale: 2 })
+      .notNull()
+      .default('0'),
+    notasSalon: text('notas_salon'),
+    notasMarca: text('notas_marca'),
+    aceptadoAt: timestamp('aceptado_at', { withTimezone: true }),
+    enviadoAt: timestamp('enviado_at', { withTimezone: true }),
+    entregadoAt: timestamp('entregado_at', { withTimezone: true }),
+    canceladoAt: timestamp('cancelado_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxSalon: index('idx_pedidos_b2b_salon').on(t.salonId, t.createdAt.desc()),
+    idxMarca: index('idx_pedidos_b2b_marca').on(t.marcaId, t.estado),
+    chkEstado: check(
+      'pedidos_b2b_estado_check',
+      sql`${t.estado} in ('borrador','pendiente','aceptado','enviado','entregado','cancelado')`,
+    ),
+  }),
+);
+
+export const pedidosB2bItems = pgTable(
+  'pedidos_b2b_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    pedidoId: uuid('pedido_id')
+      .notNull()
+      .references(() => pedidosB2b.id, { onDelete: 'cascade' }),
+    productoId: uuid('producto_id')
+      .notNull()
+      .references(() => productos.id, { onDelete: 'restrict' }),
+    nombreSnapshot: text('nombre_snapshot').notNull(),
+    skuSnapshot: text('sku_snapshot'),
+    cantidad: integer('cantidad').notNull(),
+    precioUnitMayoristaEur: numeric('precio_unit_mayorista_eur', {
+      precision: 10,
+      scale: 2,
+    }).notNull(),
+    subtotalEur: numeric('subtotal_eur', { precision: 10, scale: 2 }).notNull(),
+  },
+  (t) => ({
+    idxPedido: index('idx_pedidos_b2b_items_pedido').on(t.pedidoId),
+    chkCantidad: check(
+      'pedidos_b2b_items_cantidad_check',
+      sql`${t.cantidad} > 0`,
+    ),
+    chkSubtotal: check(
+      'pedidos_b2b_items_subtotal_check',
+      sql`${t.subtotalEur} >= 0`,
+    ),
+  }),
+);
+
+// ventas_b2c: cliente compra al salón vía Stripe Connect
+export const ventasB2c = pgTable(
+  'ventas_b2c',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salones.id, { onDelete: 'cascade' }),
+    /** Generado por trigger BEFORE INSERT (formato VEN-YYYY-NNNN). */
+    numero: text('numero').notNull().unique(),
+    clienteEmail: text('cliente_email').notNull(),
+    clienteNombre: text('cliente_nombre'),
+    clienteTelefono: text('cliente_telefono'),
+    totalEur: numeric('total_eur', { precision: 10, scale: 2 }).notNull(),
+    comisionGestoriEur: numeric('comision_gestori_eur', {
+      precision: 10,
+      scale: 2,
+    })
+      .notNull()
+      .default('0'),
+    stripePaymentIntentId: text('stripe_payment_intent_id').unique(),
+    stripeChargeId: text('stripe_charge_id'),
+    estado: text('estado').notNull().default('pendiente_pago'),
+    pagadoAt: timestamp('pagado_at', { withTimezone: true }),
+    listaRecogidaAt: timestamp('lista_recogida_at', { withTimezone: true }),
+    recogidaAt: timestamp('recogida_at', { withTimezone: true }),
+    canceladaAt: timestamp('cancelada_at', { withTimezone: true }),
+    reembolsadaAt: timestamp('reembolsada_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    idxSalon: index('idx_ventas_b2c_salon').on(t.salonId, t.createdAt.desc()),
+    idxEstado: index('idx_ventas_b2c_estado').on(t.estado),
+    idxClienteEmail: index('idx_ventas_b2c_cliente_email').on(t.clienteEmail),
+    chkEstado: check(
+      'ventas_b2c_estado_check',
+      sql`${t.estado} in ('pendiente_pago','pagada','lista_recogida','recogida','cancelada','reembolsada')`,
+    ),
+    chkTotal: check('ventas_b2c_total_check', sql`${t.totalEur} >= 0`),
+    chkComision: check(
+      'ventas_b2c_comision_check',
+      sql`${t.comisionGestoriEur} >= 0 and ${t.comisionGestoriEur} <= ${t.totalEur}`,
+    ),
+  }),
+);
+
+export const ventasB2cItems = pgTable(
+  'ventas_b2c_items',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ventaId: uuid('venta_id')
+      .notNull()
+      .references(() => ventasB2c.id, { onDelete: 'cascade' }),
+    productoId: uuid('producto_id')
+      .notNull()
+      .references(() => productos.id, { onDelete: 'restrict' }),
+    nombreSnapshot: text('nombre_snapshot').notNull(),
+    imagenSnapshot: text('imagen_snapshot'),
+    cantidad: integer('cantidad').notNull(),
+    precioUnitEur: numeric('precio_unit_eur', {
+      precision: 10,
+      scale: 2,
+    }).notNull(),
+    subtotalEur: numeric('subtotal_eur', { precision: 10, scale: 2 }).notNull(),
+  },
+  (t) => ({
+    idxVenta: index('idx_ventas_b2c_items_venta').on(t.ventaId),
+    chkCantidad: check(
+      'ventas_b2c_items_cantidad_check',
+      sql`${t.cantidad} > 0`,
+    ),
+    chkSubtotal: check(
+      'ventas_b2c_items_subtotal_check',
+      sql`${t.subtotalEur} >= 0`,
+    ),
+  }),
+);
+
+// ============================================
 // TIPOS INFERIDOS
 // ============================================
 export type Salon = typeof salones.$inferSelect;
@@ -1101,3 +1416,24 @@ export type NewAgenteToolAsignacion = typeof agenteToolsAsignaciones.$inferInser
 
 export type SalonRatingCache = typeof salonesRatingCache.$inferSelect;
 export type NewSalonRatingCache = typeof salonesRatingCache.$inferInsert;
+
+export type Marca = typeof marcas.$inferSelect;
+export type NewMarca = typeof marcas.$inferInsert;
+
+export type Producto = typeof productos.$inferSelect;
+export type NewProducto = typeof productos.$inferInsert;
+
+export type StockSalon = typeof stockSalon.$inferSelect;
+export type NewStockSalon = typeof stockSalon.$inferInsert;
+
+export type PedidoB2b = typeof pedidosB2b.$inferSelect;
+export type NewPedidoB2b = typeof pedidosB2b.$inferInsert;
+
+export type PedidoB2bItem = typeof pedidosB2bItems.$inferSelect;
+export type NewPedidoB2bItem = typeof pedidosB2bItems.$inferInsert;
+
+export type VentaB2c = typeof ventasB2c.$inferSelect;
+export type NewVentaB2c = typeof ventasB2c.$inferInsert;
+
+export type VentaB2cItem = typeof ventasB2cItems.$inferSelect;
+export type NewVentaB2cItem = typeof ventasB2cItems.$inferInsert;

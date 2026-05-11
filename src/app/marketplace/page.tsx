@@ -11,11 +11,13 @@ import {
 } from '@/lib/marketplace/categorias';
 import {
   getMarketplaceFiltros,
+  listMarketplaceDestacados,
   listMarketplaceSalones,
 } from '@/lib/marketplace/query';
 import { MarketplaceHero } from '@/components/marketplace/hero';
 import { MarketplaceSidebar } from '@/components/marketplace/sidebar';
 import { MarketplaceGrid } from '@/components/marketplace/grid';
+import { MarketplaceDestacados } from '@/components/marketplace/destacados';
 import { ActiveFilters } from '@/components/marketplace/active-filters';
 import { MarketplaceShell } from '@/components/marketplace/shell';
 import { MarketplaceReveal } from '@/components/marketplace/reveal';
@@ -102,7 +104,9 @@ export default async function MarketplacePage({
   const ciudad = sp.ciudad ?? '';
   const q = sp.q ?? '';
 
-  const [{ total, categorias, ciudades }, salones, royce] =
+  const hasFiltersTmp = !!categoria || !!ciudad || !!q.trim();
+
+  const [{ total, categorias, ciudades }, salones, destacados, royce] =
     await Promise.all([
       getMarketplaceFiltros(),
       listMarketplaceSalones({
@@ -110,6 +114,9 @@ export default async function MarketplacePage({
         ciudad: ciudad || undefined,
         q: q || undefined,
       }),
+      // Solo mostramos destacados cuando NO hay filtros — al filtrar el
+      // visitante ya tiene intención clara y los destacados distraen.
+      hasFiltersTmp ? Promise.resolve([]) : listMarketplaceDestacados(8),
       getRoyceConfig(),
     ]);
 
@@ -142,6 +149,8 @@ export default async function MarketplacePage({
         categorias={heroCategorias}
         total={total}
       />
+
+      <MarketplaceDestacados salones={destacados} />
 
       <section className="px-5 sm:px-6">
         <div className="mx-auto max-w-[1240px] flex gap-8">
