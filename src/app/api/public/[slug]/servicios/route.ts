@@ -3,6 +3,7 @@ import { and, asc, eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { salones, servicios } from '@/lib/db/schema';
+import { checkRateLimit, getClientIp } from '@/lib/api/rate-limit';
 
 /**
  * GET /api/public/[slug]/servicios
@@ -12,11 +13,20 @@ import { salones, servicios } from '@/lib/db/schema';
  * (tool `listar_servicios`) y cualquier UI pública que quiera el catálogo.
  */
 export async function GET(
-  _req: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   try {
     const { slug } = await params;
+
+    const ip = getClientIp(request);
+    const rl = await checkRateLimit('ip', `servicios:${ip}`, 500);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'Demasiadas peticiones', code: 'RATE_LIMIT' },
+        { status: 429 },
+      );
+    }
 
     const [salon] = await db
       .select({ id: salones.id, activo: salones.activo })

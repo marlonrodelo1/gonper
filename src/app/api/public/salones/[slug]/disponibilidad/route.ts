@@ -5,6 +5,7 @@ import { and, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { salones, servicios, profesionales } from '@/lib/db/schema';
 import { calcularSlots } from '@/lib/agenda/slots';
+import { checkRateLimit, getClientIp } from '@/lib/api/rate-limit';
 
 const querySchema = z.object({
   servicio_id: z.string().uuid(),
@@ -18,6 +19,16 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+
+    const ip = getClientIp(request);
+    const rl = await checkRateLimit('ip', `disponibilidad:${ip}`, 500);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'Demasiadas peticiones', code: 'RATE_LIMIT' },
+        { status: 429 },
+      );
+    }
+
     const url = new URL(request.url);
     const parsed = querySchema.safeParse({
       servicio_id: url.searchParams.get('servicio_id'),

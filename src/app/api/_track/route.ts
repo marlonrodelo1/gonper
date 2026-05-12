@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { track } from '@/lib/observability/posthog';
+import { checkRateLimit, getClientIp } from '@/lib/api/rate-limit';
 
 interface TrackBody {
   event?: string;
@@ -14,6 +15,12 @@ interface TrackBody {
  * principalmente para `$pageview` desde `<PosthogPageview/>`.
  */
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rl = await checkRateLimit('ip', `track:${ip}`, 1000);
+  if (!rl.ok) {
+    return new NextResponse(null, { status: 204 });
+  }
+
   let body: TrackBody;
   try {
     body = (await request.json()) as TrackBody;

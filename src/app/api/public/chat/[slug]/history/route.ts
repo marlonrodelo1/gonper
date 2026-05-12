@@ -4,6 +4,7 @@ import { and, asc, eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { mensajes, salones } from '@/lib/db/schema';
+import { checkRateLimit, getClientIp } from '@/lib/api/rate-limit';
 
 const querySchema = z.object({
   session_id: z.string().uuid(),
@@ -15,6 +16,16 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
+
+    const ip = getClientIp(request);
+    const rl = await checkRateLimit('ip', `chat-history:${ip}`, 500);
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'Demasiadas peticiones', code: 'RATE_LIMIT' },
+        { status: 429 },
+      );
+    }
+
     const url = new URL(request.url);
     const parsed = querySchema.safeParse({
       session_id: url.searchParams.get('session_id'),
