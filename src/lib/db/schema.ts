@@ -1094,6 +1094,33 @@ export const marcas = pgTable(
   }),
 );
 
+// categorias_marca: categorías propias de cada marca (Wella: 'Champús',
+// 'Tratamientos', etc.). Convive con productos.categoria (enum hardcoded
+// global) — un producto puede tener categoría global y/o categoría propia.
+export const categoriasMarca = pgTable(
+  'categorias_marca',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    marcaId: uuid('marca_id')
+      .notNull()
+      .references(() => marcas.id, { onDelete: 'cascade' }),
+    slug: text('slug').notNull(),
+    nombre: text('nombre').notNull(),
+    orden: integer('orden').notNull().default(0),
+    activa: boolean('activa').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uqMarcaSlug: unique('categorias_marca_slug_unique').on(t.marcaId, t.slug),
+    idxMarca: index('idx_categorias_marca_marca').on(t.marcaId, t.orden),
+  }),
+);
+
 // productos: catálogo central por marca
 export const productos = pgTable(
   'productos',
@@ -1107,6 +1134,13 @@ export const productos = pgTable(
     nombre: text('nombre').notNull(),
     descripcion: text('descripcion'),
     categoria: text('categoria').notNull(),
+    /** Categoría propia de la marca (opcional, convive con categoria global). */
+    categoriaMarcaId: uuid('categoria_marca_id').references(
+      () => categoriasMarca.id,
+      { onDelete: 'set null' },
+    ),
+    /** 'stock' (modelo distribuidor actual) | 'dropshipping' (Wella, marca envía directo). */
+    tipoDistribucion: text('tipo_distribucion').notNull().default('stock'),
     tipoNegocioTarget: text('tipo_negocio_target')
       .array()
       .notNull()
@@ -1143,12 +1177,22 @@ export const productos = pgTable(
     idxCategoria: index('idx_productos_categoria')
       .on(t.categoria)
       .where(sql`${t.activo} = true`),
+    idxCategoriaMarca: index('idx_productos_categoria_marca').on(
+      t.categoriaMarcaId,
+    ),
+    idxTipoDistribucion: index('idx_productos_tipo_distribucion').on(
+      t.tipoDistribucion,
+    ),
     idxActivo: index('idx_productos_activo')
       .on(t.activo)
       .where(sql`${t.activo} = true`),
     chkCategoria: check(
       'productos_categoria_check',
       sql`${t.categoria} in ('capilar','barba','unas','estetica','accesorio','otro')`,
+    ),
+    chkTipoDistribucion: check(
+      'productos_tipo_distribucion_check',
+      sql`${t.tipoDistribucion} in ('stock', 'dropshipping')`,
     ),
     chkPrecioMayorista: check(
       'productos_precio_mayorista_check',
@@ -1452,6 +1496,9 @@ export type NewSalonRatingCache = typeof salonesRatingCache.$inferInsert;
 
 export type Marca = typeof marcas.$inferSelect;
 export type NewMarca = typeof marcas.$inferInsert;
+
+export type CategoriaMarca = typeof categoriasMarca.$inferSelect;
+export type NewCategoriaMarca = typeof categoriasMarca.$inferInsert;
 
 export type Producto = typeof productos.$inferSelect;
 export type NewProducto = typeof productos.$inferInsert;

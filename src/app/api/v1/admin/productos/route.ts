@@ -3,17 +3,18 @@ import { z } from 'zod';
 import { and, asc, desc, eq, type SQL } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { productos, marcas } from '@/lib/db/schema';
+import { categoriasMarca, productos, marcas } from '@/lib/db/schema';
 import { requireApiToken } from '@/lib/api/auth';
 
 /**
- * GET  /api/v1/admin/productos?marca_id=&categoria= → listado
+ * GET  /api/v1/admin/productos?marca_id=&categoria=&tipo_distribucion= → listado
  * POST /api/v1/admin/productos → crear producto
  * Auth: bearer INTERNAL_API_TOKEN.
  */
 
 const Categorias = ['capilar', 'barba', 'unas', 'estetica', 'accesorio', 'otro'] as const;
 const TiposNegocio = ['peluqueria', 'barberia', 'estetica', 'manicura', 'otro'] as const;
+const TiposDistribucion = ['stock', 'dropshipping'] as const;
 
 export async function GET(req: Request) {
   const authError = requireApiToken(req);
@@ -22,11 +23,18 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const marcaId = url.searchParams.get('marca_id');
   const categoria = url.searchParams.get('categoria');
+  const tipoDistribucion = url.searchParams.get('tipo_distribucion');
 
   const conds: SQL[] = [];
   if (marcaId) conds.push(eq(productos.marcaId, marcaId));
   if (categoria && (Categorias as readonly string[]).includes(categoria)) {
     conds.push(eq(productos.categoria, categoria));
+  }
+  if (
+    tipoDistribucion &&
+    (TiposDistribucion as readonly string[]).includes(tipoDistribucion)
+  ) {
+    conds.push(eq(productos.tipoDistribucion, tipoDistribucion));
   }
 
   const rows = await db
@@ -39,8 +47,13 @@ export async function GET(req: Request) {
       nombre: productos.nombre,
       descripcion: productos.descripcion,
       categoria: productos.categoria,
+      categoriaMarcaId: productos.categoriaMarcaId,
+      categoriaMarcaSlug: categoriasMarca.slug,
+      categoriaMarcaNombre: categoriasMarca.nombre,
+      tipoDistribucion: productos.tipoDistribucion,
       tipoNegocioTarget: productos.tipoNegocioTarget,
       imagenes: productos.imagenes,
+      costeMayoristaEur: productos.costeMayoristaEur,
       precioMayoristaEur: productos.precioMayoristaEur,
       precioPublicoRecomendadoEur: productos.precioPublicoRecomendadoEur,
       unidadMedida: productos.unidadMedida,
@@ -51,6 +64,10 @@ export async function GET(req: Request) {
     })
     .from(productos)
     .innerJoin(marcas, eq(marcas.id, productos.marcaId))
+    .leftJoin(
+      categoriasMarca,
+      eq(categoriasMarca.id, productos.categoriaMarcaId),
+    )
     .where(conds.length > 0 ? and(...conds) : undefined)
     .orderBy(asc(marcas.nombre), desc(productos.createdAt));
 
@@ -64,6 +81,10 @@ const CreateBody = z.object({
   nombre: z.string().trim().min(1).max(300),
   descripcion: z.string().max(5000).nullable().optional(),
   categoria: z.enum(Categorias),
+  /** Categoría propia de la marca (opcional, debe pertenecer a la misma marca). */
+  categoria_marca_id: z.string().uuid().nullable().optional(),
+  /** 'stock' (default, modelo distribuidor actual) | 'dropshipping' (Wella). */
+  tipo_distribucion: z.enum(TiposDistribucion).default('stock'),
   tipo_negocio_target: z.array(z.enum(TiposNegocio)).default([]),
   imagenes: z.array(z.string().url().max(500)).default([]),
   /** Lo que paga Gestori a la marca (info interna). */
@@ -89,6 +110,23 @@ export async function POST(req: Request) {
   }
   const d = parsed.data;
 
+  if (d.categoria_marca_id) {
+    const [cat] = await db
+      .select({ marcaId: categoriasMarca.marcaId })
+      .from(categoriasMarca)
+      .where(eq(categoriasMarca.id, d.categoria_marca_id))
+      .limit(1);
+    if (!cat) {
+      return NextResponse.json({ error: 'categoria_marca_no_existe' }, { status: 400 });
+    }
+    if (cat.marcaId !== d.marca_id) {
+      return NextResponse.json(
+        { error: 'categoria_marca_no_pertenece_a_marca' },
+        { status: 400 },
+      );
+    }
+  }
+
   const dup = await db
     .select({ id: productos.id })
     .from(productos)
@@ -107,6 +145,8 @@ export async function POST(req: Request) {
       nombre: d.nombre,
       descripcion: d.descripcion ?? null,
       categoria: d.categoria,
+      categoriaMarcaId: d.categoria_marca_id ?? null,
+      tipoDistribucion: d.tipo_distribucion,
       tipoNegocioTarget: d.tipo_negocio_target,
       imagenes: d.imagenes,
       costeMayoristaEur:
