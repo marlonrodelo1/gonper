@@ -4,12 +4,10 @@ import { getStripe } from '@/lib/stripe/client';
 import { db } from '@/lib/db';
 import {
   salones,
-  stockSalon,
   stripeEventsProcessed,
   ventasB2c,
-  ventasB2cItems,
 } from '@/lib/db/schema';
-import { and, eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type Stripe from 'stripe';
 
 // Stripe firma el body raw — desactivar cualquier optimización de Next que altere el body.
@@ -163,52 +161,23 @@ export async function POST(req: Request) {
           break;
         }
 
-        const items = await db
-          .select()
-          .from(ventasB2cItems)
-          .where(eq(ventasB2cItems.ventaId, ventaId));
+        await db
+          .update(ventasB2c)
+          .set({
+            // Modelo dropshipping: tras pago, queda pendiente que Marlon
+            // tramite el pedido a la marca (email/manual). No hay stock
+            // que descontar — la marca lo envía directo.
+            estado: 'pendiente_tramitar_marca',
+            pagadoAt: new Date(),
+            stripeChargeId:
+              typeof pi.latest_charge === 'string'
+                ? pi.latest_charge
+                : (pi.latest_charge?.id ?? null),
+          })
+          .where(eq(ventasB2c.id, ventaId));
 
-        await db.transaction(async (tx) => {
-          await tx
-            .update(ventasB2c)
-            .set({
-              estado: 'pagada',
-              pagadoAt: new Date(),
-              stripeChargeId:
-                typeof pi.latest_charge === 'string'
-                  ? pi.latest_charge
-                  : (pi.latest_charge?.id ?? null),
-            })
-            .where(eq(ventasB2c.id, ventaId));
-
-          // Restar stock del salón. El stock se reservó al crear el
-          // PaymentIntent (decrement optimista), aquí solo confirmamos.
-          // Si por concurrencia el stock acabó en negativo, lo dejamos
-          // pero alertamos en logs.
-          for (const it of items) {
-            const updated = await tx
-              .update(stockSalon)
-              .set({
-                cantidadDisponible: sql`greatest(0, ${stockSalon.cantidadDisponible} - ${it.cantidad})`,
-              })
-              .where(
-                and(
-                  eq(stockSalon.salonId, venta.salonId),
-                  eq(stockSalon.productoId, it.productoId),
-                ),
-              )
-              .returning({ id: stockSalon.id });
-            if (updated.length === 0) {
-              console.warn(
-                '[stripe webhook] stock no encontrado para venta',
-                ventaId,
-                it.productoId,
-              );
-            }
-          }
-        });
-
-        // Notificar al cliente y al salón vía webhook n8n (best-effort).
+        // Notificar a Marlon (tramitación marca), al cliente (recibo) y
+        // al salón (comisión) vía workflow n8n.
         const n8nUrl = process.env.N8N_VENTA_B2C_WEBHOOK_URL;
         if (n8nUrl) {
           fetch(n8nUrl, {

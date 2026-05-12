@@ -34,7 +34,11 @@ const CreateBody = z.object({
   web_url: z.string().url().max(500).nullable().optional(),
   contacto_email: z.string().email().max(200).nullable().optional(),
   contacto_telefono: z.string().max(40).nullable().optional(),
+  /** Modelo dropshipping: % que recibe el salón sobre cada venta B2C. */
+  comision_salon_porcentaje: z.number().min(0).max(100).optional(),
+  /** Legacy modelo viejo, no se usa. */
   comision_porcentaje: z.number().min(0).max(100).optional(),
+  /** Legacy modelo viejo B2B, no se usa. */
   condiciones_b2b_minimo_eur: z.number().min(0).optional(),
   activa: z.boolean().optional(),
 });
@@ -77,6 +81,10 @@ export async function POST(req: Request) {
       webUrl: data.web_url ?? null,
       contactoEmail: data.contacto_email ?? null,
       contactoTelefono: data.contacto_telefono ?? null,
+      comisionSalonPorcentaje:
+        data.comision_salon_porcentaje !== undefined
+          ? data.comision_salon_porcentaje.toFixed(2)
+          : undefined,
       comisionPorcentaje:
         data.comision_porcentaje !== undefined
           ? data.comision_porcentaje.toFixed(2)

@@ -32,7 +32,7 @@ export function ProductoFichaClient({
         nombre: p.nombre,
         precio: p.precioEur,
         imagen: p.imagenes[0] ?? null,
-        maxCantidad: p.cantidadDisponible,
+        maxCantidad: 99,
         marcaNombre: p.marca.nombre,
       },
       cantidad,
@@ -61,13 +61,13 @@ export function ProductoFichaClient({
           <input
             type="number"
             min={1}
-            max={p.cantidadDisponible}
+            max={99}
             value={cantidad}
             onChange={(e) =>
               setCantidad(
                 Math.max(
                   1,
-                  Math.min(p.cantidadDisponible, Number(e.target.value) || 1),
+                  Math.min(99, Number(e.target.value) || 1),
                 ),
               )
             }
@@ -76,7 +76,7 @@ export function ProductoFichaClient({
           <button
             type="button"
             onClick={() =>
-              setCantidad((c) => Math.min(p.cantidadDisponible, c + 1))
+              setCantidad((c) => Math.min(99, c + 1))
             }
             className="h-9 w-9 grid place-items-center text-stone hover:text-ink"
             aria-label="Sumar"

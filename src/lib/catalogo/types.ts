@@ -33,16 +33,20 @@ export type ProductoCatalogo = {
   descripcion: string | null;
   categoria: CategoriaProducto;
   imagenes: string[];
-  precioMayoristaEur: number;
-  precioPublicoRecomendadoEur: number;
+  /** PVP final fijo (lo que paga el cliente). */
+  precioPublicoEur: number;
   unidadMedida: string;
   pesoG: number | null;
+  /** Si el salón actual lo tiene activo en su tienda pública. */
+  enMiTienda: boolean;
+  /** Lo que se lleva el salón por unidad (calculado: precio × comision%). */
+  comisionSalonEur: number;
   marca: {
     id: string;
     slug: string;
     nombre: string;
     logoUrl: string | null;
-    condicionesB2bMinimoEur: number;
+    comisionSalonPorcentaje: number;
   };
 };
 
@@ -52,7 +56,7 @@ export type MarcaCatalogo = {
   nombre: string;
   descripcion: string | null;
   logoUrl: string | null;
-  condicionesB2bMinimoEur: number;
+  comisionSalonPorcentaje: number;
   numProductos: number;
 };
 

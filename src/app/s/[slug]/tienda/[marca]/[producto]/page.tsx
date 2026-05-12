@@ -113,12 +113,6 @@ export default async function ProductoFichaPage({
               </span>
               <span className="text-[12.5px] text-stone">/ {p.unidad}</span>
             </div>
-            {p.cantidadDisponible <= 5 && (
-              <div className="text-[12.5px] text-terracotta tight">
-                Quedan solo {p.cantidadDisponible} unidades
-              </div>
-            )}
-
             <ProductoFichaClient
               salonSlug={salon.slug}
               aceptaPagos={salon.aceptaPagos}

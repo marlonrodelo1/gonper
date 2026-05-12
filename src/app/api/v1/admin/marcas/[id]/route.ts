@@ -37,7 +37,11 @@ const PatchBody = z.object({
   web_url: z.string().url().max(500).nullable().optional(),
   contacto_email: z.string().email().max(200).nullable().optional(),
   contacto_telefono: z.string().max(40).nullable().optional(),
+  /** Modelo dropshipping: % que recibe el salón. */
+  comision_salon_porcentaje: z.number().min(0).max(100).optional(),
+  /** Legacy, no se usa. */
   comision_porcentaje: z.number().min(0).max(100).optional(),
+  /** Legacy, no se usa. */
   condiciones_b2b_minimo_eur: z.number().min(0).optional(),
   activa: z.boolean().optional(),
 });
@@ -68,6 +72,8 @@ export async function PATCH(
   if (d.web_url !== undefined) update.webUrl = d.web_url;
   if (d.contacto_email !== undefined) update.contactoEmail = d.contacto_email;
   if (d.contacto_telefono !== undefined) update.contactoTelefono = d.contacto_telefono;
+  if (d.comision_salon_porcentaje !== undefined)
+    update.comisionSalonPorcentaje = d.comision_salon_porcentaje.toFixed(2);
   if (d.comision_porcentaje !== undefined) update.comisionPorcentaje = d.comision_porcentaje.toFixed(2);
   if (d.condiciones_b2b_minimo_eur !== undefined) update.condicionesB2bMinimoEur = d.condiciones_b2b_minimo_eur.toFixed(2);
   if (d.activa !== undefined) update.activa = d.activa;

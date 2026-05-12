@@ -35,10 +35,7 @@ export default async function CheckoutPage({
           salonSlug={salon.slug}
           salonNombre={salon.nombre}
           salonDireccion={salon.direccion}
-          aceptaPagoOnline={salon.aceptaPagoOnline}
-          aceptaEfectivo={salon.aceptaEfectivo}
-          costeEnvioEur={salon.costeEnvioEur}
-          zonaEnvio={salon.zonaEnvio}
+          aceptaPagos={salon.aceptaPagos}
         />
       </main>
     </div>

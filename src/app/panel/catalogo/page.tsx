@@ -23,6 +23,7 @@ type SearchParams = {
 
 type SalonRow = {
   id?: string;
+  slug?: string;
   tipo_negocio?: string;
   tipoNegocio?: string;
 } | null;
@@ -37,6 +38,16 @@ const TIPOS_VALIDOS = new Set([
 
 const CATS_VALIDOS = new Set(CATEGORIAS_PRODUCTO.map((c) => c.key as string));
 
+function buildReturnTo(sp: SearchParams): string {
+  const params = new URLSearchParams();
+  if (sp.marca) params.set('marca', sp.marca);
+  if (sp.cat_marca) params.set('cat_marca', sp.cat_marca);
+  if (sp.categoria) params.set('categoria', sp.categoria);
+  if (sp.q) params.set('q', sp.q);
+  const qs = params.toString();
+  return qs ? `/panel/catalogo?${qs}` : '/panel/catalogo';
+}
+
 export default async function PanelCatalogoPage({
   searchParams,
 }: {
@@ -44,12 +55,13 @@ export default async function PanelCatalogoPage({
 }) {
   const sp = await searchParams;
   const salon = (await getCurrentSalon()) as SalonRow;
+  const salonId = salon?.id;
   const tipoNegocio = salon?.tipo_negocio ?? salon?.tipoNegocio ?? undefined;
   const tipoNegocioFiltro =
     tipoNegocio && TIPOS_VALIDOS.has(tipoNegocio) ? tipoNegocio : undefined;
 
   // ============================================
-  // Vista A — sin marca: grid de marcas (marcas-first)
+  // Vista A — sin marca: grid de marcas
   // ============================================
   if (!sp.marca || sp.marca.trim() === '') {
     const marcas = await listMarcasCatalogo();
@@ -63,9 +75,9 @@ export default async function PanelCatalogoPage({
             Elige una marca
           </h2>
           <p className="text-[13px] text-stone">
-            Trabajamos por marcas. Selecciona una para ver su catálogo de
-            productos y enviar tu pedido. Cuando recibas el stock, podrás
-            venderlo en tu tienda pública.
+            Trabajamos por marcas. Cada producto que actives aparece en tu
+            tienda pública al precio que fija la marca. Te llevas un % de
+            comisión por cada venta.
           </p>
         </header>
 
@@ -79,7 +91,6 @@ export default async function PanelCatalogoPage({
   // ============================================
   const marca = await getMarcaCatalogoBySlugOrId(sp.marca);
   if (!marca) {
-    // Marca no existe o inactiva: volvemos al grid de marcas con aviso suave.
     const marcas = await listMarcasCatalogo();
     return (
       <div className="flex w-full flex-col gap-5">
@@ -115,6 +126,7 @@ export default async function PanelCatalogoPage({
     categoria,
     q,
     tipo_negocio: tipoNegocioFiltro,
+    salon_id: salonId,
   });
 
   return (
@@ -129,6 +141,7 @@ export default async function PanelCatalogoPage({
           categoria: categoria ?? '',
           q: q ?? '',
         }}
+        returnTo={buildReturnTo(sp)}
       />
     </div>
   );

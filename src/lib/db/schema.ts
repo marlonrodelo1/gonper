@@ -1061,9 +1061,18 @@ export const marcas = pgTable(
     webUrl: text('web_url'),
     contactoEmail: text('contacto_email'),
     contactoTelefono: text('contacto_telefono'),
+    /** Legacy del modelo viejo de stock con comisión a Gestori — ya no se usa. */
     comisionPorcentaje: numeric('comision_porcentaje', { precision: 5, scale: 2 })
       .notNull()
       .default('15.00'),
+    /** Lo que recibe el salón sobre cada venta B2C (% del total). */
+    comisionSalonPorcentaje: numeric('comision_salon_porcentaje', {
+      precision: 5,
+      scale: 2,
+    })
+      .notNull()
+      .default('0'),
+    /** Legacy del modelo viejo B2B con pedidos — ya no se usa. */
     condicionesB2bMinimoEur: numeric('condiciones_b2b_minimo_eur', {
       precision: 10,
       scale: 2,
@@ -1205,7 +1214,43 @@ export const productos = pgTable(
   }),
 );
 
-// stock_salon: lo que el salón tiene físicamente
+// productos_salon: qué productos tiene activos cada salón en su tienda
+// pública (modelo dropshipping, sesión 2026-05-12). Reemplaza el uso
+// operativo de `stock_salon` para el flujo nuevo.
+export const productosSalon = pgTable(
+  'productos_salon',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    salonId: uuid('salon_id')
+      .notNull()
+      .references(() => salones.id, { onDelete: 'cascade' }),
+    productoId: uuid('producto_id')
+      .notNull()
+      .references(() => productos.id, { onDelete: 'cascade' }),
+    activo: boolean('activo').notNull().default(true),
+    activadoAt: timestamp('activado_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    desactivadoAt: timestamp('desactivado_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    uq: unique('productos_salon_unique').on(t.salonId, t.productoId),
+    idxSalonActivo: index('idx_productos_salon_salon_activo')
+      .on(t.salonId)
+      .where(sql`${t.activo} = true`),
+    idxProducto: index('idx_productos_salon_producto').on(t.productoId),
+  }),
+);
+
+// stock_salon: DEPRECATED. Reemplazada por `productos_salon` para el
+// modelo dropshipping (sesión 2026-05-12). Se mantiene en el schema
+// solo para no romper datos históricos.
 export const stockSalon = pgTable(
   'stock_salon',
   {
@@ -1336,10 +1381,22 @@ export const ventasB2c = pgTable(
     clienteNombre: text('cliente_nombre'),
     clienteTelefono: text('cliente_telefono'),
     totalEur: numeric('total_eur', { precision: 10, scale: 2 }).notNull(),
+    /** Legacy modelo viejo: lo que se restaba al salón. Hoy siempre 0. */
     comisionGestoriEur: numeric('comision_gestori_eur', {
       precision: 10,
       scale: 2,
     })
+      .notNull()
+      .default('0'),
+    /** Modelo dropshipping: lo que recibe el salón via Stripe transfer. */
+    comisionSalonEur: numeric('comision_salon_eur', {
+      precision: 10,
+      scale: 2,
+    })
+      .notNull()
+      .default('0'),
+    /** Modelo dropshipping: lo que Gestori paga a la marca (info contable). */
+    costeMarcaEur: numeric('coste_marca_eur', { precision: 10, scale: 2 })
       .notNull()
       .default('0'),
     stripePaymentIntentId: text('stripe_payment_intent_id').unique(),
@@ -1505,6 +1562,9 @@ export type NewProducto = typeof productos.$inferInsert;
 
 export type StockSalon = typeof stockSalon.$inferSelect;
 export type NewStockSalon = typeof stockSalon.$inferInsert;
+
+export type ProductoSalon = typeof productosSalon.$inferSelect;
+export type NewProductoSalon = typeof productosSalon.$inferInsert;
 
 export type PedidoB2b = typeof pedidosB2b.$inferSelect;
 export type NewPedidoB2b = typeof pedidosB2b.$inferInsert;

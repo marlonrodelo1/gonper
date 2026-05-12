@@ -69,9 +69,8 @@ export function MarcasGrid({ marcas }: { marcas: MarcaCatalogo[] }) {
             )}
             <div className="mt-auto flex items-center justify-between gap-3 pt-2 text-[11.5px] text-stone">
               <span className="inline-flex items-center gap-1.5">
-                {m.condicionesB2bMinimoEur > 0
-                  ? `Mínimo ${m.condicionesB2bMinimoEur.toFixed(2)} €`
-                  : 'Sin mínimo de pedido'}
+                <span className="pill-dot bg-sage" />
+                {m.comisionSalonPorcentaje.toFixed(0)}% comisión
               </span>
               <span className="tight text-terracotta group-hover:text-terracotta-2">
                 Ver catálogo →

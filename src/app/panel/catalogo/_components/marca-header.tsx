@@ -47,10 +47,9 @@ export function MarcaHeader({ marca }: { marca: MarcaCatalogo }) {
             {marca.numProductos} producto{marca.numProductos === 1 ? '' : 's'}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="pill-dot bg-stone/40" />
-            {marca.condicionesB2bMinimoEur > 0
-              ? `Mínimo de pedido: ${marca.condicionesB2bMinimoEur.toFixed(2)} €`
-              : 'Sin mínimo de pedido'}
+            <span className="pill-dot bg-sage" />
+            Te llevas el {marca.comisionSalonPorcentaje.toFixed(0)}% de cada
+            venta
           </span>
         </div>
       </div>

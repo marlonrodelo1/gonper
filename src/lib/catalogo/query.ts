@@ -1,17 +1,23 @@
 /**
  * Queries del catálogo central — server only.
  *
- * Lo consume el panel del salón (`/panel/catalogo`) para mostrar qué
- * productos puede pedir a las marcas. NO incluye precios públicos
- * recomendados como "obligatorios" — solo informativos: el salón ajusta
- * su PVP final cuando los activa en su tienda pública.
+ * Modelo dropshipping (sesión 2026-05-12): el salón ve marcas y productos
+ * del catálogo central que Marlon define. NO toca precios ni stock — solo
+ * activa/desactiva cada producto en su tienda pública. Cuando un cliente
+ * compra, Rogotech cobra y reparte una comisión al salón vía Stripe Connect
+ * transfer.
  */
 
 import 'server-only';
 import { and, asc, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { categoriasMarca, marcas, productos } from '@/lib/db/schema';
+import {
+  categoriasMarca,
+  marcas,
+  productos,
+  productosSalon,
+} from '@/lib/db/schema';
 
 import type {
   CategoriaMarcaCatalogo,
@@ -28,7 +34,7 @@ export async function listMarcasCatalogo(): Promise<MarcaCatalogo[]> {
       nombre: marcas.nombre,
       descripcion: marcas.descripcion,
       logoUrl: marcas.logoUrl,
-      condicionesB2bMinimoEur: marcas.condicionesB2bMinimoEur,
+      comisionSalonPorcentaje: marcas.comisionSalonPorcentaje,
     })
     .from(marcas)
     .where(eq(marcas.activa, true))
@@ -36,7 +42,6 @@ export async function listMarcasCatalogo(): Promise<MarcaCatalogo[]> {
 
   if (rows.length === 0) return [];
 
-  // Conteo de productos activos por marca en una sola query.
   const counts = await db
     .select({
       marcaId: productos.marcaId,
@@ -56,15 +61,11 @@ export async function listMarcasCatalogo(): Promise<MarcaCatalogo[]> {
     nombre: r.nombre,
     descripcion: r.descripcion,
     logoUrl: r.logoUrl,
-    condicionesB2bMinimoEur: Number(r.condicionesB2bMinimoEur),
+    comisionSalonPorcentaje: Number(r.comisionSalonPorcentaje),
     numProductos: map.get(r.id) ?? 0,
   }));
 }
 
-/**
- * Resuelve una marca por su slug (preferido en URLs) o por su uuid. Devuelve
- * `null` si no existe o está inactiva.
- */
 export async function getMarcaCatalogoBySlugOrId(
   slugOrId: string,
 ): Promise<MarcaCatalogo | null> {
@@ -81,7 +82,7 @@ export async function getMarcaCatalogoBySlugOrId(
       nombre: marcas.nombre,
       descripcion: marcas.descripcion,
       logoUrl: marcas.logoUrl,
-      condicionesB2bMinimoEur: marcas.condicionesB2bMinimoEur,
+      comisionSalonPorcentaje: marcas.comisionSalonPorcentaje,
     })
     .from(marcas)
     .where(where)
@@ -100,15 +101,11 @@ export async function getMarcaCatalogoBySlugOrId(
     nombre: row.nombre,
     descripcion: row.descripcion,
     logoUrl: row.logoUrl,
-    condicionesB2bMinimoEur: Number(row.condicionesB2bMinimoEur),
+    comisionSalonPorcentaje: Number(row.comisionSalonPorcentaje),
     numProductos: Number(countRow?.total ?? 0),
   };
 }
 
-/**
- * Categorías propias de una marca con su conteo de productos activos. Se
- * usan como chips de sub-navegación dentro de la vista de la marca.
- */
 export async function listCategoriasMarcaCatalogo(
   marcaId: string,
 ): Promise<CategoriaMarcaCatalogo[]> {
@@ -157,6 +154,8 @@ export type CatalogoFilters = {
   categoria_marca_id?: string;
   q?: string;
   tipo_negocio?: string;
+  /** Id del salón que está viendo el catálogo — para devolver `enMiTienda`. */
+  salon_id?: string;
 };
 
 export async function listProductosCatalogo(
@@ -190,8 +189,7 @@ export async function listProductosCatalogo(
       descripcion: productos.descripcion,
       categoria: productos.categoria,
       imagenes: productos.imagenes,
-      precioMayoristaEur: productos.precioMayoristaEur,
-      precioPublicoRecomendadoEur: productos.precioPublicoRecomendadoEur,
+      precioPublicoEur: productos.precioPublicoRecomendadoEur,
       unidadMedida: productos.unidadMedida,
       pesoG: productos.pesoG,
       tipoNegocioTarget: productos.tipoNegocioTarget,
@@ -199,7 +197,7 @@ export async function listProductosCatalogo(
       marcaSlug: marcas.slug,
       marcaNombre: marcas.nombre,
       marcaLogoUrl: marcas.logoUrl,
-      marcaCondicionesMinimoEur: marcas.condicionesB2bMinimoEur,
+      marcaComisionSalonPorcentaje: marcas.comisionSalonPorcentaje,
     })
     .from(productos)
     .innerJoin(marcas, eq(marcas.id, productos.marcaId))
@@ -207,27 +205,52 @@ export async function listProductosCatalogo(
     .orderBy(asc(marcas.nombre), desc(productos.createdAt))
     .limit(200);
 
-  let result = rows.map((r) => ({
-    id: r.id,
-    slug: r.slug,
-    nombre: r.nombre,
-    descripcion: r.descripcion,
-    categoria: r.categoria as CategoriaProducto,
-    imagenes: Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [],
-    precioMayoristaEur: Number(r.precioMayoristaEur),
-    precioPublicoRecomendadoEur: Number(r.precioPublicoRecomendadoEur),
-    unidadMedida: r.unidadMedida,
-    pesoG: r.pesoG,
-    marca: {
-      id: r.marcaId,
-      slug: r.marcaSlug,
-      nombre: r.marcaNombre,
-      logoUrl: r.marcaLogoUrl,
-      condicionesB2bMinimoEur: Number(r.marcaCondicionesMinimoEur),
-    },
-  }));
+  // Conjunto de producto_id que el salón actual tiene activos
+  let activosSet = new Set<string>();
+  if (filters.salon_id && rows.length > 0) {
+    const productIds = rows.map((r) => r.id);
+    const activosRows = await db
+      .select({ productoId: productosSalon.productoId })
+      .from(productosSalon)
+      .where(
+        and(
+          eq(productosSalon.salonId, filters.salon_id),
+          eq(productosSalon.activo, true),
+        ),
+      );
+    activosSet = new Set(
+      activosRows
+        .map((a) => a.productoId)
+        .filter((id) => productIds.includes(id)),
+    );
+  }
 
-  // Filtro por tipo_negocio del salón se hace en cliente con array overlap
+  let result: ProductoCatalogo[] = rows.map((r) => {
+    const precio = Number(r.precioPublicoEur);
+    const comisionPct = Number(r.marcaComisionSalonPorcentaje);
+    const comisionEur = (precio * comisionPct) / 100;
+    return {
+      id: r.id,
+      slug: r.slug,
+      nombre: r.nombre,
+      descripcion: r.descripcion,
+      categoria: r.categoria as CategoriaProducto,
+      imagenes: Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [],
+      precioPublicoEur: precio,
+      unidadMedida: r.unidadMedida,
+      pesoG: r.pesoG,
+      enMiTienda: activosSet.has(r.id),
+      comisionSalonEur: Math.round(comisionEur * 100) / 100,
+      marca: {
+        id: r.marcaId,
+        slug: r.marcaSlug,
+        nombre: r.marcaNombre,
+        logoUrl: r.marcaLogoUrl,
+        comisionSalonPorcentaje: comisionPct,
+      },
+    };
+  });
+
   if (filters.tipo_negocio) {
     const tn = filters.tipo_negocio;
     result = result.filter((p) => {
@@ -238,58 +261,4 @@ export async function listProductosCatalogo(
   }
 
   return result;
-}
-
-export async function getProductoById(
-  id: string,
-): Promise<ProductoCatalogo | null> {
-  const [r] = await db
-    .select({
-      id: productos.id,
-      slug: productos.slug,
-      nombre: productos.nombre,
-      descripcion: productos.descripcion,
-      categoria: productos.categoria,
-      imagenes: productos.imagenes,
-      precioMayoristaEur: productos.precioMayoristaEur,
-      precioPublicoRecomendadoEur: productos.precioPublicoRecomendadoEur,
-      unidadMedida: productos.unidadMedida,
-      pesoG: productos.pesoG,
-      marcaId: marcas.id,
-      marcaSlug: marcas.slug,
-      marcaNombre: marcas.nombre,
-      marcaLogoUrl: marcas.logoUrl,
-      marcaCondicionesMinimoEur: marcas.condicionesB2bMinimoEur,
-    })
-    .from(productos)
-    .innerJoin(marcas, eq(marcas.id, productos.marcaId))
-    .where(
-      and(
-        eq(productos.id, id),
-        eq(productos.activo, true),
-        eq(marcas.activa, true),
-      ),
-    )
-    .limit(1);
-
-  if (!r) return null;
-  return {
-    id: r.id,
-    slug: r.slug,
-    nombre: r.nombre,
-    descripcion: r.descripcion,
-    categoria: r.categoria as CategoriaProducto,
-    imagenes: Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [],
-    precioMayoristaEur: Number(r.precioMayoristaEur),
-    precioPublicoRecomendadoEur: Number(r.precioPublicoRecomendadoEur),
-    unidadMedida: r.unidadMedida,
-    pesoG: r.pesoG,
-    marca: {
-      id: r.marcaId,
-      slug: r.marcaSlug,
-      nombre: r.marcaNombre,
-      logoUrl: r.marcaLogoUrl,
-      condicionesB2bMinimoEur: Number(r.marcaCondicionesMinimoEur),
-    },
-  };
 }

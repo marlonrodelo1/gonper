@@ -1,29 +1,15 @@
-'use client';
-
-import { useState } from 'react';
-
 import type { ProductoCatalogo } from '@/lib/catalogo/types';
+import { toggleProductoEnMiTienda } from '../actions';
 
-type Props = {
+export function ProductoCard({
+  producto: p,
+  returnTo,
+}: {
   producto: ProductoCatalogo;
-  onAdd: (cantidad: number) => void;
-};
-
-export function ProductoCard({ producto: p, onAdd }: Props) {
-  const [cantidad, setCantidad] = useState(1);
-
-  const ahorroPorcentaje =
-    p.precioPublicoRecomendadoEur > p.precioMayoristaEur
-      ? Math.round(
-          ((p.precioPublicoRecomendadoEur - p.precioMayoristaEur) /
-            p.precioPublicoRecomendadoEur) *
-            100,
-        )
-      : 0;
-
+  returnTo: string;
+}) {
   return (
     <article className="card flex flex-col overflow-hidden">
-      {/* Imagen */}
       <div
         className="relative w-full bg-cream-2"
         style={{ aspectRatio: '4/3' }}
@@ -41,104 +27,57 @@ export function ProductoCard({ producto: p, onAdd }: Props) {
             {p.nombre.charAt(0).toUpperCase()}
           </div>
         )}
-        {ahorroPorcentaje > 0 && (
+        {p.enMiTienda && (
           <span
-            className="absolute right-2 top-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-[10.5px] font-medium tight"
+            className="absolute right-2 top-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10.5px] font-medium tight"
             style={{ background: 'rgba(139,157,122,0.92)', color: '#FBF8F2' }}
           >
-            -{ahorroPorcentaje}% vs PVP
+            <span
+              className="inline-block h-1.5 w-1.5 rounded-full"
+              style={{ background: '#FBF8F2' }}
+            />
+            En mi tienda
           </span>
         )}
       </div>
 
-      {/* Body */}
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <div className="flex items-center gap-2">
-          {p.marca.logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={p.marca.logoUrl}
-              alt=""
-              className="h-4 w-4 rounded-full object-cover"
-            />
-          )}
-          <span className="text-[11.5px] uppercase tracking-[0.16em] text-stone/80">
-            {p.marca.nombre}
-          </span>
-        </div>
+      <div className="flex flex-1 flex-col gap-2 p-3.5">
         <h3
-          className="font-playfair leading-tight text-ink"
-          style={{ fontSize: '17px', letterSpacing: '-0.01em' }}
+          className="font-playfair leading-tight text-ink line-clamp-2"
+          style={{ fontSize: '15px', letterSpacing: '-0.01em' }}
         >
           {p.nombre}
         </h3>
-        {p.descripcion && (
-          <p className="line-clamp-2 text-[12.5px] text-stone leading-relaxed">
-            {p.descripcion}
-          </p>
-        )}
 
-        <div className="mt-auto flex flex-col gap-2 pt-2">
-          <div className="flex items-baseline justify-between gap-2">
-            <div>
-              <span className="text-[10.5px] uppercase tracking-[0.18em] text-stone/70">
-                Precio mayorista
-              </span>
-              <div className="tight text-[20px] font-medium text-ink">
-                {p.precioMayoristaEur.toFixed(2)} €
-                <span className="ml-1 text-[11.5px] font-normal text-stone/70">
-                  / {p.unidadMedida}
-                </span>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="text-[10.5px] uppercase tracking-[0.16em] text-stone/60">
-                PVP recom.
-              </span>
-              <div className="tight text-[13px] text-stone">
-                {p.precioPublicoRecomendadoEur.toFixed(2)} €
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <div className="inline-flex items-center rounded-full border border-line bg-paper">
-              <button
-                type="button"
-                onClick={() => setCantidad((c) => Math.max(1, c - 1))}
-                className="h-8 w-8 grid place-items-center text-stone hover:text-ink"
-                aria-label="Restar"
-              >
-                −
-              </button>
-              <input
-                type="number"
-                min={1}
-                max={999}
-                value={cantidad}
-                onChange={(e) =>
-                  setCantidad(Math.max(1, Math.min(999, Number(e.target.value) || 1)))
-                }
-                className="w-10 bg-transparent text-center text-[13px] tight text-ink focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              />
-              <button
-                type="button"
-                onClick={() => setCantidad((c) => Math.min(999, c + 1))}
-                className="h-8 w-8 grid place-items-center text-stone hover:text-ink"
-                aria-label="Sumar"
-              >
-                +
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => onAdd(cantidad)}
-              className="gloss-btn tight flex-1 rounded-full px-4 py-2 text-[12.5px] font-medium"
-            >
-              Añadir al pedido
-            </button>
-          </div>
+        <div className="flex items-baseline gap-2">
+          <span className="tight text-[18px] font-medium text-ink">
+            {p.precioPublicoEur.toFixed(2)} €
+          </span>
+          <span className="text-[11px] text-stone/70">/ {p.unidadMedida}</span>
         </div>
+
+        <div className="text-[11.5px] text-sage-deep">
+          Te llevas{' '}
+          <span className="font-medium tabular-nums">
+            {p.comisionSalonEur.toFixed(2)} €
+          </span>{' '}
+          por venta
+        </div>
+
+        <form action={toggleProductoEnMiTienda} className="mt-auto pt-2">
+          <input type="hidden" name="producto_id" value={p.id} />
+          <input type="hidden" name="return_to" value={returnTo} />
+          <button
+            type="submit"
+            className={`tight inline-flex w-full items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[12.5px] font-medium transition ${
+              p.enMiTienda
+                ? 'border border-line bg-paper text-stone hover:text-ink'
+                : 'gloss-btn'
+            }`}
+          >
+            {p.enMiTienda ? 'Quitar de mi tienda' : 'Vender en mi tienda'}
+          </button>
+        </form>
       </div>
     </article>
   );

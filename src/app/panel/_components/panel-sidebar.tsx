@@ -51,8 +51,6 @@ const navWeb: NavItem[] = [
 
 const navTienda: NavItem[] = [
   { href: '/panel/catalogo', label: 'Catálogo', icon: Icon.Sparkle },
-  { href: '/panel/pedidos', label: 'Pedidos', icon: Icon.Sparkle, activeMatch: '/panel/pedidos' },
-  { href: '/panel/stock', label: 'Stock', icon: Icon.Sparkle },
   { href: '/panel/ventas', label: 'Ventas online', icon: Icon.Sparkle, activeMatch: '/panel/ventas' },
 ];
 

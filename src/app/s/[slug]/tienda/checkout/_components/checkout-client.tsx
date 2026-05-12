@@ -21,10 +21,7 @@ type Props = {
   salonSlug: string;
   salonNombre: string;
   salonDireccion: string | null;
-  aceptaPagoOnline: boolean;
-  aceptaEfectivo: boolean;
-  costeEnvioEur: number | null;
-  zonaEnvio: string | null;
+  aceptaPagos: boolean;
 };
 
 type CheckoutResp =
@@ -32,27 +29,15 @@ type CheckoutResp =
       ok: true;
       venta_id: string;
       numero: string;
-      metodo_pago: 'online';
       client_secret: string;
       publishable_key: string | null;
     }
-  | {
-      ok: true;
-      venta_id: string;
-      numero: string;
-      metodo_pago: 'efectivo';
-      redirect_url: string;
-    }
-  | { error: string; producto?: string; disponible?: number };
+  | { error: string };
 
 export function CheckoutClient({
   salonSlug,
   salonNombre,
-  salonDireccion,
-  aceptaPagoOnline,
-  aceptaEfectivo,
-  costeEnvioEur,
-  zonaEnvio,
+  aceptaPagos,
 }: Props) {
   const router = useRouter();
   const [items, setItems] = useState<CarritoItem[]>([]);
@@ -63,10 +48,6 @@ export function CheckoutClient({
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [telefono, setTelefono] = useState('');
-  const [metodoPago, setMetodoPago] = useState<'online' | 'efectivo'>(
-    aceptaPagoOnline ? 'online' : 'efectivo',
-  );
-  const [metodoEntrega, setMetodoEntrega] = useState<'recogida' | 'envio'>('recogida');
   const [direccionEnvio, setDireccionEnvio] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -75,10 +56,7 @@ export function CheckoutClient({
     setItems(leerCarrito(salonSlug));
   }, [salonSlug]);
 
-  const subtotal = useMemo(() => totalCarrito(items), [items]);
-  const costeEnvio =
-    metodoEntrega === 'envio' && costeEnvioEur ? costeEnvioEur : 0;
-  const total = subtotal + costeEnvio;
+  const total = useMemo(() => totalCarrito(items), [items]);
 
   async function startCheckout(e: React.FormEvent) {
     e.preventDefault();
@@ -91,8 +69,12 @@ export function CheckoutClient({
       setErr('Necesitamos tu nombre y email.');
       return;
     }
-    if (metodoEntrega === 'envio' && !direccionEnvio.trim()) {
-      setErr('Necesitamos la dirección de envío.');
+    if (direccionEnvio.trim().length < 5) {
+      setErr('Necesitamos una dirección de envío válida.');
+      return;
+    }
+    if (!aceptaPagos) {
+      setErr('Este salón aún está configurando los pagos.');
       return;
     }
 
@@ -105,10 +87,7 @@ export function CheckoutClient({
           cliente_email: email.trim(),
           cliente_nombre: nombre.trim(),
           cliente_telefono: telefono.trim() || undefined,
-          metodo_pago: metodoPago,
-          metodo_entrega: metodoEntrega,
-          direccion_envio:
-            metodoEntrega === 'envio' ? direccionEnvio.trim() : undefined,
+          direccion_envio: direccionEnvio.trim(),
           items: items.map((it) => ({
             producto_id: it.productoId,
             cantidad: it.cantidad,
@@ -118,17 +97,8 @@ export function CheckoutClient({
       const data = (await res.json()) as CheckoutResp;
       if (!res.ok || !('ok' in data) || !data.ok) {
         const e = 'error' in data ? data.error : 'No se pudo iniciar el pedido';
-        setErr(
-          'producto' in data && data.producto
-            ? `${e}: ${data.producto}${data.disponible !== undefined ? ` (quedan ${data.disponible})` : ''}`
-            : e,
-        );
+        setErr(e);
         setSubmitting(false);
-        return;
-      }
-
-      if (data.metodo_pago === 'efectivo') {
-        router.push(data.redirect_url);
         return;
       }
 
@@ -185,16 +155,7 @@ export function CheckoutClient({
             <StripePaymentForm salonSlug={salonSlug} numero={numero} total={total} />
           </Elements>
         </section>
-        <ResumenAside
-          items={items}
-          subtotal={subtotal}
-          costeEnvio={costeEnvio}
-          total={total}
-          metodoPago={metodoPago}
-          metodoEntrega={metodoEntrega}
-          salonNombre={salonNombre}
-          salonDireccion={salonDireccion}
-        />
+        <ResumenAside items={items} total={total} salonNombre={salonNombre} />
       </div>
     );
   }
@@ -231,76 +192,27 @@ export function CheckoutClient({
           maxLength={40}
           placeholder="+34 ..."
         />
+        <FieldText
+          label="Dirección de envío"
+          value={direccionEnvio}
+          onChange={setDireccionEnvio}
+          placeholder="Calle, número, piso, ciudad, CP"
+          maxLength={500}
+          required
+        />
 
-        <div className="flex flex-col gap-2">
-          <label className="text-[11px] uppercase tracking-[0.2em] text-stone/80">
-            ¿Cómo quieres recibirlo?
-          </label>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <ChoiceTile
-              active={metodoEntrega === 'recogida'}
-              title="Recoger en el salón"
-              subtitle="Gratis · Te avisamos al estar listo"
-              onClick={() => setMetodoEntrega('recogida')}
-            />
-            <ChoiceTile
-              active={metodoEntrega === 'envio'}
-              title="Envío a domicilio"
-              subtitle={
-                costeEnvioEur
-                  ? `+ ${costeEnvioEur.toFixed(2)} € · ${zonaEnvio ?? 'envío gestionado por el salón'}`
-                  : 'No disponible'
-              }
-              disabled={!costeEnvioEur}
-              onClick={() => costeEnvioEur && setMetodoEntrega('envio')}
-            />
+        {!aceptaPagos && (
+          <div
+            className="rounded-2xl border px-4 py-3 text-[13px]"
+            style={{
+              borderColor: 'rgba(177,72,72,0.4)',
+              background: '#F1D6D6',
+              color: '#7C2E2E',
+            }}
+          >
+            Este salón aún está configurando los pagos. Vuelve en unos días.
           </div>
-        </div>
-
-        {metodoEntrega === 'envio' && (
-          <FieldText
-            label="Dirección de envío"
-            value={direccionEnvio}
-            onChange={setDireccionEnvio}
-            placeholder="Calle, número, piso, ciudad, CP"
-            maxLength={500}
-            required
-          />
         )}
-
-        <div className="flex flex-col gap-2">
-          <label className="text-[11px] uppercase tracking-[0.2em] text-stone/80">
-            ¿Cómo quieres pagar?
-          </label>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <ChoiceTile
-              active={metodoPago === 'online'}
-              title="Pagar online con tarjeta"
-              subtitle="Pago seguro con Stripe"
-              disabled={!aceptaPagoOnline}
-              onClick={() => aceptaPagoOnline && setMetodoPago('online')}
-            />
-            <ChoiceTile
-              active={metodoPago === 'efectivo'}
-              title="Pagar al recoger / recibir"
-              subtitle="Efectivo, Bizum, etc. — gestionado por el salón"
-              disabled={!aceptaEfectivo}
-              onClick={() => aceptaEfectivo && setMetodoPago('efectivo')}
-            />
-          </div>
-          {!aceptaPagoOnline && !aceptaEfectivo && (
-            <div
-              className="rounded-2xl border px-4 py-3 text-[13px]"
-              style={{
-                borderColor: 'rgba(177,72,72,0.4)',
-                background: '#F1D6D6',
-                color: '#7C2E2E',
-              }}
-            >
-              Este salón aún no tiene ningún método de cobro activo.
-            </div>
-          )}
-        </div>
 
         {err && (
           <div
@@ -317,33 +229,19 @@ export function CheckoutClient({
 
         <button
           type="submit"
-          disabled={submitting || (!aceptaPagoOnline && !aceptaEfectivo)}
+          disabled={submitting || !aceptaPagos}
           className="gloss-btn tight rounded-full px-5 py-3 text-[13.5px] font-medium disabled:opacity-60"
         >
-          {submitting
-            ? 'Procesando…'
-            : metodoPago === 'online'
-              ? `Continuar al pago · ${total.toFixed(2)} €`
-              : `Confirmar pedido · ${total.toFixed(2)} €`}
+          {submitting ? 'Procesando…' : `Continuar al pago · ${total.toFixed(2)} €`}
         </button>
 
         <p className="text-[11.5px] text-stone/75">
-          {metodoPago === 'online'
-            ? 'Cobro online vía Stripe. Tu tarjeta nunca pasa por Gestori.'
-            : `Tu pedido se reserva y ${salonNombre} se pondrá en contacto para coordinar el cobro y la entrega.`}
+          Pago seguro con Stripe. La marca te envía directamente a la dirección
+          que indiques. Plazos de entrega estándar.
         </p>
       </section>
 
-      <ResumenAside
-        items={items}
-        subtotal={subtotal}
-        costeEnvio={costeEnvio}
-        total={total}
-        metodoPago={metodoPago}
-        metodoEntrega={metodoEntrega}
-        salonNombre={salonNombre}
-        salonDireccion={salonDireccion}
-      />
+      <ResumenAside items={items} total={total} salonNombre={salonNombre} />
     </form>
   );
 }
@@ -380,36 +278,6 @@ function FieldText({
         className="rounded-2xl border border-line bg-paper px-4 py-3 text-[14px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2"
       />
     </div>
-  );
-}
-
-function ChoiceTile({
-  active,
-  disabled,
-  title,
-  subtitle,
-  onClick,
-}: {
-  active: boolean;
-  disabled?: boolean;
-  title: string;
-  subtitle: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={`flex flex-col items-start gap-0.5 rounded-2xl border px-4 py-3 text-left transition ${
-        active
-          ? 'border-ink bg-ink/[0.04]'
-          : 'border-line bg-paper hover:border-line-2'
-      } disabled:opacity-50 disabled:cursor-not-allowed`}
-    >
-      <span className="tight text-[13.5px] font-medium text-ink">{title}</span>
-      <span className="text-[11.5px] text-stone">{subtitle}</span>
-    </button>
   );
 }
 
@@ -475,22 +343,12 @@ function StripePaymentForm({
 
 function ResumenAside({
   items,
-  subtotal,
-  costeEnvio,
   total,
-  metodoPago,
-  metodoEntrega,
   salonNombre,
-  salonDireccion,
 }: {
   items: CarritoItem[];
-  subtotal: number;
-  costeEnvio: number;
   total: number;
-  metodoPago: 'online' | 'efectivo';
-  metodoEntrega: 'recogida' | 'envio';
   salonNombre: string;
-  salonDireccion?: string | null;
 }) {
   return (
     <aside className="card flex flex-col gap-3 p-5 h-fit lg:sticky lg:top-5">
@@ -503,20 +361,12 @@ function ResumenAside({
             <span className="truncate pr-2">
               {it.cantidad}× {it.nombre}
             </span>
-            <span className="text-ink">{(it.precio * it.cantidad).toFixed(2)} €</span>
+            <span className="text-ink">
+              {(it.precio * it.cantidad).toFixed(2)} €
+            </span>
           </li>
         ))}
       </ul>
-      <div className="flex items-center justify-between text-[13px] text-stone border-t border-line pt-2">
-        <span>Subtotal</span>
-        <span className="text-ink">{subtotal.toFixed(2)} €</span>
-      </div>
-      <div className="flex items-center justify-between text-[13px] text-stone">
-        <span>{metodoEntrega === 'envio' ? 'Envío' : 'Recogida en salón'}</span>
-        <span className={metodoEntrega === 'envio' ? 'text-ink' : 'text-sage-deep'}>
-          {metodoEntrega === 'envio' ? `${costeEnvio.toFixed(2)} €` : 'Gratis'}
-        </span>
-      </div>
       <div className="flex items-center justify-between border-t border-line pt-3 mt-1">
         <span className="text-[11px] uppercase tracking-[0.2em] text-stone/80">
           Total
@@ -526,19 +376,8 @@ function ResumenAside({
         </span>
       </div>
       <p className="text-[11.5px] text-stone/75 leading-relaxed mt-1">
-        {metodoEntrega === 'recogida' ? (
-          <>
-            Recogida en <strong>{salonNombre}</strong>
-            {salonDireccion ? `. ${salonDireccion}` : ''}. Te avisaremos
-            cuando esté listo.
-          </>
-        ) : (
-          <>
-            Envío gestionado por <strong>{salonNombre}</strong>. Te
-            contactarán para coordinar la entrega.
-          </>
-        )}
-        {metodoPago === 'efectivo' && ' Pagas al recoger/recibir, no ahora.'}
+        Comprado a través de <strong>{salonNombre}</strong>. La marca envía a
+        tu dirección. Soporte y devoluciones por nuestro lado.
       </p>
     </aside>
   );

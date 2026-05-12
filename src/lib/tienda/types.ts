@@ -1,6 +1,8 @@
 /**
  * Tipos client-safe para la tienda pública del salón.
- * No importa Drizzle ni `db`.
+ * Modelo dropshipping (sesión 2026-05-12): el salón solo activa/desactiva
+ * productos del catálogo central. El precio es fijo (lo pone Marlon).
+ * No hay stock — asumimos que la marca siempre tiene disponibilidad.
  */
 
 export type TiendaProducto = {
@@ -12,7 +14,6 @@ export type TiendaProducto = {
   unidad: string;
   categoria: string;
   precioEur: number;
-  cantidadDisponible: number;
   marca: {
     id: string;
     slug: string;
@@ -30,11 +31,7 @@ export type TiendaSalon = {
   direccion: string | null;
   logoUrl: string | null;
   bannerUrl: string | null;
-  /** true si el visitante puede pagar (online o efectivo, alguno activo). */
+  /** Stripe Connect onboarded del salón — bloqueante para vender. */
   aceptaPagos: boolean;
-  aceptaPagoOnline: boolean;
-  aceptaEfectivo: boolean;
-  /** Coste de envío en € o null si no hace envíos. */
-  costeEnvioEur: number | null;
-  zonaEnvio: string | null;
+  stripeConnectAccountId: string | null;
 };

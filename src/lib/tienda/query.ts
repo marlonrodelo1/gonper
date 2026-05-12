@@ -2,12 +2,7 @@ import 'server-only';
 import { and, asc, desc, eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import {
-  marcas,
-  productos,
-  salones,
-  stockSalon,
-} from '@/lib/db/schema';
+import { marcas, productos, productosSalon, salones } from '@/lib/db/schema';
 import type { TiendaProducto, TiendaSalon } from './types';
 
 export async function getTiendaSalonBySlug(
@@ -25,23 +20,13 @@ export async function getTiendaSalonBySlug(
       bannerUrl: salones.bannerUrl,
       activo: salones.activo,
       stripeConnectOnboarded: salones.stripeConnectOnboarded,
-      tiendaAceptaPagoOnline: salones.tiendaAceptaPagoOnline,
-      tiendaAceptaEfectivo: salones.tiendaAceptaEfectivo,
-      tiendaCosteEnvioEur: salones.tiendaCosteEnvioEur,
-      tiendaZonaEnvio: salones.tiendaZonaEnvio,
+      stripeConnectAccountId: salones.stripeConnectAccountId,
     })
     .from(salones)
     .where(eq(salones.slug, slug))
     .limit(1);
 
   if (!row || !row.activo) return null;
-
-  const onlineDisponible =
-    row.tiendaAceptaPagoOnline && row.stripeConnectOnboarded;
-  const efectivoDisponible = row.tiendaAceptaEfectivo;
-  const costeEnvio = row.tiendaCosteEnvioEur
-    ? Number(row.tiendaCosteEnvioEur)
-    : null;
 
   return {
     id: row.id,
@@ -52,11 +37,8 @@ export async function getTiendaSalonBySlug(
     direccion: row.direccion,
     logoUrl: row.logoUrl,
     bannerUrl: row.bannerUrl,
-    aceptaPagos: onlineDisponible || efectivoDisponible,
-    aceptaPagoOnline: onlineDisponible,
-    aceptaEfectivo: efectivoDisponible,
-    costeEnvioEur: costeEnvio && costeEnvio > 0 ? costeEnvio : null,
-    zonaEnvio: row.tiendaZonaEnvio,
+    aceptaPagos: row.stripeConnectOnboarded,
+    stripeConnectAccountId: row.stripeConnectAccountId,
   };
 }
 
@@ -72,46 +54,41 @@ export async function listTiendaProductos(
       imagenes: productos.imagenes,
       unidad: productos.unidadMedida,
       categoria: productos.categoria,
-      precioPublicoEur: stockSalon.precioPublicoEur,
-      precioRecomendadoEur: productos.precioPublicoRecomendadoEur,
-      cantidadDisponible: stockSalon.cantidadDisponible,
+      precioEur: productos.precioPublicoRecomendadoEur,
       marcaId: marcas.id,
       marcaSlug: marcas.slug,
       marcaNombre: marcas.nombre,
       marcaLogoUrl: marcas.logoUrl,
     })
-    .from(stockSalon)
-    .innerJoin(productos, eq(productos.id, stockSalon.productoId))
+    .from(productosSalon)
+    .innerJoin(productos, eq(productos.id, productosSalon.productoId))
     .innerJoin(marcas, eq(marcas.id, productos.marcaId))
     .where(
       and(
-        eq(stockSalon.salonId, salonId),
-        eq(stockSalon.activoEnTiendaPublica, true),
+        eq(productosSalon.salonId, salonId),
+        eq(productosSalon.activo, true),
         eq(productos.activo, true),
         eq(marcas.activa, true),
       ),
     )
     .orderBy(asc(marcas.nombre), desc(productos.createdAt));
 
-  return rows
-    .filter((r) => r.cantidadDisponible > 0)
-    .map((r) => ({
-      productoId: r.productoId,
-      productoSlug: r.productoSlug,
-      nombre: r.nombre,
-      descripcion: r.descripcion,
-      imagenes: Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [],
-      unidad: r.unidad,
-      categoria: r.categoria,
-      precioEur: Number(r.precioPublicoEur ?? r.precioRecomendadoEur),
-      cantidadDisponible: r.cantidadDisponible,
-      marca: {
-        id: r.marcaId,
-        slug: r.marcaSlug,
-        nombre: r.marcaNombre,
-        logoUrl: r.marcaLogoUrl,
-      },
-    }));
+  return rows.map((r) => ({
+    productoId: r.productoId,
+    productoSlug: r.productoSlug,
+    nombre: r.nombre,
+    descripcion: r.descripcion,
+    imagenes: Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [],
+    unidad: r.unidad,
+    categoria: r.categoria,
+    precioEur: Number(r.precioEur),
+    marca: {
+      id: r.marcaId,
+      slug: r.marcaSlug,
+      nombre: r.marcaNombre,
+      logoUrl: r.marcaLogoUrl,
+    },
+  }));
 }
 
 export async function getTiendaProductoBySlug(args: {
@@ -128,21 +105,19 @@ export async function getTiendaProductoBySlug(args: {
       imagenes: productos.imagenes,
       unidad: productos.unidadMedida,
       categoria: productos.categoria,
-      precioPublicoEur: stockSalon.precioPublicoEur,
-      precioRecomendadoEur: productos.precioPublicoRecomendadoEur,
-      cantidadDisponible: stockSalon.cantidadDisponible,
-      activoEnTienda: stockSalon.activoEnTiendaPublica,
+      precioEur: productos.precioPublicoRecomendadoEur,
+      activoEnTienda: productosSalon.activo,
       marcaId: marcas.id,
       marcaSlug: marcas.slug,
       marcaNombre: marcas.nombre,
       marcaLogoUrl: marcas.logoUrl,
     })
-    .from(stockSalon)
-    .innerJoin(productos, eq(productos.id, stockSalon.productoId))
+    .from(productosSalon)
+    .innerJoin(productos, eq(productos.id, productosSalon.productoId))
     .innerJoin(marcas, eq(marcas.id, productos.marcaId))
     .where(
       and(
-        eq(stockSalon.salonId, args.salonId),
+        eq(productosSalon.salonId, args.salonId),
         eq(marcas.slug, args.marcaSlug),
         eq(productos.slug, args.productoSlug),
         eq(productos.activo, true),
@@ -151,7 +126,7 @@ export async function getTiendaProductoBySlug(args: {
     )
     .limit(1);
 
-  if (!r || !r.activoEnTienda || r.cantidadDisponible <= 0) return null;
+  if (!r || !r.activoEnTienda) return null;
 
   return {
     productoId: r.productoId,
@@ -161,8 +136,7 @@ export async function getTiendaProductoBySlug(args: {
     imagenes: Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [],
     unidad: r.unidad,
     categoria: r.categoria,
-    precioEur: Number(r.precioPublicoEur ?? r.precioRecomendadoEur),
-    cantidadDisponible: r.cantidadDisponible,
+    precioEur: Number(r.precioEur),
     marca: {
       id: r.marcaId,
       slug: r.marcaSlug,

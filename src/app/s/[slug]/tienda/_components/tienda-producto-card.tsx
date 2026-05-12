@@ -26,7 +26,8 @@ export function TiendaProductoCard({ producto: p, salonSlug, aceptaPagos }: Prop
       nombre: p.nombre,
       precio: p.precioEur,
       imagen: p.imagenes[0] ?? null,
-      maxCantidad: p.cantidadDisponible,
+      // Modelo dropshipping: sin tope de stock (Wella siempre tiene).
+      maxCantidad: 99,
       marcaNombre: p.marca.nombre,
     });
     setAdding(true);
@@ -35,11 +36,8 @@ export function TiendaProductoCard({ producto: p, salonSlug, aceptaPagos }: Prop
       setAdding(false);
       setFeedback(null);
     }, 1500);
-    // Disparar evento custom para que el FAB actualice su badge
     window.dispatchEvent(new CustomEvent('gestori-cart-updated'));
   }
-
-  const stockBajo = p.cantidadDisponible <= 5;
 
   return (
     <article className="card flex flex-col overflow-hidden">
@@ -60,14 +58,6 @@ export function TiendaProductoCard({ producto: p, salonSlug, aceptaPagos }: Prop
           <div className="absolute inset-0 grid place-items-center text-[42px] font-serif-it text-stone/55">
             {p.nombre.charAt(0)}
           </div>
-        )}
-        {stockBajo && (
-          <span
-            className="absolute right-2 top-2 inline-flex items-center rounded-full bg-paper/95 px-2.5 py-0.5 text-[10.5px] font-medium tight text-terracotta backdrop-blur"
-            style={{ border: '1px solid rgba(197,86,44,0.3)' }}
-          >
-            Quedan {p.cantidadDisponible}
-          </span>
         )}
       </Link>
 
