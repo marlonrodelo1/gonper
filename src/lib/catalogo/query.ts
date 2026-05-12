@@ -11,9 +11,10 @@ import 'server-only';
 import { and, asc, desc, eq, ilike, or, sql, type SQL } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { marcas, productos } from '@/lib/db/schema';
+import { categoriasMarca, marcas, productos } from '@/lib/db/schema';
 
 import type {
+  CategoriaMarcaCatalogo,
   CategoriaProducto,
   MarcaCatalogo,
   ProductoCatalogo,
@@ -25,6 +26,7 @@ export async function listMarcasCatalogo(): Promise<MarcaCatalogo[]> {
       id: marcas.id,
       slug: marcas.slug,
       nombre: marcas.nombre,
+      descripcion: marcas.descripcion,
       logoUrl: marcas.logoUrl,
       condicionesB2bMinimoEur: marcas.condicionesB2bMinimoEur,
     })
@@ -52,8 +54,99 @@ export async function listMarcasCatalogo(): Promise<MarcaCatalogo[]> {
     id: r.id,
     slug: r.slug,
     nombre: r.nombre,
+    descripcion: r.descripcion,
     logoUrl: r.logoUrl,
     condicionesB2bMinimoEur: Number(r.condicionesB2bMinimoEur),
+    numProductos: map.get(r.id) ?? 0,
+  }));
+}
+
+/**
+ * Resuelve una marca por su slug (preferido en URLs) o por su uuid. Devuelve
+ * `null` si no existe o está inactiva.
+ */
+export async function getMarcaCatalogoBySlugOrId(
+  slugOrId: string,
+): Promise<MarcaCatalogo | null> {
+  const esUuid = /^[0-9a-f-]{36}$/.test(slugOrId);
+  const where = and(
+    eq(marcas.activa, true),
+    esUuid ? eq(marcas.id, slugOrId) : eq(marcas.slug, slugOrId),
+  );
+
+  const [row] = await db
+    .select({
+      id: marcas.id,
+      slug: marcas.slug,
+      nombre: marcas.nombre,
+      descripcion: marcas.descripcion,
+      logoUrl: marcas.logoUrl,
+      condicionesB2bMinimoEur: marcas.condicionesB2bMinimoEur,
+    })
+    .from(marcas)
+    .where(where)
+    .limit(1);
+
+  if (!row) return null;
+
+  const [countRow] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(productos)
+    .where(and(eq(productos.marcaId, row.id), eq(productos.activo, true)));
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    nombre: row.nombre,
+    descripcion: row.descripcion,
+    logoUrl: row.logoUrl,
+    condicionesB2bMinimoEur: Number(row.condicionesB2bMinimoEur),
+    numProductos: Number(countRow?.total ?? 0),
+  };
+}
+
+/**
+ * Categorías propias de una marca con su conteo de productos activos. Se
+ * usan como chips de sub-navegación dentro de la vista de la marca.
+ */
+export async function listCategoriasMarcaCatalogo(
+  marcaId: string,
+): Promise<CategoriaMarcaCatalogo[]> {
+  const rows = await db
+    .select({
+      id: categoriasMarca.id,
+      slug: categoriasMarca.slug,
+      nombre: categoriasMarca.nombre,
+      orden: categoriasMarca.orden,
+    })
+    .from(categoriasMarca)
+    .where(
+      and(eq(categoriasMarca.marcaId, marcaId), eq(categoriasMarca.activa, true)),
+    )
+    .orderBy(asc(categoriasMarca.orden), asc(categoriasMarca.nombre));
+
+  if (rows.length === 0) return [];
+
+  const counts = await db
+    .select({
+      categoriaMarcaId: productos.categoriaMarcaId,
+      total: sql<number>`count(*)::int`,
+    })
+    .from(productos)
+    .where(and(eq(productos.marcaId, marcaId), eq(productos.activo, true)))
+    .groupBy(productos.categoriaMarcaId);
+
+  const map = new Map<string, number>();
+  for (const c of counts) {
+    if (c.categoriaMarcaId)
+      map.set(c.categoriaMarcaId, Number(c.total ?? 0));
+  }
+
+  return rows.map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    nombre: r.nombre,
+    orden: r.orden,
     numProductos: map.get(r.id) ?? 0,
   }));
 }
@@ -61,6 +154,7 @@ export async function listMarcasCatalogo(): Promise<MarcaCatalogo[]> {
 export type CatalogoFilters = {
   marca_id?: string;
   categoria?: CategoriaProducto;
+  categoria_marca_id?: string;
   q?: string;
   tipo_negocio?: string;
 };
@@ -75,6 +169,8 @@ export async function listProductosCatalogo(
 
   if (filters.marca_id) conds.push(eq(productos.marcaId, filters.marca_id));
   if (filters.categoria) conds.push(eq(productos.categoria, filters.categoria));
+  if (filters.categoria_marca_id)
+    conds.push(eq(productos.categoriaMarcaId, filters.categoria_marca_id));
   if (filters.q && filters.q.trim()) {
     const like = `%${filters.q.trim()}%`;
     conds.push(

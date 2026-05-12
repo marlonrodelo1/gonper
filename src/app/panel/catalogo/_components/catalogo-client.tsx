@@ -3,31 +3,41 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { CATEGORIAS_PRODUCTO, type ProductoCatalogo, type MarcaCatalogo } from '@/lib/catalogo/types';
+import {
+  CATEGORIAS_PRODUCTO,
+  type CategoriaMarcaCatalogo,
+  type MarcaCatalogo,
+  type ProductoCatalogo,
+} from '@/lib/catalogo/types';
 import { CartDrawer, type CartItem } from './cart-drawer';
 import { ProductoCard } from './producto-card';
 
 type Filtros = {
-  marca_id: string;
+  categoria_marca_id: string;
   categoria: string;
   q: string;
 };
 
 type Props = {
-  marcas: MarcaCatalogo[];
+  marca: MarcaCatalogo;
+  categoriasMarca: CategoriaMarcaCatalogo[];
   productos: ProductoCatalogo[];
   filtros: Filtros;
 };
 
 const CART_STORAGE_KEY = 'gestori_cart_b2b';
 
-export function CatalogoClient({ marcas, productos, filtros }: Props) {
+export function CatalogoClient({
+  marca,
+  categoriasMarca,
+  productos,
+  filtros,
+}: Props) {
   const router = useRouter();
   const [draftQ, setDraftQ] = useState(filtros.q);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
 
-  // Cargar carrito desde sessionStorage al montar
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -41,7 +51,6 @@ export function CatalogoClient({ marcas, productos, filtros }: Props) {
     }
   }, []);
 
-  // Persistir carrito en sessionStorage en cada cambio
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -52,13 +61,13 @@ export function CatalogoClient({ marcas, productos, filtros }: Props) {
   }, [cart]);
 
   function navigate(patch: Partial<Filtros>) {
-    const params = new URLSearchParams();
     const next = { ...filtros, ...patch };
-    if (next.marca_id) params.set('marca', next.marca_id);
+    const params = new URLSearchParams();
+    params.set('marca', marca.slug);
+    if (next.categoria_marca_id) params.set('cat_marca', next.categoria_marca_id);
     if (next.categoria) params.set('categoria', next.categoria);
     if (next.q) params.set('q', next.q);
-    const qs = params.toString();
-    router.push(qs ? `/panel/catalogo?${qs}` : '/panel/catalogo');
+    router.push(`/panel/catalogo?${params.toString()}`);
   }
 
   function addToCart(p: ProductoCatalogo, cantidad: number) {
@@ -116,89 +125,90 @@ export function CatalogoClient({ marcas, productos, filtros }: Props) {
     [cart],
   );
 
+  // Si la marca tiene categorías propias, las usamos como navegación principal.
+  // Si no, fallback al enum global de Gestori.
+  const usaCategoriasMarca = categoriasMarca.length > 0;
+
   return (
     <>
-      {/* Filtros */}
       <section className="card flex flex-col gap-4 p-4 md:p-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate({ marca_id: '' })}
-            className={`tight rounded-full border px-3.5 py-2 text-[12.5px] transition ${
-              filtros.marca_id === ''
-                ? 'bg-ink text-paper border-ink'
-                : 'bg-paper border-line text-stone hover:text-ink hover:border-line-2'
-            }`}
-          >
-            Todas las marcas
-            <span
-              className={
-                filtros.marca_id === '' ? 'ml-1 text-paper/55' : 'ml-1 text-stone/55'
-              }
+        {usaCategoriasMarca ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate({ categoria_marca_id: '' })}
+              className={`tight rounded-full border px-3.5 py-2 text-[12.5px] transition ${
+                filtros.categoria_marca_id === ''
+                  ? 'bg-ink text-paper border-ink'
+                  : 'bg-paper border-line text-stone hover:text-ink hover:border-line-2'
+              }`}
             >
-              ({marcas.reduce((a, m) => a + m.numProductos, 0)})
-            </span>
-          </button>
-          {marcas.map((m) => {
-            const active = filtros.marca_id === m.id;
-            return (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => navigate({ marca_id: m.id })}
-                className={`tight rounded-full border px-3.5 py-2 text-[12.5px] transition inline-flex items-center gap-2 ${
-                  active
-                    ? 'bg-ink text-paper border-ink'
-                    : 'bg-paper border-line text-stone hover:text-ink hover:border-line-2'
-                }`}
+              Todos
+              <span
+                className={
+                  filtros.categoria_marca_id === ''
+                    ? 'ml-1 text-paper/55'
+                    : 'ml-1 text-stone/55'
+                }
               >
-                {m.logoUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={m.logoUrl}
-                    alt=""
-                    className="h-4 w-4 rounded-full object-cover"
-                  />
-                )}
-                {m.nombre}
-                <span className={active ? 'text-paper/55' : 'text-stone/55'}>
-                  ({m.numProductos})
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={() => navigate({ categoria: '' })}
-            className={`tight rounded-full border px-3 py-1.5 text-[12px] transition ${
-              filtros.categoria === ''
-                ? 'bg-ink text-paper border-ink'
-                : 'bg-paper border-line text-stone hover:text-ink hover:border-line-2'
-            }`}
-          >
-            Todas las categorías
-          </button>
-          {CATEGORIAS_PRODUCTO.map((c) => {
-            const active = filtros.categoria === c.key;
-            return (
-              <button
-                key={c.key}
-                type="button"
-                onClick={() => navigate({ categoria: c.key })}
-                className={`tight rounded-full border px-3 py-1.5 text-[12px] transition ${
-                  active
-                    ? 'bg-ink text-paper border-ink'
-                    : 'bg-paper border-line text-stone hover:text-ink hover:border-line-2'
-                }`}
-              >
-                {c.label}
-              </button>
-            );
-          })}
-        </div>
+                ({marca.numProductos})
+              </span>
+            </button>
+            {categoriasMarca.map((c) => {
+              const active = filtros.categoria_marca_id === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => navigate({ categoria_marca_id: c.id })}
+                  className={`tight rounded-full border px-3.5 py-2 text-[12.5px] transition ${
+                    active
+                      ? 'bg-ink text-paper border-ink'
+                      : 'bg-paper border-line text-stone hover:text-ink hover:border-line-2'
+                  }`}
+                >
+                  {c.nombre}
+                  <span
+                    className={active ? 'ml-1 text-paper/55' : 'ml-1 text-stone/55'}
+                  >
+                    ({c.numProductos})
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => navigate({ categoria: '' })}
+              className={`tight rounded-full border px-3 py-1.5 text-[12px] transition ${
+                filtros.categoria === ''
+                  ? 'bg-ink text-paper border-ink'
+                  : 'bg-paper border-line text-stone hover:text-ink hover:border-line-2'
+              }`}
+            >
+              Todas las categorías
+            </button>
+            {CATEGORIAS_PRODUCTO.map((c) => {
+              const active = filtros.categoria === c.key;
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={() => navigate({ categoria: c.key })}
+                  className={`tight rounded-full border px-3 py-1.5 text-[12px] transition ${
+                    active
+                      ? 'bg-ink text-paper border-ink'
+                      : 'bg-paper border-line text-stone hover:text-ink hover:border-line-2'
+                  }`}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         <form
           onSubmit={(e) => {
@@ -211,7 +221,7 @@ export function CatalogoClient({ marcas, productos, filtros }: Props) {
             type="text"
             value={draftQ}
             onChange={(e) => setDraftQ(e.target.value)}
-            placeholder="Buscar por nombre o marca…"
+            placeholder={`Buscar en ${marca.nombre}…`}
             className="flex-1 rounded-2xl border border-line bg-paper px-4 py-2.5 text-[13.5px] text-ink placeholder:text-stone/55 focus:outline-none focus:border-line-2"
           />
           <button
@@ -235,7 +245,6 @@ export function CatalogoClient({ marcas, productos, filtros }: Props) {
         </form>
       </section>
 
-      {/* Botón flotante de carrito */}
       {totalItems > 0 && (
         <button
           type="button"
@@ -259,22 +268,27 @@ export function CatalogoClient({ marcas, productos, filtros }: Props) {
         </button>
       )}
 
-      {/* Grid productos */}
       {productos.length === 0 ? (
         <div className="card flex flex-col items-center justify-center gap-2 p-12 text-center">
           <p className="text-[14px] text-stone">
-            No hay productos con esos filtros.
+            {filtros.q || filtros.categoria || filtros.categoria_marca_id
+              ? 'No hay productos con esos filtros.'
+              : `${marca.nombre} aún no tiene productos en el catálogo.`}
           </p>
-          <button
-            type="button"
-            onClick={() => {
-              setDraftQ('');
-              router.push('/panel/catalogo');
-            }}
-            className="tight text-[12.5px] text-terracotta hover:text-terracotta-2 underline underline-offset-4 decoration-terracotta/30"
-          >
-            Limpiar filtros
-          </button>
+          {(filtros.q || filtros.categoria || filtros.categoria_marca_id) && (
+            <button
+              type="button"
+              onClick={() => {
+                setDraftQ('');
+                router.push(
+                  `/panel/catalogo?marca=${encodeURIComponent(marca.slug)}`,
+                );
+              }}
+              className="tight text-[12.5px] text-terracotta hover:text-terracotta-2 underline underline-offset-4 decoration-terracotta/30"
+            >
+              Limpiar filtros
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

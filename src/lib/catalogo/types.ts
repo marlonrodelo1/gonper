@@ -50,7 +50,16 @@ export type MarcaCatalogo = {
   id: string;
   slug: string;
   nombre: string;
+  descripcion: string | null;
   logoUrl: string | null;
   condicionesB2bMinimoEur: number;
+  numProductos: number;
+};
+
+export type CategoriaMarcaCatalogo = {
+  id: string;
+  slug: string;
+  nombre: string;
+  orden: number;
   numProductos: number;
 };
