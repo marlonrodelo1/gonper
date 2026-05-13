@@ -4,12 +4,19 @@ import { and, desc, eq, gte, isNotNull, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import {
+  horarios,
   leads,
   marcas,
   productos,
+  profesionales,
   salones,
+  servicios,
   ventasB2c,
 } from '@/lib/db/schema';
+import {
+  HORARIOS_DEFAULT,
+  SERVICIOS_POR_TIPO,
+} from './salon-seeds';
 
 /**
  * Tools de Royce admin Telegram — operaciones plataforma-wide.
@@ -428,6 +435,331 @@ export async function capturarLead(args: {
     lead_id: inserted.id,
     ya_existia: false,
   };
+}
+
+// ============================================
+// MUTACIONES — solo si las llama Marlon (super admin)
+// ============================================
+//
+// Tools de escritura para que Royce pueda gestionar la plataforma desde
+// Telegram. El AI Agent debe pedir confirmación explícita ("¿confirmas?
+// sí/no") antes de invocarlas — el system prompt lo refuerza.
+
+const PLANES_VALIDOS = ['trial', 'basico', 'solo', 'studio', 'pro', 'cancelado'] as const;
+type PlanValido = (typeof PLANES_VALIDOS)[number];
+
+const TIPOS_NEGOCIO_VALIDOS = ['barberia', 'peluqueria', 'estetica', 'manicura', 'otro'] as const;
+type TipoNegocioValido = (typeof TIPOS_NEGOCIO_VALIDOS)[number];
+
+function slugify(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+// ============================================
+// CREAR SALÓN (sin user — Marlon vincula después)
+// ============================================
+export async function crearSalon(args: {
+  nombre: string;
+  slug: string;
+  tipo_negocio: TipoNegocioValido;
+  email?: string;
+  telefono?: string;
+  direccion?: string;
+}): Promise<{ mensaje: string; salon_id?: string; slug?: string }> {
+  const nombre = args.nombre.trim();
+  const slug = slugify(args.slug);
+  if (!nombre || !slug) {
+    return { mensaje: '❌ Necesito nombre y slug válidos.' };
+  }
+  if (!TIPOS_NEGOCIO_VALIDOS.includes(args.tipo_negocio)) {
+    return {
+      mensaje: `❌ tipo_negocio inválido. Usa uno de: ${TIPOS_NEGOCIO_VALIDOS.join(', ')}.`,
+    };
+  }
+
+  const existing = await db
+    .select({ id: salones.id })
+    .from(salones)
+    .where(eq(salones.slug, slug))
+    .limit(1);
+  if (existing.length > 0) {
+    return { mensaje: `❌ Ya existe un salón con slug \`${slug}\`. Prueba otro.` };
+  }
+
+  const trialUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  const [salon] = await db
+    .insert(salones)
+    .values({
+      slug,
+      nombre,
+      tipoNegocio: args.tipo_negocio,
+      email: args.email?.trim() || null,
+      telefono: args.telefono?.trim() || null,
+      direccion: args.direccion?.trim() || null,
+      plan: 'trial',
+      trialUntil,
+    })
+    .returning({ id: salones.id, slug: salones.slug });
+
+  // Seeds: servicios, horarios, profesional default
+  const serviciosSeed =
+    SERVICIOS_POR_TIPO[args.tipo_negocio] ?? SERVICIOS_POR_TIPO.otro;
+  try {
+    await db.insert(servicios).values(
+      serviciosSeed.map((s) => ({
+        salonId: salon.id,
+        nombre: s.nombre,
+        duracionMin: s.duracion_min,
+        precioEur: String(s.precio_eur),
+        orden: s.orden,
+        esDefault: true,
+      })),
+    );
+  } catch (e) {
+    console.warn('[royce:crearSalon] seed servicios:', e);
+  }
+  try {
+    await db.insert(horarios).values(
+      HORARIOS_DEFAULT.map((h) => ({
+        salonId: salon.id,
+        diaSemana: h.dia_semana,
+        inicio: h.inicio,
+        fin: h.fin,
+        esDefault: true,
+      })),
+    );
+  } catch (e) {
+    console.warn('[royce:crearSalon] seed horarios:', e);
+  }
+  try {
+    await db.insert(profesionales).values({
+      salonId: salon.id,
+      nombre,
+      colorHex: '#8B9D7A',
+      orden: 0,
+      esDefault: true,
+    });
+  } catch (e) {
+    console.warn('[royce:crearSalon] seed profesional:', e);
+  }
+
+  return {
+    mensaje: `✅ Salón *${nombre}* creado con slug \`${slug}\`. Trial 7d activado. El dueño aún no está vinculado — invítale a registrarse (signup con este email creará usuario, pero el slug ya está tomado; mejor crear el user manual desde Supabase o cambiar la lógica más adelante).`,
+    salon_id: salon.id,
+    slug: salon.slug,
+  };
+}
+
+// ============================================
+// CAMBIAR PLAN DE UN SALÓN
+// ============================================
+export async function cambiarPlanSalon(args: {
+  slug: string;
+  plan: PlanValido;
+}): Promise<{ mensaje: string }> {
+  if (!PLANES_VALIDOS.includes(args.plan)) {
+    return {
+      mensaje: `❌ Plan inválido. Usa uno de: ${PLANES_VALIDOS.join(', ')}.`,
+    };
+  }
+  const slug = args.slug.trim();
+
+  const result = await db
+    .update(salones)
+    .set({
+      plan: args.plan,
+      // Si el plan no es trial, limpiamos trialUntil (ya pagó o se canceló).
+      ...(args.plan === 'trial'
+        ? {}
+        : { trialUntil: null }),
+      updatedAt: new Date(),
+    })
+    .where(eq(salones.slug, slug))
+    .returning({ id: salones.id, nombre: salones.nombre });
+
+  if (result.length === 0) {
+    return { mensaje: `❌ No encontré salón con slug \`${slug}\`.` };
+  }
+  return {
+    mensaje: `✅ Plan de *${result[0].nombre}* cambiado a *${args.plan}*.`,
+  };
+}
+
+// ============================================
+// CREAR MARCA
+// ============================================
+export async function crearMarca(args: {
+  nombre: string;
+  slug?: string;
+  comision_salon_porcentaje?: number;
+  descripcion?: string;
+  logo_url?: string;
+  contacto_email?: string;
+}): Promise<{ mensaje: string; marca_id?: string }> {
+  const nombre = args.nombre.trim();
+  const slug = slugify(args.slug?.trim() || nombre);
+  if (!nombre || !slug) {
+    return { mensaje: '❌ Necesito al menos el nombre de la marca.' };
+  }
+
+  const existing = await db
+    .select({ id: marcas.id })
+    .from(marcas)
+    .where(eq(marcas.slug, slug))
+    .limit(1);
+  if (existing.length > 0) {
+    return { mensaje: `❌ Ya existe una marca con slug \`${slug}\`.` };
+  }
+
+  const comision = Number(args.comision_salon_porcentaje ?? 0);
+  if (comision < 0 || comision > 100) {
+    return { mensaje: '❌ La comisión del salón debe estar entre 0 y 100.' };
+  }
+
+  const [marca] = await db
+    .insert(marcas)
+    .values({
+      slug,
+      nombre,
+      descripcion: args.descripcion?.trim() || null,
+      logoUrl: args.logo_url?.trim() || null,
+      contactoEmail: args.contacto_email?.trim() || null,
+      comisionSalonPorcentaje: comision.toFixed(2),
+      activa: true,
+    })
+    .returning({ id: marcas.id });
+
+  return {
+    mensaje: `✅ Marca *${nombre}* creada (slug \`${slug}\`, comisión salón ${comision}%).`,
+    marca_id: marca.id,
+  };
+}
+
+// ============================================
+// CREAR PRODUCTO
+// ============================================
+export async function crearProducto(args: {
+  marca_slug: string;
+  nombre: string;
+  categoria: string;
+  precio_publico_recomendado_eur: number;
+  precio_mayorista_eur?: number;
+  slug?: string;
+  sku?: string;
+  tipo_distribucion?: 'stock' | 'dropshipping';
+}): Promise<{ mensaje: string; producto_id?: string }> {
+  const marcaSlug = args.marca_slug.trim();
+  const [marca] = await db
+    .select({ id: marcas.id, nombre: marcas.nombre })
+    .from(marcas)
+    .where(eq(marcas.slug, marcaSlug))
+    .limit(1);
+  if (!marca) {
+    return { mensaje: `❌ No encontré la marca \`${marcaSlug}\`.` };
+  }
+
+  const nombre = args.nombre.trim();
+  const slug = slugify(args.slug?.trim() || nombre);
+  const categoria = args.categoria.trim();
+  if (!nombre || !slug || !categoria) {
+    return { mensaje: '❌ Necesito nombre, slug y categoría.' };
+  }
+
+  const pvp = Number(args.precio_publico_recomendado_eur);
+  if (isNaN(pvp) || pvp < 0) {
+    return { mensaje: '❌ El precio público recomendado debe ser un número >= 0.' };
+  }
+  const pvpMayorista =
+    args.precio_mayorista_eur !== undefined
+      ? Number(args.precio_mayorista_eur)
+      : pvp * 0.6; // default 60% del PVP
+
+  const tipo = args.tipo_distribucion ?? 'stock';
+
+  const existing = await db
+    .select({ id: productos.id })
+    .from(productos)
+    .where(and(eq(productos.marcaId, marca.id), eq(productos.slug, slug)))
+    .limit(1);
+  if (existing.length > 0) {
+    return {
+      mensaje: `❌ Ya existe un producto con slug \`${slug}\` en la marca *${marca.nombre}*.`,
+    };
+  }
+
+  const [producto] = await db
+    .insert(productos)
+    .values({
+      marcaId: marca.id,
+      slug,
+      nombre,
+      categoria,
+      tipoDistribucion: tipo,
+      sku: args.sku?.trim() || null,
+      precioMayoristaEur: pvpMayorista.toFixed(2),
+      precioPublicoRecomendadoEur: pvp.toFixed(2),
+      activo: true,
+    })
+    .returning({ id: productos.id });
+
+  return {
+    mensaje: `✅ Producto *${nombre}* creado en marca *${marca.nombre}* (PVP ${fmtEur(pvp)}, mayorista ${fmtEur(pvpMayorista)}).`,
+    producto_id: producto.id,
+  };
+}
+
+// ============================================
+// MARCAR / DESMARCAR DESTACADO EN MARKETPLACE
+// ============================================
+export async function marcarDestacado(args: {
+  salon_slug: string;
+  orden?: number;
+}): Promise<{ mensaje: string }> {
+  const slug = args.salon_slug.trim();
+  const orden = Number.isInteger(args.orden) ? args.orden : 0;
+
+  const result = await db
+    .update(salones)
+    .set({
+      marketplaceDestacado: true,
+      marketplaceDestacadoOrden: orden,
+      updatedAt: new Date(),
+    })
+    .where(eq(salones.slug, slug))
+    .returning({ nombre: salones.nombre });
+  if (result.length === 0) {
+    return { mensaje: `❌ No encontré salón con slug \`${slug}\`.` };
+  }
+  return {
+    mensaje: `✅ *${result[0].nombre}* destacado en marketplace (orden ${orden}).`,
+  };
+}
+
+export async function desmarcarDestacado(args: {
+  salon_slug: string;
+}): Promise<{ mensaje: string }> {
+  const slug = args.salon_slug.trim();
+
+  const result = await db
+    .update(salones)
+    .set({
+      marketplaceDestacado: false,
+      marketplaceDestacadoOrden: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(salones.slug, slug))
+    .returning({ nombre: salones.nombre });
+  if (result.length === 0) {
+    return { mensaje: `❌ No encontré salón con slug \`${slug}\`.` };
+  }
+  return { mensaje: `✅ *${result[0].nombre}* removido de destacados.` };
 }
 
 // Avoid unused import

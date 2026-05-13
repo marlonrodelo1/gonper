@@ -10,11 +10,17 @@
 import { z } from 'zod';
 
 import {
+  cambiarPlanSalon,
   capturarLead,
+  crearMarca,
+  crearProducto,
+  crearSalon,
+  desmarcarDestacado,
   getMetricasGlobales,
   infoSalon,
   leadsRecientes,
   listarSalones,
+  marcarDestacado,
   marcasActivas,
   productosCatalogo,
   ventasB2cRecientes,
@@ -25,6 +31,7 @@ export type RoyceCategoria =
   | 'salones'
   | 'tienda'
   | 'captacion'
+  | 'gestion'
   | 'sistema';
 
 export const ROYCE_CATEGORIA_LABEL: Record<RoyceCategoria, string> = {
@@ -32,6 +39,7 @@ export const ROYCE_CATEGORIA_LABEL: Record<RoyceCategoria, string> = {
   salones: '🏪 *Salones*',
   tienda: '🛍️ *Tienda online*',
   captacion: '📥 *Captación*',
+  gestion: '⚙️ *Gestión (acciones)*',
   sistema: '⚙️ *Sistema*',
 };
 
@@ -40,6 +48,7 @@ const ROYCE_CATEGORIA_ORDEN: RoyceCategoria[] = [
   'salones',
   'tienda',
   'captacion',
+  'gestion',
   'sistema',
 ];
 
@@ -160,6 +169,99 @@ export const ROYCE_TOOLS: AnyRoyceToolDef[] = [
       })
       .strict(),
     handler: (args) => capturarLead(args),
+  }),
+
+  // ---------- GESTIÓN (mutaciones — exigir confirmación previa) ----------
+  defineTool({
+    name: 'crear_salon',
+    categoria: 'gestion',
+    descripcion: 'Crea un salón nuevo con trial 7d, seeds de servicios/horarios/profesional. NO crea user auth — el dueño se vincula después manualmente.',
+    ejemplos: ['"crea un salón Barber Tenerife"', '"añade salón con slug pepe-barber"'],
+    schema: z
+      .object({
+        nombre: z.string().min(2).max(120),
+        slug: z.string().min(2).max(120),
+        tipo_negocio: z.enum(['barberia', 'peluqueria', 'estetica', 'manicura', 'otro']),
+        email: z.string().email().max(200).optional(),
+        telefono: z.string().max(40).optional(),
+        direccion: z.string().max(300).optional(),
+      })
+      .strict(),
+    handler: (args) => crearSalon(args),
+  }),
+  defineTool({
+    name: 'cambiar_plan_salon',
+    categoria: 'gestion',
+    descripcion: 'Cambia el plan de un salón. Planes: trial, basico, solo, studio, pro, cancelado.',
+    ejemplos: ['"sube el plan de dadi a basico"', '"cancela suscripción de salon-X"'],
+    schema: z
+      .object({
+        slug: z.string().min(1).max(120),
+        plan: z.enum(['trial', 'basico', 'solo', 'studio', 'pro', 'cancelado']),
+      })
+      .strict(),
+    handler: (args) => cambiarPlanSalon(args),
+  }),
+  defineTool({
+    name: 'crear_marca',
+    categoria: 'gestion',
+    descripcion: 'Crea una marca nueva en el catálogo de la tienda. Slug se autogenera del nombre si no se pasa.',
+    ejemplos: ['"crea marca Wella con 10% de comisión salón"'],
+    schema: z
+      .object({
+        nombre: z.string().min(2).max(120),
+        slug: z.string().min(2).max(120).optional(),
+        comision_salon_porcentaje: z.number().min(0).max(100).optional(),
+        descripcion: z.string().max(2000).optional(),
+        logo_url: z.string().url().max(500).optional(),
+        contacto_email: z.string().email().max(200).optional(),
+      })
+      .strict(),
+    handler: (args) => crearMarca(args),
+  }),
+  defineTool({
+    name: 'crear_producto',
+    categoria: 'gestion',
+    descripcion: 'Crea un producto nuevo asociado a una marca existente. Si no se pasa precio_mayorista, se calcula como 60% del PVP.',
+    ejemplos: ['"añade Champú X de Wella a 12€"'],
+    schema: z
+      .object({
+        marca_slug: z.string().min(1).max(120),
+        nombre: z.string().min(2).max(200),
+        categoria: z.string().min(1).max(80),
+        precio_publico_recomendado_eur: z.number().nonnegative(),
+        precio_mayorista_eur: z.number().nonnegative().optional(),
+        slug: z.string().min(2).max(160).optional(),
+        sku: z.string().max(80).optional(),
+        tipo_distribucion: z.enum(['stock', 'dropshipping']).optional(),
+      })
+      .strict(),
+    handler: (args) => crearProducto(args),
+  }),
+  defineTool({
+    name: 'marcar_destacado',
+    categoria: 'gestion',
+    descripcion: 'Destaca un salón en el marketplace (aparece al frente). orden controla la prioridad (menor = antes).',
+    ejemplos: ['"destaca dadi"', '"sube barber-shop al destacado"'],
+    schema: z
+      .object({
+        salon_slug: z.string().min(1).max(120),
+        orden: z.number().int().nonnegative().optional(),
+      })
+      .strict(),
+    handler: (args) => marcarDestacado(args),
+  }),
+  defineTool({
+    name: 'desmarcar_destacado',
+    categoria: 'gestion',
+    descripcion: 'Quita a un salón del listado de destacados del marketplace.',
+    ejemplos: ['"quita destacado a dadi"'],
+    schema: z
+      .object({
+        salon_slug: z.string().min(1).max(120),
+      })
+      .strict(),
+    handler: (args) => desmarcarDestacado(args),
   }),
 
   // ---------- SISTEMA ----------
