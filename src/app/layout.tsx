@@ -34,10 +34,18 @@ const META_TITLE = "Gonper Studio — Lleva tu negocio desde tu móvil";
 const META_DESCRIPTION =
   "El asistente IA que gestiona tu salón desde Telegram. Reservas, recordatorios y números a un mensaje de distancia. 30 días gratis, sin tarjeta.";
 
+const LOGO_URL =
+  "https://lyqvgdambamzbrzpwgpg.supabase.co/storage/v1/object/public/salon-assets/logos/gonperstudio.png";
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: META_TITLE,
   description: META_DESCRIPTION,
+  icons: {
+    icon: [{ url: LOGO_URL, type: "image/png" }],
+    shortcut: LOGO_URL,
+    apple: LOGO_URL,
+  },
   openGraph: {
     type: "website",
     locale: "es_ES",

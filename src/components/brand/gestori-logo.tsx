@@ -101,59 +101,65 @@ export function GestoriLogo({
 }
 
 /**
- * Marca compacta: "G" en círculo con gradiente terracota. Para favicons,
+ * URL del logo Gonper Studio hospedado en Supabase Storage. Usado como
+ * brand mark en sidebars, headers y avatares del bot. Si en el futuro
+ * cambia el archivo, basta con reemplazarlo en el bucket — el nombre
+ * se mantiene.
+ */
+const BRAND_LOGO_URL =
+  'https://lyqvgdambamzbrzpwgpg.supabase.co/storage/v1/object/public/salon-assets/logos/gonperstudio.png';
+
+/**
+ * Marca compacta cuadrada con el logo de Gonper Studio. Para favicons,
  * avatares de bot, brand mark pequeño en sidebars y headers.
+ *
+ * Mantiene compatibilidad con la firma anterior (size, background,
+ * borderColor) aunque ahora el `background` solo se usa como fallback
+ * mientras la imagen carga.
  */
 export function GestoriMark({
   size = 32,
-  color = '#FBF8F2',
   background,
   borderColor,
   className,
   style,
 }: {
   size?: number;
-  /** Color de la 'G'. Default: cream. */
-  color?: string;
-  /** Fondo. Default: gradiente terracota. */
+  /** Fondo de fallback mientras carga la imagen. Default: cream. */
   background?: string;
   borderColor?: string;
   className?: string;
   style?: CSSProperties;
 }) {
-  const bg =
-    background ??
-    'linear-gradient(135deg, #C5562C 0%, #A8451F 100%)';
   return (
     <span
       className={className}
       style={{
-        display: 'inline-grid',
-        placeItems: 'center',
+        display: 'inline-block',
         width: size,
         height: size,
         borderRadius: '50%',
-        background: bg,
+        overflow: 'hidden',
+        background: background ?? '#FBF8F2',
         border: borderColor ? `1.5px solid ${borderColor}` : 'none',
-        color,
-        boxShadow:
-          'inset 0 1px 0 rgba(255,255,255,0.25), 0 4px 12px -4px rgba(168,69,31,0.4)',
+        boxShadow: '0 4px 12px -4px rgba(0,0,0,0.15)',
         ...style,
       }}
       aria-hidden="true"
     >
-      <span
-        className="font-playfair"
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={BRAND_LOGO_URL}
+        alt=""
+        width={size}
+        height={size}
         style={{
-          fontSize: Math.round(size * 0.62),
-          fontWeight: 600,
-          lineHeight: 1,
-          transform: `translateY(-${Math.round(size * 0.03)}px)`,
-          letterSpacing: '-0.02em',
+          display: 'block',
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
         }}
-      >
-        G
-      </span>
+      />
     </span>
   );
 }
