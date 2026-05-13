@@ -13,7 +13,7 @@ directamente** — sólo he limpiado el código Next.js.
 
 ## Workflows afectados
 
-### 1. `Gestori - Bot del salon (multi-tenant) v2` — id `B26aw7VP89wVYvOL`
+### 1. `Gonper Studio - Bot del salon (multi-tenant) v2` — id `B26aw7VP89wVYvOL`
 
 **NO BORRAR.** Sigue siendo el webhook que recibe updates del bot Telegram
 del dueño (vinculación con `/start dueno-<token>`, comandos del dueño,
@@ -27,7 +27,7 @@ Lo que hay que **simplificar**:
   dueño debe responderse con un mensaje fijo del estilo:
 
   > "Este bot es solo para el dueño del salón. Si quieres reservar cita,
-  > visita https://gestori.es/{salon_slug}/reservar — te atendemos por la
+  > visita https://gonperstudio.shop/{salon_slug}/reservar — te atendemos por la
   > web en menos de 30 segundos."
 
   …y terminar el flujo. No llamar a DeepSeek, no consultar BD, no llamar a
@@ -72,7 +72,7 @@ Lo que hay que **simplificar**:
   - Path n8n: `/webhook/gestori-bot` puede quedarse igual.
   Si lo renombras, actualiza también `src/app/panel/config/bot/actions.ts`.
 
-### 2. `Gestori - Recordatorios cron` — workflow de recordatorios
+### 2. `Gonper Studio - Recordatorios cron` — workflow de recordatorios
 
 El endpoint `POST /api/v1/cron/recordatorios` que devuelve la lista de
 citas cuya hora está dentro de la ventana 110–130 min ha sido modificado:
@@ -127,8 +127,8 @@ las llamadas:
 
 ## Resumen para el agente que actualice los workflows
 
-1. Abre el workflow `Gestori - Bot del salon (multi-tenant) v2` en n8n
-   (`https://n8n.gestori.es`, id `B26aw7VP89wVYvOL`).
+1. Abre el workflow `Gonper Studio - Bot del salon (multi-tenant) v2` en n8n
+   (`https://n8n.gonperstudio.shop`, id `B26aw7VP89wVYvOL`).
 2. Identifica la rama "cliente" (todo lo que NO es `chat_id ==
    telegram_chat_id_dueno`).
 3. Sustitúyela por una respuesta fija que redirige a la web pública del

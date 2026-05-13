@@ -169,7 +169,7 @@ export function PanelSidebar({
               {salonNombre ?? 'Tu salón'}
             </div>
             <div className="truncate text-[11px] text-stone">
-              {userEmail ?? `gestori.es/${salonSlug ?? '—'}`}
+              {userEmail ?? `gonperstudio.shop/${salonSlug ?? '—'}`}
             </div>
           </div>
           <Icon.Caret width="14" height="14" className="text-stone" />
@@ -372,7 +372,7 @@ export function PanelSidebar({
           <div className="flex flex-col gap-2 border-t border-line px-4 py-3">
             {isSuperAdmin && (
               <a
-                href="https://admin.gestori.es"
+                href="https://admin.gonperstudio.shop"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={cerrar}

@@ -15,7 +15,7 @@ import { requireApiToken } from '@/lib/api/auth';
  * PATCH /api/v1/admin/pedidos-b2b/[id]/estado
  *
  * Cambia el estado de un pedido B2B desde el super-admin (lo dispara la
- * marca via super-admin o Gestori). Cuando el pedido pasa a `entregado`,
+ * marca via super-admin o Gonper Studio). Cuando el pedido pasa a `entregado`,
  * se hace upsert en `stock_salon` con las cantidades pedidas — el salón
  * tendrá ese stock disponible para vender en su tienda pública (debe
  * activarlo manualmente desde /panel/stock).

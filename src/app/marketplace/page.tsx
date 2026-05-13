@@ -79,7 +79,7 @@ export async function generateMetadata({
   else partes.push('Salones de belleza y peluquería');
   if (ciudad) partes.push(`en ${ciudad}`);
 
-  const title = `${partes.join(' ')} · Gestori`;
+  const title = `${partes.join(' ')} · Gonper Studio`;
   const description =
     'Descubre peluquerías, barberías, manicura y estética en toda España. Reserva sin descargas, en una conversación.';
 

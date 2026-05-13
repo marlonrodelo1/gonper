@@ -172,13 +172,13 @@ Si se quisiera que esos avisos pasen también por n8n (por trazabilidad), habrí
 ```bash
 # 1) Listar catálogo de tools
 curl -H "Authorization: Bearer $INTERNAL_API_TOKEN" \
-  https://gestori.es/api/v1/admin/tool
+  https://gonperstudio.shop/api/v1/admin/tool
 
 # 2) Help
 curl -X POST -H "Authorization: Bearer $INTERNAL_API_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"salon_id":"<UUID>","tool":"comando_help"}' \
-  https://gestori.es/api/v1/admin/tool
+  https://gonperstudio.shop/api/v1/admin/tool
 
 # 3) Crear cita
 curl -X POST -H "Authorization: Bearer $INTERNAL_API_TOKEN" \
@@ -193,5 +193,5 @@ curl -X POST -H "Authorization: Bearer $INTERNAL_API_TOKEN" \
       "inicio_iso":"2026-05-09T15:00:00Z"
     }
   }' \
-  https://gestori.es/api/v1/admin/tool
+  https://gonperstudio.shop/api/v1/admin/tool
 ```

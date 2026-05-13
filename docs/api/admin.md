@@ -1,7 +1,7 @@
-# API Admin — contratos para el super-admin (admin.gestori.es)
+# API Admin — contratos para el super-admin (admin.gonperstudio.shop)
 
-Estos endpoints viven en este repo (gestori.es) y los consume el repo separado
-del super-admin (admin.gestori.es). Todos requieren el header:
+Estos endpoints viven en este repo (gonperstudio.shop) y los consume el repo separado
+del super-admin (admin.gonperstudio.shop). Todos requieren el header:
 
 ```
 Authorization: Bearer ${INTERNAL_API_TOKEN}
@@ -10,7 +10,7 @@ Authorization: Bearer ${INTERNAL_API_TOKEN}
 El token está en las env vars de ambos proyectos en Dokploy. Cualquier
 endpoint sin Authorization válido devuelve `401 Unauthorized`.
 
-Base URL en producción: `https://gestori.es`
+Base URL en producción: `https://gonperstudio.shop`
 
 ---
 
@@ -116,8 +116,8 @@ Body (requeridos en negrita):
 - `tipo_distribucion?` `stock` (default) | `dropshipping` (preparación Wella; sin cambios de comportamiento hoy)
 - `tipo_negocio_target?` array de `peluqueria|barberia|estetica|manicura|otro` (default [])
 - `imagenes?` array de URLs (la primera = portada)
-- `coste_mayorista_eur?` number >= 0 — info interna (lo que paga Gestori a la marca)
-- **`precio_mayorista_eur`** number >= 0 — lo que paga el salón a Gestori
+- `coste_mayorista_eur?` number >= 0 — info interna (lo que paga Gonper Studio a la marca)
+- **`precio_mayorista_eur`** number >= 0 — lo que paga el salón a Gonper Studio
 - **`precio_publico_recomendado_eur`** number >= 0
 - `unidad_medida?` string (default "unidad")
 - `peso_g?` integer

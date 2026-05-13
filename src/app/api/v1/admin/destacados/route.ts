@@ -12,7 +12,7 @@ import { revalidatePath } from 'next/cache';
  * PATCH /api/v1/admin/destacados → actualizar destacado/orden de un salón
  *
  * Auth: bearer INTERNAL_API_TOKEN. Lo consume el repo super-admin
- * (admin.gestori.es).
+ * (admin.gonperstudio.shop).
  */
 
 export async function GET(req: Request) {

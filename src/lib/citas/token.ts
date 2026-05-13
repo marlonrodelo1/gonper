@@ -11,8 +11,8 @@ interface Payload {
  * Genera un token firmado con HMAC-SHA256 que prueba que el portador puede
  * actuar sobre una cita concreta con una acción concreta. Pensado para
  * incrustar en links de email del recordatorio:
- *   https://gestori.es/c/<token>   → confirmar
- *   https://gestori.es/x/<token>   → cancelar
+ *   https://gonperstudio.shop/c/<token>   → confirmar
+ *   https://gonperstudio.shop/x/<token>   → cancelar
  *
  * No incluye expiración — la cita en sí tiene fecha y el endpoint rechaza
  * citas en estados terminales.

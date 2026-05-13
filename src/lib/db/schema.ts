@@ -1061,7 +1061,7 @@ export const marcas = pgTable(
     webUrl: text('web_url'),
     contactoEmail: text('contacto_email'),
     contactoTelefono: text('contacto_telefono'),
-    /** Legacy del modelo viejo de stock con comisión a Gestori — ya no se usa. */
+    /** Legacy del modelo viejo de stock con comisión a Gonper Studio — ya no se usa. */
     comisionPorcentaje: numeric('comision_porcentaje', { precision: 5, scale: 2 })
       .notNull()
       .default('15.00'),
@@ -1155,12 +1155,12 @@ export const productos = pgTable(
       .notNull()
       .default(sql`'{}'::text[]`),
     imagenes: jsonb('imagenes').notNull().default(sql`'[]'::jsonb`),
-    /** Lo que paga Gestori a la marca (coste de compra del distribuidor) — interno. */
+    /** Lo que paga Gonper Studio a la marca (coste de compra del distribuidor) — interno. */
     costeMayoristaEur: numeric('coste_mayorista_eur', {
       precision: 10,
       scale: 2,
     }),
-    /** Lo que paga el salón a Gestori (precio de reventa). */
+    /** Lo que paga el salón a Gonper Studio (precio de reventa). */
     precioMayoristaEur: numeric('precio_mayorista_eur', {
       precision: 10,
       scale: 2,
@@ -1395,7 +1395,7 @@ export const ventasB2c = pgTable(
     })
       .notNull()
       .default('0'),
-    /** Modelo dropshipping: lo que Gestori paga a la marca (info contable). */
+    /** Modelo dropshipping: lo que Gonper Studio paga a la marca (info contable). */
     costeMarcaEur: numeric('coste_marca_eur', { precision: 10, scale: 2 })
       .notNull()
       .default('0'),

@@ -294,14 +294,14 @@ export default async function ConfigTiendaPage({
 
       <section className="card flex flex-col gap-3 p-5 md:p-7 bg-cream/40">
         <h3 className="tight text-[14px] font-medium text-ink">
-          ¿Cómo recibo los pedidos B2B (a Gestori)?
+          ¿Cómo recibo los pedidos B2B (a Gonper Studio)?
         </h3>
         <p className="text-[13px] text-stone leading-relaxed">
           Cuando hagas un pedido desde{' '}
           <Link href="/panel/catalogo" className="text-terracotta hover:text-terracotta-2">
             /panel/catalogo
           </Link>
-          , Gestori procesa tu pedido y la marca te lo envía directamente.
+          , Gonper Studio procesa tu pedido y la marca te lo envía directamente.
           Pagas contra reembolso o por transferencia al recibir. Verás tus
           pedidos y su estado en{' '}
           <Link href="/panel/pedidos" className="text-terracotta hover:text-terracotta-2">

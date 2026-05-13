@@ -10,7 +10,7 @@ import { requireApiToken } from '@/lib/api/auth';
  * GET  /api/v1/admin/marcas → listado de marcas
  * POST /api/v1/admin/marcas → crear marca
  *
- * Consumido por el repo super-admin (admin.gestori.es).
+ * Consumido por el repo super-admin (admin.gonperstudio.shop).
  * Auth: bearer INTERNAL_API_TOKEN.
  */
 

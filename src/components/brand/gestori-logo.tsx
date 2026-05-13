@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
 
 export type GestoriLogoProps = {
-  /** Tamaño del wordmark "Gestori" en px (default 32). El resto escala proporcionalmente. */
+  /** Tamaño del wordmark "Gonper Studio" en px (default 32). El resto escala proporcionalmente. */
   size?: number;
   /** Texto bajo el wordmark. Por defecto "Studio". null = sin tag (versión wordmark puro). */
   tag?: string | null;
@@ -18,8 +18,8 @@ export type GestoriLogoProps = {
 };
 
 /**
- * Logo principal de Gestori.
- *  Diseño: Wordmark "Gestori" en Playfair Display (peso 500) + punto sello
+ * Logo principal de Gonper Studio.
+ *  Diseño: Wordmark "Gonper Studio" en Playfair Display (peso 500) + punto sello
  *  terracotta + tag opcional debajo en sans con tracking ancho.
  *
  *  Uso típico:
@@ -53,7 +53,7 @@ export function GestoriLogo({
         ...style,
       }}
       aria-hidden={ariaHidden}
-      aria-label={ariaHidden ? undefined : 'Gestori'}
+      aria-label={ariaHidden ? undefined : 'Gonper Studio'}
     >
       <span
         className="font-playfair"
@@ -66,7 +66,7 @@ export function GestoriLogo({
           color: 'inherit',
         }}
       >
-        Gestori
+        Gonper Studio
         <span
           aria-hidden="true"
           style={{

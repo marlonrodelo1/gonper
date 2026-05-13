@@ -122,7 +122,7 @@ export default async function PanelVentaDetallePage({
               {Number(venta.totalEur).toFixed(2)} €
             </div>
             <div className="text-[11.5px] text-stone/70">
-              Comisión Gestori: {Number(venta.comisionGestoriEur).toFixed(2)} €
+              Comisión Gonper Studio: {Number(venta.comisionGestoriEur).toFixed(2)} €
             </div>
           </div>
         </footer>

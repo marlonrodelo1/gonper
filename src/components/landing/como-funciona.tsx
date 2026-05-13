@@ -57,7 +57,7 @@ export function ComoFunciona() {
             </h2>
           </div>
           <p className="text-stone max-w-[360px] text-[15px] leading-relaxed">
-            Configuras los servicios y horarios una vez. Gestori hace el resto:
+            Configuras los servicios y horarios una vez. Gonper Studio hace el resto:
             atiende, recuerda, te avisa. Tú llevas el negocio en el bolsillo.
           </p>
         </div>

@@ -16,7 +16,7 @@ export function renderReservaConfirmadaEmail(p: ReservaConfirmadaParams): {
   html: string;
 } {
   const subject = `Reserva confirmada en ${p.salonNombre}`;
-  // Paleta Gestori
+  // Paleta Gonper Studio
   const COLOR_BG = '#F7F3EC';
   const COLOR_PAPER = '#FBF8F2';
   const COLOR_INK = '#1A1815';
@@ -36,7 +36,7 @@ export function renderReservaConfirmadaEmail(p: ReservaConfirmadaParams): {
     <tr><td align="center">
       <table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0" style="background:${COLOR_PAPER};border:1px solid ${COLOR_LINE};border-radius:16px;overflow:hidden">
         <tr><td style="padding:28px 32px 8px">
-          <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:${COLOR_STONE}">Gestori · ${escapeHtml(p.salonNombre)}</div>
+          <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:${COLOR_STONE}">Gonper Studio · ${escapeHtml(p.salonNombre)}</div>
         </td></tr>
         <tr><td style="padding:8px 32px 16px">
           <h1 style="margin:0 0 8px;font-size:24px;font-weight:500;line-height:1.2;color:${COLOR_INK}">
@@ -73,7 +73,7 @@ export function renderReservaConfirmadaEmail(p: ReservaConfirmadaParams): {
         </td></tr>
         <tr><td style="padding:16px 32px 28px;border-top:1px solid ${COLOR_LINE}">
           <p style="margin:0;font-size:11px;color:${COLOR_STONE};text-align:center">
-            Reservado a través de <a href="https://gestori.es" style="color:${COLOR_TERRACOTTA};text-decoration:none">gestori.es</a>
+            Reservado a través de <a href="https://gonperstudio.shop" style="color:${COLOR_TERRACOTTA};text-decoration:none">gonperstudio.shop</a>
           </p>
         </td></tr>
       </table>

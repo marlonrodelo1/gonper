@@ -28,9 +28,9 @@ const playfair = Playfair_Display({
   display: "swap",
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gestori.es";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gonperstudio.shop";
 
-const META_TITLE = "Gestori — Lleva tu negocio desde tu móvil";
+const META_TITLE = "Gonper Studio — Lleva tu negocio desde tu móvil";
 const META_DESCRIPTION =
   "El asistente IA que gestiona tu salón desde Telegram. Reservas, recordatorios y números a un mensaje de distancia. 30 días gratis, sin tarjeta.";
 
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "es_ES",
     url: SITE_URL,
-    siteName: "Gestori",
+    siteName: "Gonper Studio",
     title: META_TITLE,
     description: META_DESCRIPTION,
     // La imagen se genera automaticamente desde src/app/opengraph-image.tsx

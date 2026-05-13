@@ -1,22 +1,22 @@
-# Brief Claude Code — Super-admin tienda (repo `admin.gestori.es`)
+# Brief Claude Code — Super-admin tienda (repo `admin.gonperstudio.shop`)
 
-Este prompt va al repo separado de super-admin (no aquí). Llévalo a Claude Code apuntando al repo `admin.gestori.es` y péguelo en una conversación nueva. El brief asume que el repo base ya existe con auth Supabase + `requireSuperAdmin()` (si no, lo pides primero).
+Este prompt va al repo separado de super-admin (no aquí). Llévalo a Claude Code apuntando al repo `admin.gonperstudio.shop` y péguelo en una conversación nueva. El brief asume que el repo base ya existe con auth Supabase + `requireSuperAdmin()` (si no, lo pides primero).
 
 ---
 
-# Pegar a Claude Code dentro de `admin.gestori.es`
+# Pegar a Claude Code dentro de `admin.gonperstudio.shop`
 
 ## Contexto del proyecto
 
-Este repo es **`admin.gestori.es`**, el super-admin del SaaS Gestori (panel para que Marlon, dueño de Rogotech, gestione marcas, productos y destacados del marketplace que se sirven al repo principal `gestori.es`).
+Este repo es **`admin.gonperstudio.shop`**, el super-admin del SaaS Gonper Studio (panel para que Marlon, dueño de Rogotech, gestione marcas, productos y destacados del marketplace que se sirven al repo principal `gonperstudio.shop`).
 
 - Stack: Next.js 16 App Router + TypeScript estricto + Tailwind 4 + shadcn/ui.
 - Auth: Supabase Auth (SSR cookies) + `requireSuperAdmin()` que verifica fila en tabla `admin_users` (proyecto Supabase `gomper-prod`).
-- **Marca visual de este panel**: "Gomper" (la versión interna), no "Gestori". Mantener consistencia con lo que ya haya en el repo.
-- Backend: todos los datos se leen y mutan vía endpoints del repo principal `gestori.es/api/v1/admin/*` con header `Authorization: Bearer ${process.env.INTERNAL_API_TOKEN}`. **No accedes a la BD directamente desde este repo** (salvo subida de imágenes a Supabase Storage).
+- **Marca visual de este panel**: "Gomper" (la versión interna), no "Gonper Studio". Mantener consistencia con lo que ya haya en el repo.
+- Backend: todos los datos se leen y mutan vía endpoints del repo principal `gonperstudio.shop/api/v1/admin/*` con header `Authorization: Bearer ${process.env.INTERNAL_API_TOKEN}`. **No accedes a la BD directamente desde este repo** (salvo subida de imágenes a Supabase Storage).
 - Env vars necesarias en Dokploy del servicio "Fronted super admin":
-  - `INTERNAL_API_TOKEN` (compartido con `gestori.es`).
-  - `NEXT_PUBLIC_GESTORI_API_BASE_URL=https://gestori.es` (o la URL del repo principal).
+  - `INTERNAL_API_TOKEN` (compartido con `gonperstudio.shop`).
+  - `NEXT_PUBLIC_GESTORI_API_BASE_URL=https://gonperstudio.shop` (o la URL del repo principal).
   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (para subir imágenes al bucket `salon-assets`).
 
 ## Restricciones
@@ -24,7 +24,7 @@ Este repo es **`admin.gestori.es`**, el super-admin del SaaS Gestori (panel para
 - TypeScript estricto, sin `any`. Validación Zod en todos los formularios.
 - shadcn/ui antes que custom CSS. Mobile-friendly (el panel se usará desde móvil para gestionar marcas urgentes).
 - Spanish en TODO lo visible al usuario; inglés en variables/funciones técnicas.
-- Paleta visual Gestori (variables CSS): cream (`#F5EFE7`), ink (`#2B2823`), terracotta (`#B14848`), sage (`#8B9D7A`). Si el repo ya tiene globals.css con estas vars, reusarlas; si no, definirlas.
+- Paleta visual Gonper Studio (variables CSS): cream (`#F5EFE7`), ink (`#2B2823`), terracotta (`#B14848`), sage (`#8B9D7A`). Si el repo ya tiene globals.css con estas vars, reusarlas; si no, definirlas.
 - Server components por defecto, `'use client'` solo donde haga falta interactividad.
 - **NO duplicar lógica de validación**: si el endpoint del backend ya valida (con Zod), aquí solo replicas a nivel de UX. La fuente de verdad son los errores que devuelva la API.
 
@@ -66,7 +66,7 @@ Cada pantalla debe usar el layout común (sidebar + topbar) y el helper `require
 
 **Listado** (tabla):
 - Filtros (chips o select arriba): marca (dropdown), categoría global (enum 6 valores), `tipo_distribucion` (stock/dropshipping), activo (sí/no).
-- Columnas: imagen (preview 40x40), nombre, marca, categoría global, categoría propia de marca (si tiene), precio mayorista (lo que paga el salón a Gestori), **coste mayorista** (lo que paga Gestori a la marca, marcado como *interno*), PVP recomendado, `tipo_distribucion` (badge), activo (badge).
+- Columnas: imagen (preview 40x40), nombre, marca, categoría global, categoría propia de marca (si tiene), precio mayorista (lo que paga el salón a Gonper Studio), **coste mayorista** (lo que paga Gonper Studio a la marca, marcado como *interno*), PVP recomendado, `tipo_distribucion` (badge), activo (badge).
 - Búsqueda local por nombre.
 - Botón "Nuevo producto" → `/admin/productos/nuevo`.
 - Botón "Importar CSV" → `/admin/productos/bulk`.
@@ -93,7 +93,7 @@ Cada pantalla debe usar el layout común (sidebar + topbar) y el helper `require
   - `peso_g?`, `stock_disponible_marca?`.
   - `activo` (switch).
 - Cálculo automático visible en la UI (no se guarda, solo informativo):
-  - Margen Gestori B2B = `precio_mayorista_eur - coste_mayorista_eur` (cuando ambos están).
+  - Margen Gonper Studio B2B = `precio_mayorista_eur - coste_mayorista_eur` (cuando ambos están).
   - Margen salón sobre PVP recomendado = `precio_publico_recomendado_eur - precio_mayorista_eur`.
 
 **Endpoints**:
@@ -235,7 +235,7 @@ export async function gestoriFetch<T>(
 
 export class GestoriApiError extends Error {
   constructor(public status: number, public body: unknown) {
-    super(`Gestori API ${status}`);
+    super(`Gonper Studio API ${status}`);
   }
 }
 ```
@@ -254,7 +254,7 @@ export class GestoriApiError extends Error {
 
 ## Smoke test end-to-end
 
-Una vez todo construido y desplegado en `admin.gestori.es`:
+Una vez todo construido y desplegado en `admin.gonperstudio.shop`:
 
 1. Login con `rodelomarlon1@gmail.com` (super-admin verificado en `admin_users`).
 2. Crear marca "Wella Demo" con logo URL real.
@@ -262,12 +262,12 @@ Una vez todo construido y desplegado en `admin.gestori.es`:
 4. Crear 1 producto en "Mascarillas" desde el form individual.
 5. Descargar plantilla CSV, llenar con 3 productos en "Champús", subir.
 6. Verificar `/admin/productos?marca_id=<id>` muestra los 4.
-7. Ir al panel del salón en `gestori.es/panel/catalogo` con un usuario salón existente → los 4 productos aparecen.
+7. Ir al panel del salón en `gonperstudio.shop/panel/catalogo` con un usuario salón existente → los 4 productos aparecen.
 8. Hacer pedido B2B desde el salón.
-9. Volver a `admin.gestori.es/admin/pedidos-b2b` → marcar como `entregado`.
+9. Volver a `admin.gonperstudio.shop/admin/pedidos-b2b` → marcar como `entregado`.
 10. Volver al salón `/panel/stock` → confirmar stock recibido.
-11. En `admin.gestori.es/admin/destacados` → marcar 2 salones como destacados con orden 1 y 2.
-12. Verificar `gestori.es/marketplace` los muestra (cache 60s).
+11. En `admin.gonperstudio.shop/admin/destacados` → marcar 2 salones como destacados con orden 1 y 2.
+12. Verificar `gonperstudio.shop/marketplace` los muestra (cache 60s).
 
 Si los 12 pasos pasan → super-admin operativo en producción.
 

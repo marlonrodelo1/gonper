@@ -96,7 +96,7 @@ export default async function SignupPage({
             className="w-full rounded-xl border border-line bg-paper px-4 py-2.5 text-[14px] text-ink outline-none transition focus:border-line-2 focus:bg-cream"
           />
           <p className="text-[11.5px] text-stone/80">
-            Será parte de tu URL pública: gestori.es/<span className="text-ink">tu-slug</span>
+            Será parte de tu URL pública: gonperstudio.shop/<span className="text-ink">tu-slug</span>
           </p>
         </div>
 

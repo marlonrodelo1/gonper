@@ -69,7 +69,7 @@ export default async function PanelCatalogoPage({
       <div className="flex w-full flex-col gap-5">
         <header className="flex flex-col gap-1">
           <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
-            Catálogo central de Gestori
+            Catálogo central de Gonper Studio
           </span>
           <h2 className="tight text-[20px] font-medium text-ink">
             Elige una marca
@@ -96,7 +96,7 @@ export default async function PanelCatalogoPage({
       <div className="flex w-full flex-col gap-5">
         <header className="flex flex-col gap-1">
           <span className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
-            Catálogo central de Gestori
+            Catálogo central de Gonper Studio
           </span>
           <h2 className="tight text-[20px] font-medium text-ink">
             Elige una marca

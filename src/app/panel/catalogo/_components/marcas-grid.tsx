@@ -16,7 +16,7 @@ export function MarcasGrid({ marcas }: { marcas: MarcaCatalogo[] }) {
           Aún no hay marcas disponibles
         </p>
         <p className="max-w-md text-[13px] text-stone">
-          En cuanto el equipo de Gestori añada marcas al catálogo central, las
+          En cuanto el equipo de Gonper Studio añada marcas al catálogo central, las
           verás aquí y podrás pedir su stock.
         </p>
       </div>

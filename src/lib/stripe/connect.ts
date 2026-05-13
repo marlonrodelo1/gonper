@@ -6,12 +6,12 @@ import { salones } from '@/lib/db/schema';
 import { getStripe } from './client';
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gestori.es';
+  process.env.NEXT_PUBLIC_SITE_URL ?? 'https://gonperstudio.shop';
 
 /**
  * Stripe Connect helpers para que los salones cobren ventas B2C a sus
  * clientes finales con split automático (margen al salón, comisión a
- * Gestori vía `application_fee_amount`).
+ * Gonper Studio vía `application_fee_amount`).
  *
  * Modelo: Connect Express. Stripe se encarga del KYC (DNI, IBAN, etc.).
  * Cuando el salón completa onboarding, Stripe nos avisa por webhook

@@ -10,7 +10,7 @@ const items = [
   },
   {
     q: "¿Mis clientes tienen que descargar algo?",
-    a: "No. Tu link público (gestori.es/tu-salon) abre una web normal. Eligen servicio, día y hora, dejan su email y reciben confirmación. 30 segundos.",
+    a: "No. Tu link público (gonperstudio.shop/tu-salon) abre una web normal. Eligen servicio, día y hora, dejan su email y reciben confirmación. 30 segundos.",
   },
   {
     q: "¿Y si un cliente no responde al recordatorio?",

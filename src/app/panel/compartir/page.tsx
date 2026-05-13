@@ -7,7 +7,7 @@ type CurrentSalon = {
   slug: string;
 } | null;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gestori.es';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://gonperstudio.shop';
 
 export default async function CompartirPage() {
   const salon = (await getCurrentSalon()) as CurrentSalon;

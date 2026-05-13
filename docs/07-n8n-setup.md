@@ -27,9 +27,9 @@ Ambos se hablan vía la API REST: la API es la única fuente de verdad. n8n no t
 ## 2. Pre-requisitos
 
 - **Bot de Telegram creado**: hablar con [@BotFather](https://t.me/BotFather), `/newbot`, guardar el `token` (formato `123456:ABC...`).
-- **Bot configurado en el panel del salón**: en `https://gestori.es/panel/config/bot` → pegar el token. El backend lo guarda en `salones.telegram_bot_token` y la API de recordatorios ya lo devuelve.
+- **Bot configurado en el panel del salón**: en `https://gonperstudio.shop/panel/config/bot` → pegar el token. El backend lo guarda en `salones.telegram_bot_token` y la API de recordatorios ya lo devuelve.
 - **n8n self-hosted o cloud** alcanzable públicamente vía HTTPS (los webhooks de Telegram requieren HTTPS válido).
-- **URL pública de la app**, ej. `https://gestori.es`.
+- **URL pública de la app**, ej. `https://gonperstudio.shop`.
 - **`INTERNAL_API_TOKEN`** ya configurado como variable de entorno en el deploy de la app (Dokploy → service env). Misma cadena se usa al configurar la credencial de n8n.
 - **Slug del salón** (ej. `salon-demo`). Es el identificador público del salón en la URL.
 
@@ -47,7 +47,7 @@ Crear en `Settings → Credentials` antes de importar los workflows.
 | Header Auth | `Authorization` |
 | Value | `Bearer <INTERNAL_API_TOKEN>` |
 
-Reutilizable por todos los nodos `HTTP Request` que llamen a `gestori.es/api/v1/*`.
+Reutilizable por todos los nodos `HTTP Request` que llamen a `gonperstudio.shop/api/v1/*`.
 
 ### 3.2 `Telegram Bot Salón Demo` (Telegram API)
 
@@ -67,7 +67,7 @@ Si gestionas varios salones con n8n único, crea **una credencial Telegram por s
    - Nodos `Telegram Trigger` y `Telegram` → credencial `Telegram Bot Salón Demo`.
    - Nodos `HTTP Request` → credencial `Header Auth Gomper API`.
 3. Editar el nodo **`Set Config`** y ajustar:
-   - `apiBaseUrl` → `https://gestori.es` (o la URL pública del deploy).
+   - `apiBaseUrl` → `https://gonperstudio.shop` (o la URL pública del deploy).
    - `defaultSlug` → `salon-demo` (slug que se usa si el `/start` no trae parámetro).
 4. Guardar y **activar** el workflow (toggle arriba a la derecha).
 5. Copiar la URL del `Telegram Trigger` (en el nodo, pestaña `Webhook URLs` → `Production URL`).
@@ -109,7 +109,7 @@ La API es **idempotente y atómica**: usa `UPDATE ... FOR UPDATE SKIP LOCKED` y 
 1. Abrir `https://t.me/<bot>?start=salon-demo` desde el móvil.
 2. Verificar que el bot responde con menú (Reservar / Mis citas / Precios / Horario).
 3. Pulsar **Reservar** → elegir servicio → elegir profesional → elegir fecha → elegir hora → escribir nombre y teléfono → confirmar.
-4. En el panel `https://gestori.es/panel/agenda` debería aparecer la cita en estado `pendiente`.
+4. En el panel `https://gonperstudio.shop/panel/agenda` debería aparecer la cita en estado `pendiente`.
 5. Crear manualmente (o esperar) una cita cuya hora de inicio caiga en los próximos 50–70 minutos. En el siguiente tick del cron (máximo 5 min) llega el recordatorio al chat de Telegram.
 6. Pulsar **✅ Confirmar** → en el panel la cita pasa a `confirmada` y el bot responde "Genial, te esperamos".
 7. Pulsar **❌ Cancelar** en otra cita → estado `cancelada`, motivo `cliente`.

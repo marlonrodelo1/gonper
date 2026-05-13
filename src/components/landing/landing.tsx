@@ -21,7 +21,7 @@ type Props = {
 };
 
 /**
- * Landing pública de Gestori.
+ * Landing pública de Gonper Studio.
  *
  * Este wrapper es un Client Component porque tiene que llamar `useReveal()`
  * para que IntersectionObserver active las animaciones de cada `.reveal`.

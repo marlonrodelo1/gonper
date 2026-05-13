@@ -90,7 +90,7 @@ export default async function ConfigWebPage({
         </h2>
         <p className="text-[13px] text-stone">
           Aparecerán en tu web pública{' '}
-          <span className="font-mono text-ink">gestori.es/{salon.slug}</span> y
+          <span className="font-mono text-ink">gonperstudio.shop/{salon.slug}</span> y
           al compartir el enlace por WhatsApp, Telegram o redes.
         </p>
       </header>
@@ -314,11 +314,11 @@ export default async function ConfigWebPage({
               Paso 3
             </span>
             <h3 className="tight mt-0.5 text-[17px] font-medium text-ink">
-              Marketplace público de Gestori
+              Marketplace público de Gonper Studio
             </h3>
             <p className="mt-0.5 text-[12.5px] text-stone">
               Listamos tu salón en{' '}
-              <span className="font-mono text-ink">gestori.es/marketplace</span>{' '}
+              <span className="font-mono text-ink">gonperstudio.shop/marketplace</span>{' '}
               para que clientes nuevos te descubran. Tu web pública{' '}
               <span className="font-mono text-ink">/{salon.slug}</span> sigue
               funcionando aunque desactives esto.
@@ -492,7 +492,7 @@ export default async function ConfigWebPage({
           </div>
           <div className="flex flex-col gap-1 px-4 py-3">
             <span className="text-[11px] uppercase tracking-[0.18em] text-stone/60">
-              gestori.es
+              gonperstudio.shop
             </span>
             <span className="tight truncate text-[14px] font-medium text-ink">
               {salon.nombre}

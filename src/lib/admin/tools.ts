@@ -757,7 +757,7 @@ function normalizarNumeroE164(input: string): string | null {
   return digitos;
 }
 
-const PUBLIC_BASE_URL = 'https://gestori.es';
+const PUBLIC_BASE_URL = 'https://gonperstudio.shop';
 
 /**
  * Genera el material para que el dueño comparta la URL de su tienda

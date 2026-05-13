@@ -23,7 +23,7 @@ import { checkRateLimit, getClientIp } from '@/lib/api/rate-limit';
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const USER_AGENT =
-  'Gestori (https://gestori.es; contacto@gestori.es)';
+  'Gonper Studio (https://gonperstudio.shop; contacto@gonperstudio.shop)';
 
 type NominatimResult = {
   place_id: number;

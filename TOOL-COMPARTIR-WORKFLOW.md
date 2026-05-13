@@ -13,7 +13,7 @@ Dado un `salon_id` (resuelto previamente por el workflow desde el chat de
 Telegram del dueño):
 
 1. Carga `salon.slug` y `salon.nombre`.
-2. Construye `url_publica = https://gestori.es/s/<slug>`.
+2. Construye `url_publica = https://gonperstudio.shop/s/<slug>`.
 3. Construye un `mensaje_compartible` (usa `mensaje_personalizado` si el
    dueño lo dictó, si no genera uno por defecto en español).
 4. Si llega `numero_destino`, lo normaliza a E.164 sin signos (`+34611...`,
@@ -30,7 +30,7 @@ Multi-tenant aislado por `salon_id`. No toca DB de escritura.
 ## Endpoint
 
 ```
-POST https://gestori.es/api/v1/admin/tool
+POST https://gonperstudio.shop/api/v1/admin/tool
 Authorization: Bearer {{ $env.INTERNAL_API_TOKEN }}
 Content-Type: application/json
 
@@ -53,10 +53,10 @@ Respuesta:
   "result": {
     "ok": true,
     "result": {
-      "url_publica": "https://gestori.es/s/revolution",
+      "url_publica": "https://gonperstudio.shop/s/revolution",
       "mensaje_compartible": "Hola! Te dejo el link...",
       "whatsapp_link": "https://wa.me/34611222333?text=...",
-      "qr_url": "https://gestori.es/api/v1/qr?text=...&size=512",
+      "qr_url": "https://gonperstudio.shop/api/v1/qr?text=...&size=512",
       "mensaje": "✅ Toca este link y WhatsApp se abrirá..."
     }
   }

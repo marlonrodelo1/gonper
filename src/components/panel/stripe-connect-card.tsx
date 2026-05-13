@@ -75,7 +75,7 @@ export function StripeConnectCard({ hasAccount, onboarded, justReturned }: Props
         <p className="text-[13px] text-stone">
           Para vender productos en tu tienda pública necesitas conectar tu
           cuenta con Stripe. Es la pasarela de pago — tú recibes el dinero de
-          cada venta en tu IBAN, Gestori se queda solo la comisión por
+          cada venta en tu IBAN, Gonper Studio se queda solo la comisión por
           intermediación.
         </p>
       </header>

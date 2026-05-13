@@ -18,7 +18,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           aria-label="Volver a inicio"
         >
           <span className="tight font-serif-it text-[34px] leading-none text-ink">
-            Gestori
+            Gonper Studio
           </span>
         </Link>
 
@@ -29,10 +29,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         <p className="mt-6 text-center text-[12px] text-stone">
           ¿Problemas para entrar? Escríbenos a{' '}
           <a
-            href="mailto:hola@gestori.es"
+            href="mailto:hola@gonperstudio.shop"
             className="text-terracotta hover:text-terracotta-2"
           >
-            hola@gestori.es
+            hola@gonperstudio.shop
           </a>
         </p>
       </div>

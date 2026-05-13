@@ -16,9 +16,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const salon = await getTiendaSalonBySlug(slug);
-  if (!salon) return { title: 'Tienda no encontrada · Gestori' };
+  if (!salon) return { title: 'Tienda no encontrada · Gonper Studio' };
   return {
-    title: `Tienda · ${salon.nombre} · Gestori`,
+    title: `Tienda · ${salon.nombre} · Gonper Studio`,
     description: `Compra productos de belleza y cosmética en ${salon.nombre}. Recogida en el salón.`,
   };
 }

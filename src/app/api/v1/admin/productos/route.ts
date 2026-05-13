@@ -87,9 +87,9 @@ const CreateBody = z.object({
   tipo_distribucion: z.enum(TiposDistribucion).default('stock'),
   tipo_negocio_target: z.array(z.enum(TiposNegocio)).default([]),
   imagenes: z.array(z.string().url().max(500)).default([]),
-  /** Lo que paga Gestori a la marca (info interna). */
+  /** Lo que paga Gonper Studio a la marca (info interna). */
   coste_mayorista_eur: z.number().min(0).nullable().optional(),
-  /** Lo que paga el salón a Gestori (precio de reventa). */
+  /** Lo que paga el salón a Gonper Studio (precio de reventa). */
   precio_mayorista_eur: z.number().min(0),
   precio_publico_recomendado_eur: z.number().min(0),
   unidad_medida: z.string().max(40).default('unidad'),

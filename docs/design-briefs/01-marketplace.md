@@ -2,17 +2,17 @@
 
 ## Contexto del producto
 
-**Gestori (gestori.es)** es un SaaS para dueños de salones (peluquería, barbería, estética, manicura) en España. Cada salón tiene su web pública en `/s/[slug]` con sus servicios, fotos, equipo y un chat embebido para reservar (ver ejemplo: una barbería real ya en producción tiene esa estructura).
+**Gonper Studio (gonperstudio.shop)** es un SaaS para dueños de salones (peluquería, barbería, estética, manicura) en España. Cada salón tiene su web pública en `/s/[slug]` con sus servicios, fotos, equipo y un chat embebido para reservar (ver ejemplo: una barbería real ya en producción tiene esa estructura).
 
 Lo que se diseña aquí: el **Marketplace público** en `/marketplace`. Es el punto de descubrimiento donde una visitante busca un salón cerca y aterriza en su tienda `/s/[slug]`. Sin login (cero fricción).
 
 NO se diseña aquí:
 - El widget de Royce (ya implementado, copia exacta del widget que ya tienen los salones — puedes verlo flotante en la esquina inferior derecha de cualquier `/s/[slug]`).
-- El super-admin: ya existe en `admin.gestori.es` (otro proyecto, marca "Gomper") — no hay que diseñarlo aquí.
+- El super-admin: ya existe en `admin.gonperstudio.shop` (otro proyecto, marca "Gomper") — no hay que diseñarlo aquí.
 
 ## Identidad visual
 
-Misma paleta que la landing actual de Gestori (cream/ink/stone/terracotta/sage), tipografía serif para titulares + sans para cuerpo, estética editorial cálida.
+Misma paleta que la landing actual de Gonper Studio (cream/ink/stone/terracotta/sage), tipografía serif para titulares + sans para cuerpo, estética editorial cálida.
 
 Colores acento por categoría (ya en uso en `/s/[slug]`, respetar):
 - **Manicura** → rosa polvo `#D88EA0` / soft `#F3DEE3`.
@@ -35,7 +35,7 @@ Colores acento por categoría (ya en uso en `/s/[slug]`, respetar):
 
 - **Desktop**: sidebar 280px a la izquierda con filtros sticky + grid de cards 2-3 columnas según ancho.
 - **Mobile**: filtros en bottom-sheet que se abre con un botón flotante "Filtros · 2" (badge con conteo aplicados).
-- Header sticky simplificado al hacer scroll: solo logo Gestori + buscador comprimido + botón "Filtros".
+- Header sticky simplificado al hacer scroll: solo logo Gonper Studio + buscador comprimido + botón "Filtros".
 
 ### M.3 — Filtros
 
@@ -74,7 +74,7 @@ El widget de Royce flota en la esquina inferior derecha (igual que en la landing
 
 ## SEO / cabecera del marketplace
 
-- Título dinámico: *"Peluquerías en Tenerife · Gestori"*.
+- Título dinámico: *"Peluquerías en Tenerife · Gonper Studio"*.
 - Cards con `<a href="/s/[slug]">` reales (no JS-only) para que sean indexables.
 
 ## Restricciones técnicas

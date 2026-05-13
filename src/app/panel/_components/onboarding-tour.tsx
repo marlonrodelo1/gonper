@@ -66,7 +66,7 @@ const STEPS: Step[] = [
     badge: 'Web del salón',
     titulo: 'Tu web pública',
     cuerpo:
-      'Promociones, galería y reseñas se muestran en gestori.es/tu-slug. Edita aquí y verás los cambios en tiempo real.',
+      'Promociones, galería y reseñas se muestran en gonperstudio.shop/tu-slug. Edita aquí y verás los cambios en tiempo real.',
   },
   {
     target: '[data-tour="nav-config"]',
@@ -82,7 +82,7 @@ const STEPS: Step[] = [
     badge: 'Listo',
     titulo: 'A trabajar 💪',
     cuerpo:
-      'Si necesitas ayuda escríbenos a hola@gestori.es. Cuando termine tu prueba de 30 días pasarás automáticamente al plan Básico (30 €/mes), salvo que canceles antes.',
+      'Si necesitas ayuda escríbenos a hola@gonperstudio.shop. Cuando termine tu prueba de 30 días pasarás automáticamente al plan Básico (30 €/mes), salvo que canceles antes.',
   },
 ];
 

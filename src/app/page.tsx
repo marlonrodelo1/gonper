@@ -12,7 +12,7 @@ import { agentes } from '@/lib/db/schema';
 export const revalidate = 60;
 
 const ROYCE_BIENVENIDA_FALLBACK =
-  '¡Hola! Soy Royce, el agente de Gestori. Cuéntame, ¿qué tipo de negocio llevas?';
+  '¡Hola! Soy Royce, el agente de Gonper Studio. Cuéntame, ¿qué tipo de negocio llevas?';
 
 async function getRoyceConfig(): Promise<{
   bienvenida: string;

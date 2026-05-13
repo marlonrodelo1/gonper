@@ -31,7 +31,7 @@ Si `STRIPE_PRICE_BASIC` falta, el botón "Suscribirme" avisa pero no rompe la p�
 
 En [Developers → Webhooks → Add endpoint](https://dashboard.stripe.com/webhooks):
 
-- **Endpoint URL:** `https://gestori.es/api/stripe/webhook`
+- **Endpoint URL:** `https://gonperstudio.shop/api/stripe/webhook`
   (en local: usar `stripe listen --forward-to localhost:3000/api/stripe/webhook` y Stripe te imprime el secret a usar)
 - **Eventos a escuchar:**
   - `checkout.session.completed`

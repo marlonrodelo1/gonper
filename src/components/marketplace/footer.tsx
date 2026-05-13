@@ -24,7 +24,7 @@ export function MarketplaceFooter() {
               </span>
             </span>
             <span className="text-[15px] tight font-medium text-ink">
-              Gestori
+              Gonper Studio
             </span>
           </div>
           <p className="mt-3 text-[13px] text-stone max-w-[320px] leading-relaxed">
@@ -45,7 +45,7 @@ export function MarketplaceFooter() {
         </div>
       </div>
       <div className="mx-auto max-w-[1200px] mt-10 pt-6 border-t border-line/60 flex items-center justify-between text-[12px] text-stone/80">
-        <span>© 2026 Gestori · Hecho en Tenerife</span>
+        <span>© 2026 Gonper Studio · Hecho en Tenerife</span>
         <span>v1.0</span>
       </div>
     </footer>

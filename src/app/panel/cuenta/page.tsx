@@ -195,12 +195,12 @@ export default async function CuentaPage({
             )}
             <div className="flex flex-col">
               <a
-                href={`https://gestori.es/s/${vinculo.salonSlug}`}
+                href={`https://gonperstudio.shop/s/${vinculo.salonSlug}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="tight text-[14px] font-medium text-terracotta hover:text-terracotta-2"
               >
-                gestori.es/s/{vinculo.salonSlug} ↗
+                gonperstudio.shop/s/{vinculo.salonSlug} ↗
               </a>
               <span className="text-[12px] text-stone">
                 Web pública del salón

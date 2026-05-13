@@ -11,7 +11,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
  *
  * Diferencias por surface:
  *   - landing: muestra sugerencias clickables debajo de la bienvenida
- *     ("¿Qué es Gestori?", "Cuánto cuesta", etc.) para enganchar al
+ *     ("¿Qué es Gonper Studio?", "Cuánto cuesta", etc.) para enganchar al
  *     visitante. Al hacer click se envía como mensaje.
  *   - marketplace: solo bienvenida + input. Sin sugerencias proactivas.
  */
@@ -34,11 +34,11 @@ type Props = {
 const STORAGE_KEY = 'gestori_royce_session';
 const HOOK_DISMISSED_KEY = 'gestori_royce_hook_dismissed';
 const AGENT_NAME = 'Royce';
-const HOOK_MESSAGE = '¡Hola! ¿Te explico qué hace Gestori?';
+const HOOK_MESSAGE = '¡Hola! ¿Te explico qué hace Gonper Studio?';
 const HOOK_DELAY_MS = 1500;
 
 const SUGERENCIAS_LANDING = [
-  '¿Qué es Gestori?',
+  '¿Qué es Gonper Studio?',
   '¿Cuánto cuesta?',
   'Quiero ver cómo funciona',
   '¿Cómo me ayuda con mi salón?',

@@ -85,7 +85,7 @@ export function MarketplaceTopNav({
             </span>
           </span>
           <span className="hidden sm:flex flex-col leading-tight">
-            <span className="text-[14px] tight font-medium">Gestori</span>
+            <span className="text-[14px] tight font-medium">Gonper Studio</span>
             <span className="text-[10px] uppercase tracking-[0.2em] text-stone/70 -mt-0.5">
               Marketplace
             </span>

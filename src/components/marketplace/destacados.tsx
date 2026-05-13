@@ -75,7 +75,7 @@ export function MarketplaceDestacados({ salones }: Props) {
               Destacados
             </h2>
             <p className="reveal in mt-0.5 text-[13px] text-stone/85 tight">
-              Salones que recomendamos desde Gestori
+              Salones que recomendamos desde Gonper Studio
             </p>
           </div>
           {salones.length > 3 && (

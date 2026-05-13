@@ -114,13 +114,13 @@ export async function generateMetadata({
     .limit(1);
 
   if (!salon) {
-    return { title: 'Salón no encontrado · Gestori' };
+    return { title: 'Salón no encontrado · Gonper Studio' };
   }
 
   const titulo = `${salon.nombre} · Reserva con Juanita`;
   const descripcion = `Te comparto mi negocio. Reserva en ${salon.nombre} 24/7 con Juanita${salon.direccion ? ' · ' + salon.direccion : ''}.`;
   const imagen = salon.bannerUrl ?? null;
-  const url = `https://gestori.es/s/${slug}`;
+  const url = `https://gonperstudio.shop/s/${slug}`;
 
   return {
     title: titulo,
@@ -131,7 +131,7 @@ export async function generateMetadata({
       url,
       title: titulo,
       description: descripcion,
-      siteName: 'Gestori · gestori.es',
+      siteName: 'Gonper Studio · gonperstudio.shop',
       locale: 'es_ES',
       images: imagen
         ? [
