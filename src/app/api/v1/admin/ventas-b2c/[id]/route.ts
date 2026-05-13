@@ -3,6 +3,8 @@ import { eq } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import {
+  marcas,
+  productos,
   salones,
   ventasB2c,
   ventasB2cItems,
@@ -12,8 +14,9 @@ import { requireApiToken } from '@/lib/api/auth';
 /**
  * GET /api/v1/admin/ventas-b2c/[id]
  *
- * Devuelve el detalle de una venta B2C con items + datos del salón.
- * Consumido por workflow n8n "Venta B2C nueva" para componer los emails.
+ * Devuelve el detalle de una venta B2C con items + datos del salón + marca
+ * de cada item. Consumido por el workflow n8n "Venta B2C nueva" para
+ * componer los 3 emails (cliente, salón, Marlon).
  */
 export async function GET(
   req: Request,
@@ -36,6 +39,9 @@ export async function GET(
       clienteTelefono: ventasB2c.clienteTelefono,
       totalEur: ventasB2c.totalEur,
       comisionGestoriEur: ventasB2c.comisionGestoriEur,
+      comisionSalonEur: ventasB2c.comisionSalonEur,
+      costeMarcaEur: ventasB2c.costeMarcaEur,
+      direccionEnvio: ventasB2c.direccionEnvio,
       estado: ventasB2c.estado,
       pagadoAt: ventasB2c.pagadoAt,
       salonId: salones.id,
@@ -53,8 +59,23 @@ export async function GET(
   if (!row) return NextResponse.json({ error: 'no_existe' }, { status: 404 });
 
   const items = await db
-    .select()
+    .select({
+      productoId: ventasB2cItems.productoId,
+      nombreSnapshot: ventasB2cItems.nombreSnapshot,
+      imagenSnapshot: ventasB2cItems.imagenSnapshot,
+      cantidad: ventasB2cItems.cantidad,
+      precioUnitEur: ventasB2cItems.precioUnitEur,
+      subtotalEur: ventasB2cItems.subtotalEur,
+      productoSku: productos.sku,
+      costeMayoristaEur: productos.costeMayoristaEur,
+      marcaId: marcas.id,
+      marcaNombre: marcas.nombre,
+      marcaSlug: marcas.slug,
+      marcaContactoEmail: marcas.contactoEmail,
+    })
     .from(ventasB2cItems)
+    .innerJoin(productos, eq(productos.id, ventasB2cItems.productoId))
+    .leftJoin(marcas, eq(marcas.id, productos.marcaId))
     .where(eq(ventasB2cItems.ventaId, id));
 
   return NextResponse.json({
@@ -66,6 +87,9 @@ export async function GET(
       cliente_telefono: row.clienteTelefono,
       total_eur: row.totalEur,
       comision_gestori_eur: row.comisionGestoriEur,
+      comision_salon_eur: row.comisionSalonEur,
+      coste_marca_eur: row.costeMarcaEur,
+      direccion_envio: row.direccionEnvio,
       estado: row.estado,
       pagado_at: row.pagadoAt,
       salon_id: row.salonId,
@@ -76,11 +100,17 @@ export async function GET(
       salon_ciudad: row.salonCiudad,
       items: items.map((it) => ({
         producto_id: it.productoId,
+        producto_sku: it.productoSku,
         nombre_snapshot: it.nombreSnapshot,
         imagen_snapshot: it.imagenSnapshot,
         cantidad: it.cantidad,
         precio_unit_eur: it.precioUnitEur,
         subtotal_eur: it.subtotalEur,
+        coste_mayorista_eur: it.costeMayoristaEur,
+        marca_id: it.marcaId,
+        marca_nombre: it.marcaNombre,
+        marca_slug: it.marcaSlug,
+        marca_contacto_email: it.marcaContactoEmail,
       })),
     },
   });
