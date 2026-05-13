@@ -67,6 +67,17 @@ const navConfig: NavItem[] = [
   },
 ];
 
+// Perfil del dueño + Stripe Connect + cobros. Separado de "Configuración"
+// (que es del salón) porque conceptualmente vive en otra capa.
+const navCuenta: NavItem[] = [
+  {
+    href: '/panel/cuenta',
+    label: 'Mi cuenta',
+    icon: Icon.Users,
+    activeMatch: '/panel/cuenta',
+  },
+];
+
 export function PanelSidebar({
   userEmail,
   salonNombre,
@@ -274,6 +285,33 @@ export function PanelSidebar({
                       active ? 'bg-cream' : 'bg-stone/40'
                     }`}
                   />
+                  <span className="tight">{it.label}</span>
+                </Link>
+              );
+            })}
+
+            {/* Cuenta del dueño (perfil, Stripe Connect, suscripción) */}
+            <div className="mt-4 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-stone/60">
+              Cuenta
+            </div>
+            {navCuenta.map((it) => {
+              const active = isActive(it);
+              const IconCmp = it.icon;
+              return (
+                <Link
+                  key={it.href}
+                  href={it.href}
+                  onClick={cerrar}
+                  data-tour={it.tour}
+                  className={`flex items-center gap-3 rounded-lg px-3 py-2 text-[14px] transition ${
+                    active
+                      ? 'bg-ink text-cream'
+                      : 'text-stone hover:bg-paper hover:text-ink'
+                  }`}
+                >
+                  <span className={active ? 'text-cream' : 'text-terracotta'}>
+                    <IconCmp width="18" height="18" />
+                  </span>
                   <span className="tight">{it.label}</span>
                 </Link>
               );
