@@ -57,9 +57,6 @@ export async function crearCheckout(planId: 'basico') {
 
   let customerId =
     pick<string>(salonRaw, 'stripe_customer_id', 'stripeCustomerId') ?? null;
-  const subscriptionId =
-    pick<string>(salonRaw, 'stripe_subscription_id', 'stripeSubscriptionId') ??
-    null;
 
   if (!customerId) {
     const customer = await stripe.customers.create({
@@ -74,10 +71,9 @@ export async function crearCheckout(planId: 'basico') {
       .where(eq(salones.id, salonId));
   }
 
-  // Si el salón aún no tuvo nunca suscripción (primer pago), incluimos trial
-  // 30 días con tarjeta obligatoria. Si ya la tuvo, no se reaplica.
-  const aplicarTrial = !subscriptionId;
-
+  // El trial de 7 días lo gestiona la app vía `salones.trial_until` (sin
+  // tarjeta). Cuando el dueño llega aquí ya pasó por el TrialBlocker, así que
+  // el Checkout cobra inmediato — sin `trial_period_days` en Stripe.
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
@@ -87,7 +83,6 @@ export async function crearCheckout(planId: 'basico') {
     metadata: { salon_id: salonId, plan: planId },
     payment_method_collection: 'always',
     subscription_data: {
-      ...(aplicarTrial ? { trial_period_days: 30 } : {}),
       metadata: { salon_id: salonId, plan: planId },
     },
     allow_promotion_codes: true,

@@ -806,7 +806,7 @@ export const trialAvisosEnviados = pgTable(
     salonId: uuid('salon_id')
       .notNull()
       .references(() => salones.id, { onDelete: 'cascade' }),
-    // 7d = 7 días antes; 2d = 2 días antes; vencido = trial expirado.
+    // 2d = 2 días antes del fin; vispera = día del fin; vencido = trial expirado.
     tipo: text('tipo').notNull(),
     enviadoAt: timestamp('enviado_at', { withTimezone: true })
       .notNull()

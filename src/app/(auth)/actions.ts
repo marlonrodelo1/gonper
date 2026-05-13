@@ -137,9 +137,9 @@ export async function signup(formData: FormData) {
     redirect('/signup?error=' + encodeURIComponent(`El slug "${salonSlug}" ya está en uso. Prueba con otro.`));
   }
 
-  // 3. Crear el salón con trial de 30 días sin tarjeta. Se accede al panel
+  // 3. Crear el salón con trial de 7 días sin tarjeta. Se accede al panel
   // inmediatamente; el upgrade a Stripe se hace desde /panel/config/suscripcion.
-  const trialUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const trialUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
   const { data: salon, error: salonError } = await admin
     .from('salones')
     .insert({

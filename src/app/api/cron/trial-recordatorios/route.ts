@@ -17,10 +17,10 @@ export const dynamic = 'force-dynamic';
  * POST /api/cron/trial-recordatorios
  *
  * Cron unificado que invoca n8n cada día. Manda 3 tipos de aviso al dueño
- * cuyo salón está en `plan='trial'` con `trial_until`:
- *   - 7d:      faltan ~7 días para vencer.
- *   - 2d:      faltan ~2 días para vencer.
- *   - vencido: trial vencido y aún no ha activado tarjeta.
+ * cuyo salón está en `plan='trial'` con `trial_until` (trial 7 días):
+ *   - 2d:      faltan ~2 días para vencer (día 5 desde signup).
+ *   - vispera: trial vence hoy (día 7 desde signup).
+ *   - vencido: trial vencido y aún no ha activado tarjeta (día 8+).
  *
  * La tabla `trial_avisos_enviados` con UNIQUE(salon_id, tipo) garantiza
  * idempotencia — no se manda dos veces el mismo aviso.
@@ -48,12 +48,12 @@ export async function POST(request: Request) {
     hasta: new Date(ahora.getTime() + offsetDiasMax * 24 * 60 * 60 * 1000),
   });
 
-  const tipos: { tipo: '7d' | '2d' | 'vencido'; rango: { desde: Date; hasta: Date }; dias: number }[] = [
-    { tipo: '7d', rango: ventana(6, 8), dias: 7 },
-    { tipo: '2d', rango: ventana(1, 3), dias: 2 },
+  const tipos: { tipo: '2d' | 'vispera' | 'vencido'; rango: { desde: Date; hasta: Date }; dias: number }[] = [
+    { tipo: '2d', rango: ventana(1, 3), dias: 2 },        // día 5 desde signup
+    { tipo: 'vispera', rango: ventana(0, 1), dias: 1 },   // día 7 desde signup
     // Vencido: trial_until ya pasó (entre -60 días y ahora). Limitamos a 60d
     // hacia atrás para no spammear cuentas viejas que ya nadie usa.
-    { tipo: 'vencido', rango: ventana(-60, 0), dias: 0 },
+    { tipo: 'vencido', rango: ventana(-60, 0), dias: 0 }, // día 8+
   ];
 
   const supabase = createAdminClient();

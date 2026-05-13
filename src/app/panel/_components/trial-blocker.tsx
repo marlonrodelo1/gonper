@@ -40,7 +40,7 @@ export function TrialBlocker({
     ? 'Activa tu cuenta'
     : 'Tu prueba gratuita ha terminado';
   const descripcion = sinSuscripcion
-    ? 'Para empezar a usar Gonper Studio necesitas añadir tu tarjeta. Tienes 30 días gratis y no se te cobra nada hoy. Cancelas cuando quieras antes del día 31.'
+    ? 'Tu prueba de 7 días ha terminado. Para seguir usando Gonper Studio, añade tu tarjeta y activa el plan Básico (30 €/mes, sin permanencia, cancelas cuando quieras).'
     : 'Para seguir usando Gonper Studio, suscríbete al plan Básico (30 €/mes, sin permanencia, cancelas cuando quieras).';
   const cta = sinSuscripcion ? 'Añadir tarjeta y activar' : 'Suscribirme ahora';
 
