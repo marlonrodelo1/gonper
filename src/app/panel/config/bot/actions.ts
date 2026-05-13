@@ -14,7 +14,7 @@ const TOKEN_RE = /^\d{8,12}:[A-Za-z0-9_-]{30,}$/;
 
 const N8N_BOT_WEBHOOK_BASE =
   process.env.N8N_BOT_CLIENTE_WEBHOOK_URL ||
-  'https://rogotech-n8n.qyklvu.easypanel.host/webhook/gestori-bot';
+  'https://n8n.gestori.es/webhook/gonper-bot';
 
 async function requireSalon(): Promise<{ id: string; slug: string }> {
   const salon = (await getCurrentSalon()) as CurrentSalon;
