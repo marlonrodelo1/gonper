@@ -3,6 +3,8 @@ import { Resend } from 'resend';
 const apiKey = process.env.RESEND_API_KEY;
 const fromAddress = process.env.RESEND_FROM_EMAIL || 'Gonper Studio <hola@gonperstudio.shop>';
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gonperstudio.shop';
+const LOGO_URL =
+  'https://lyqvgdambamzbrzpwgpg.supabase.co/storage/v1/object/public/salon-assets/logos/gonperstudio.png';
 
 let _resend: Resend | null = null;
 function getClient(): Resend | null {
@@ -84,8 +86,8 @@ function layout(opts: { titulo: string; cuerpoHtml: string }): string {
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${COLOR_BG};padding:40px 16px">
     <tr><td align="center">
       <table role="presentation" width="560" cellspacing="0" cellpadding="0" border="0" style="background:${COLOR_PAPER};border:1px solid ${COLOR_LINE};border-radius:16px;overflow:hidden">
-        <tr><td style="padding:32px 32px 8px">
-          <div style="font-size:13px;letter-spacing:0.18em;text-transform:uppercase;color:${COLOR_STONE}">Gonper Studio</div>
+        <tr><td style="padding:28px 32px 8px">
+          <img src="${LOGO_URL}" alt="Gonper Studio" width="120" style="display:block;border:0;outline:none;max-width:120px;height:auto"/>
         </td></tr>
         ${opts.cuerpoHtml}
         <tr><td style="padding:24px 32px 28px;border-top:1px solid ${COLOR_LINE}">
