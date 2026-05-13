@@ -326,15 +326,18 @@ export async function productosCatalogo(args: {
 }): Promise<{ mensaje: string }> {
   const limite = Math.min(30, Math.max(1, args.limite ?? 10));
 
+  // Tratar "" o whitespace como undefined (el AI Agent puede mandar "" cuando el LLM no provee el placeholder)
+  const marcaSlug = args.marca_slug?.trim() || undefined;
+
   let marcaId: string | null = null;
-  if (args.marca_slug) {
+  if (marcaSlug) {
     const [m] = await db
       .select({ id: marcas.id, nombre: marcas.nombre })
       .from(marcas)
-      .where(eq(marcas.slug, args.marca_slug))
+      .where(eq(marcas.slug, marcaSlug))
       .limit(1);
     if (!m) {
-      return { mensaje: `❌ No encontré la marca \`${args.marca_slug}\`.` };
+      return { mensaje: `❌ No encontré la marca \`${marcaSlug}\`.` };
     }
     marcaId = m.id;
   }
@@ -370,6 +373,61 @@ export async function productosCatalogo(args: {
   }
 
   return { mensaje: lineas.join('\n') };
+}
+
+// ============================================
+// CAPTURAR LEAD (landing — Royce comercial)
+// ============================================
+export async function capturarLead(args: {
+  email: string;
+  nombre?: string;
+  tipo_negocio?: 'barberia' | 'peluqueria' | 'estetica' | 'manicura' | 'otro';
+  dolor?: string;
+}): Promise<{ mensaje: string; lead_id?: string; ya_existia?: boolean }> {
+  const email = args.email.trim().toLowerCase();
+  // Tratar "" como undefined (el AI Agent puede mandar "" cuando el LLM no provee el placeholder)
+  const nombre = args.nombre?.trim() || null;
+  const tipoNegocio = args.tipo_negocio?.trim() || null;
+  const dolor = args.dolor?.trim() || null;
+
+  const existing = await db
+    .select({ id: leads.id, convertido: leads.convertido })
+    .from(leads)
+    .where(eq(leads.email, email))
+    .limit(1);
+
+  if (existing.length > 0) {
+    await db
+      .update(leads)
+      .set({
+        nombre,
+        tipoNegocio,
+        dolorPrincipal: dolor,
+      })
+      .where(eq(leads.id, existing[0].id));
+    return {
+      mensaje: `✅ Datos actualizados para ${email}. Te contactaremos pronto.`,
+      lead_id: existing[0].id,
+      ya_existia: true,
+    };
+  }
+
+  const [inserted] = await db
+    .insert(leads)
+    .values({
+      email,
+      nombre,
+      tipoNegocio,
+      dolorPrincipal: dolor,
+      origen: 'landing_chat',
+    })
+    .returning({ id: leads.id });
+
+  return {
+    mensaje: `✅ ¡Gracias! Apuntado ${email}. Te contactaremos en menos de 24h.`,
+    lead_id: inserted.id,
+    ya_existia: false,
+  };
 }
 
 // Avoid unused import

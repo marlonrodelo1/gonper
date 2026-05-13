@@ -10,6 +10,7 @@
 import { z } from 'zod';
 
 import {
+  capturarLead,
   getMetricasGlobales,
   infoSalon,
   leadsRecientes,
@@ -142,6 +143,23 @@ export const ROYCE_TOOLS: AnyRoyceToolDef[] = [
       })
       .strict(),
     handler: (args) => leadsRecientes(args),
+  }),
+  defineTool({
+    name: 'capturar_lead',
+    categoria: 'captacion',
+    descripcion: 'Guarda email + datos del visitante de la landing como lead. Idempotente por email (actualiza si ya existe).',
+    ejemplos: ['cuando el visitante deja su email en el chat'],
+    schema: z
+      .object({
+        email: z.string().email().max(200),
+        nombre: z.string().min(1).max(120).optional(),
+        tipo_negocio: z
+          .enum(['barberia', 'peluqueria', 'estetica', 'manicura', 'otro'])
+          .optional(),
+        dolor: z.string().max(2000).optional(),
+      })
+      .strict(),
+    handler: (args) => capturarLead(args),
   }),
 
   // ---------- SISTEMA ----------
