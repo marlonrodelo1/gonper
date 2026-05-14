@@ -127,7 +127,7 @@ export default async function TiendaPage({
               color: '#7A5A1B',
             }}
           >
-            Este salón aún está configurando los pagos. Vuelve en unos días.
+            Este salón aún no tiene la tienda activa. Vuelve pronto.
           </div>
         )}
 

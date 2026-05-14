@@ -74,7 +74,7 @@ export function CheckoutClient({
       return;
     }
     if (!aceptaPagos) {
-      setErr('Este salón aún está configurando los pagos.');
+      setErr('Este salón aún no tiene la tienda activa.');
       return;
     }
 
@@ -210,7 +210,7 @@ export function CheckoutClient({
               color: '#7C2E2E',
             }}
           >
-            Este salón aún está configurando los pagos. Vuelve en unos días.
+            Este salón aún no tiene la tienda activa. Vuelve pronto.
           </div>
         )}
 

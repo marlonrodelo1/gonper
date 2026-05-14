@@ -103,7 +103,7 @@ export function ProductoFichaClient({
       </div>
       {!aceptaPagos && (
         <div className="text-[12.5px] text-stone/80">
-          El salón aún está configurando los pagos online.
+          Este salón aún no tiene la tienda activa.
         </div>
       )}
     </div>
