@@ -71,9 +71,32 @@ export async function crearCheckout(planId: 'basico') {
       .where(eq(salones.id, salonId));
   }
 
-  // El trial de 7 días lo gestiona la app vía `salones.trial_until` (sin
-  // tarjeta). Cuando el dueño llega aquí ya pasó por el TrialBlocker, así que
-  // el Checkout cobra inmediato — sin `trial_period_days` en Stripe.
+  // Calcular días de trial restantes desde `salones.trial_until`. Si el
+  // dueño entra a meter tarjeta DURANTE el trial (caso ideal), pasamos
+  // `trial_period_days` a Stripe para que NO le cobremos hoy: Stripe
+  // guarda la tarjeta y hace el primer cargo el día que vence el trial.
+  // Si el trial ya expiró (TrialBlocker abrió), cobro inmediato sin
+  // trial_period_days.
+  const trialUntilRaw = pick<string | Date>(
+    salonRaw,
+    'trial_until',
+    'trialUntil',
+  );
+  let trialPeriodDays: number | undefined;
+  if (trialUntilRaw) {
+    const trialUntilMs = new Date(trialUntilRaw as string).getTime();
+    if (Number.isFinite(trialUntilMs)) {
+      const diasRestantes = Math.ceil(
+        (trialUntilMs - Date.now()) / (24 * 60 * 60 * 1000),
+      );
+      // Stripe exige trial_period_days >= 1.
+      if (diasRestantes >= 1) {
+        // Stripe acepta hasta 730 días — cap defensivo.
+        trialPeriodDays = Math.min(diasRestantes, 730);
+      }
+    }
+  }
+
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
@@ -84,6 +107,7 @@ export async function crearCheckout(planId: 'basico') {
     payment_method_collection: 'always',
     subscription_data: {
       metadata: { salon_id: salonId, plan: planId },
+      ...(trialPeriodDays ? { trial_period_days: trialPeriodDays } : {}),
     },
     allow_promotion_codes: true,
     locale: 'es',
