@@ -61,6 +61,7 @@ export async function listTiendaProductosDestacados(
       productoSlug: productos.slug,
       marcaSlug: marcas.slug,
       marcaLogoUrl: marcas.logoUrl,
+      marcaImagenDefault: marcas.imagenDefaultProductoUrl,
       nombre: productos.nombre,
       imagenes: productos.imagenes,
       precioEur: productos.precioPublicoRecomendadoEur,
@@ -82,7 +83,8 @@ export async function listTiendaProductosDestacados(
   return rows
     .map((r) => {
       const imagenes = Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [];
-      const imagen = imagenes[0] ?? r.marcaLogoUrl ?? null;
+      const imagen =
+        imagenes[0] ?? r.marcaImagenDefault ?? r.marcaLogoUrl ?? null;
       return {
         productoId: r.productoId,
         productoSlug: r.productoSlug,
@@ -132,6 +134,7 @@ export async function listTiendaProductos(
       marcaSlug: marcas.slug,
       marcaNombre: marcas.nombre,
       marcaLogoUrl: marcas.logoUrl,
+      marcaImagenDefault: marcas.imagenDefaultProductoUrl,
     })
     .from(productosSalon)
     .innerJoin(productos, eq(productos.id, productosSalon.productoId))
@@ -146,22 +149,35 @@ export async function listTiendaProductos(
     )
     .orderBy(asc(marcas.nombre), desc(productos.createdAt));
 
-  return rows.map((r) => ({
-    productoId: r.productoId,
-    productoSlug: r.productoSlug,
-    nombre: r.nombre,
-    descripcion: r.descripcion,
-    imagenes: Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [],
-    unidad: r.unidad,
-    categoria: r.categoria,
-    precioEur: Number(r.precioEur),
-    marca: {
-      id: r.marcaId,
-      slug: r.marcaSlug,
-      nombre: r.marcaNombre,
-      logoUrl: r.marcaLogoUrl,
-    },
-  }));
+  return rows.map((r) => {
+    const imagenesProducto = Array.isArray(r.imagenes)
+      ? (r.imagenes as string[])
+      : [];
+    // Si el producto no tiene ninguna imagen, inyectamos la imagen "ejemplo"
+    // de la marca como única imagen para que las cards no queden vacías.
+    const imagenesFinales =
+      imagenesProducto.length > 0
+        ? imagenesProducto
+        : r.marcaImagenDefault
+          ? [r.marcaImagenDefault]
+          : [];
+    return {
+      productoId: r.productoId,
+      productoSlug: r.productoSlug,
+      nombre: r.nombre,
+      descripcion: r.descripcion,
+      imagenes: imagenesFinales,
+      unidad: r.unidad,
+      categoria: r.categoria,
+      precioEur: Number(r.precioEur),
+      marca: {
+        id: r.marcaId,
+        slug: r.marcaSlug,
+        nombre: r.marcaNombre,
+        logoUrl: r.marcaLogoUrl,
+      },
+    };
+  });
 }
 
 export async function getTiendaProductoBySlug(args: {

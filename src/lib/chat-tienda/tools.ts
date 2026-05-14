@@ -17,6 +17,7 @@ import { db } from '@/lib/db';
 import { profesionales, salones, servicios } from '@/lib/db/schema';
 import { calcularSlots } from '@/lib/agenda/slots';
 import { crearReservaPublica } from '@/lib/reservas/publica';
+import { listTiendaProductos } from '@/lib/tienda/query';
 import type { ToolFunction } from '@/lib/llm/deepseek-tools';
 
 export const TOOLS_TIENDA: ToolFunction[] = [
@@ -85,6 +86,25 @@ export const TOOLS_TIENDA: ToolFunction[] = [
           },
         },
         required: ['servicio_id', 'inicio_iso', 'cliente_nombre', 'cliente_email'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'listar_productos_tienda',
+      description:
+        'Devuelve los productos profesionales (cosmética, cuidado) que el salón vende en su tienda online. Úsalo si el cliente pregunta por productos, qué marcas vendéis, o si quiere llevarse algo. El cliente compra desde gonperstudio.shop/s/<slug>/tienda. Devuelve nombre, marca y precio. NO uses esta tool para reservar citas — solo para hablar de productos comprables.',
+      parameters: {
+        type: 'object',
+        properties: {
+          categoria: {
+            type: 'string',
+            description:
+              'Filtro opcional por categoría (cabello, unas, piel, maquillaje, barba, etc.). Omitir para devolver todos.',
+          },
+        },
+        required: [],
       },
     },
   },
@@ -302,6 +322,56 @@ export async function executeChatTiendaTool(args: {
         inicio_iso: result.inicioIso,
         servicio_nombre: result.servicioNombre,
         profesional_nombre: result.profesionalNombre,
+      },
+    };
+  }
+
+  if (toolName === 'listar_productos_tienda') {
+    const categoriaFiltro = String(toolArgs.categoria ?? '').trim().toLowerCase();
+
+    const [salon] = await db
+      .select({ id: salones.id, slug: salones.slug, activo: salones.activo })
+      .from(salones)
+      .where(eq(salones.slug, slug))
+      .limit(1);
+    if (!salon || !salon.activo) {
+      return { name: toolName, result: { error: 'Salón no encontrado' } };
+    }
+
+    const productosTienda = await listTiendaProductos(salon.id);
+    const filtrados = categoriaFiltro
+      ? productosTienda.filter(
+          (p) => (p.categoria || '').toLowerCase() === categoriaFiltro,
+        )
+      : productosTienda;
+
+    if (filtrados.length === 0) {
+      return {
+        name: toolName,
+        result: {
+          productos: [],
+          mensaje: categoriaFiltro
+            ? `No hay productos disponibles en la categoría '${categoriaFiltro}'.`
+            : 'Este salón aún no tiene productos activos en su tienda.',
+        },
+      };
+    }
+
+    // Recorta a 20 productos para no saturar el contexto del LLM.
+    const listado = filtrados.slice(0, 20).map((p) => ({
+      nombre: p.nombre,
+      marca: p.marca.nombre,
+      categoria: p.categoria,
+      precio_eur: p.precioEur,
+      link: `/s/${salon.slug}/tienda/${p.marca.slug}/${p.productoSlug}`,
+    }));
+
+    return {
+      name: toolName,
+      result: {
+        productos: listado,
+        total: filtrados.length,
+        link_tienda: `/s/${salon.slug}/tienda`,
       },
     };
   }

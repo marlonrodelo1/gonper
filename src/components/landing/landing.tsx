@@ -4,7 +4,9 @@ import { useReveal } from "@/lib/hooks/use-reveal";
 import { Hero } from "./hero";
 import { Strip } from "./strip";
 import { Beneficios } from "./beneficios";
+import { MarcasSlider } from "./marcas-slider";
 import { ComoFunciona } from "./como-funciona";
+import type { MarcaPublica } from "@/lib/marcas/query";
 import { Juanita } from "./juanita";
 import { Comparativa } from "./comparativa";
 import { Pricing } from "./pricing";
@@ -18,6 +20,8 @@ type Props = {
   royceBienvenida: string;
   /** URL del avatar del agente, o null si no se ha configurado. */
   royceAvatarUrl: string | null;
+  /** Marcas activas para el slider entre Beneficios y ComoFunciona. */
+  marcas: MarcaPublica[];
 };
 
 /**
@@ -33,13 +37,14 @@ type Props = {
  * que el chat-widget de los salones). El mockup `<ChatDemo />` dentro de
  * `<Juanita />` se mantiene — es marketing visual, no el chat real.
  */
-export function Landing({ royceBienvenida, royceAvatarUrl }: Props) {
+export function Landing({ royceBienvenida, royceAvatarUrl, marcas }: Props) {
   useReveal();
   return (
     <>
       <Hero />
       <Strip />
       <Beneficios />
+      <MarcasSlider marcas={marcas} />
       <ComoFunciona />
       <Juanita />
       <Comparativa />

@@ -1058,6 +1058,9 @@ export const marcas = pgTable(
     nombre: text('nombre').notNull(),
     descripcion: text('descripcion'),
     logoUrl: text('logo_url'),
+    /** Imagen de ejemplo a usar como fallback cuando un producto de esta
+     * marca no tiene foto propia. La consume la tienda pública. */
+    imagenDefaultProductoUrl: text('imagen_default_producto_url'),
     webUrl: text('web_url'),
     contactoEmail: text('contacto_email'),
     contactoTelefono: text('contacto_telefono'),
