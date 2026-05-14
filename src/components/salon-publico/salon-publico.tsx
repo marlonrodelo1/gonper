@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useReveal } from '@/lib/hooks/use-reveal';
 import { TopNav } from './top-nav';
 import { Hero } from './hero';
+import { TiendaBanner } from './tienda-banner';
 import { Promos } from './promos';
 import { Servicios, type ServicioReal } from './servicios';
 import { Galeria } from './galeria';
@@ -38,6 +39,7 @@ type Props = {
   comparativas: ComparativaAntesDespues[];
   resenas: Resena[];
   resumenResenas: { rating: number; total: number } | null;
+  tieneTienda: boolean;
 };
 
 export function SalonPublico({
@@ -57,6 +59,7 @@ export function SalonPublico({
   comparativas,
   resenas,
   resumenResenas,
+  tieneTienda,
 }: Props) {
   useReveal();
   const [pickedServicio, setPickedServicio] = useState<string | null>(null);
@@ -73,6 +76,11 @@ export function SalonPublico({
         agenteNombre={salon.agenteNombre}
         horarioHoyTexto={horarioHoyTexto}
         servicios={servicios}
+      />
+      <TiendaBanner
+        slug={salon.slug}
+        agenteNombre={salon.agenteNombre}
+        tieneTienda={tieneTienda}
       />
       <Promos agenteNombre={salon.agenteNombre} promociones={promociones} />
       <Servicios

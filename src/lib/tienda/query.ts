@@ -42,6 +42,26 @@ export async function getTiendaSalonBySlug(
   };
 }
 
+export async function salonTieneTiendaActiva(
+  salonId: string,
+): Promise<boolean> {
+  const rows = await db
+    .select({ id: productosSalon.id })
+    .from(productosSalon)
+    .innerJoin(productos, eq(productos.id, productosSalon.productoId))
+    .innerJoin(marcas, eq(marcas.id, productos.marcaId))
+    .where(
+      and(
+        eq(productosSalon.salonId, salonId),
+        eq(productosSalon.activo, true),
+        eq(productos.activo, true),
+        eq(marcas.activa, true),
+      ),
+    )
+    .limit(1);
+  return rows.length > 0;
+}
+
 export async function listTiendaProductos(
   salonId: string,
 ): Promise<TiendaProducto[]> {

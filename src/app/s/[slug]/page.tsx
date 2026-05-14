@@ -16,6 +16,7 @@ import {
 } from '@/lib/db/schema';
 import { SalonPublico } from '@/components/salon-publico/salon-publico';
 import type { HorarioSemana } from '@/components/salon-publico/ubicacion';
+import { salonTieneTiendaActiva } from '@/lib/tienda/query';
 
 const TIPO_NEGOCIO_LABEL: Record<string, string> = {
   barberia: 'Barbería',
@@ -179,6 +180,7 @@ export default async function SalonPublicPage({
     comparativasActivas,
     resenasAprobadas,
     resumenResenasRows,
+    tieneTienda,
   ] = await Promise.all([
     db
       .select({
@@ -262,6 +264,7 @@ export default async function SalonPublicPage({
       })
       .from(resenas)
       .where(and(eq(resenas.salonId, salon.id), eq(resenas.aprobada, true))),
+    salonTieneTiendaActiva(salon.id),
   ]);
 
   const resumenRow = resumenResenasRows[0];
@@ -377,6 +380,7 @@ export default async function SalonPublicPage({
         comparativas={comparativasActivas}
         resenas={resenasAprobadas}
         resumenResenas={resumenResenas}
+        tieneTienda={tieneTienda}
       />
     </div>
   );
