@@ -9,6 +9,13 @@ type Props = {
   horarioHoyTexto: string;
   servicios: Pick<Servicio, 'nombre'>[];
   tieneTienda: boolean;
+  /** True cuando se renderiza dentro de /s/[slug]/tienda. Cambia el
+   * segundo CTA del hero a "Volver al salón". */
+  enTienda?: boolean;
+  /** Si false, omite la fila de quick-info debajo del hero (Hoy /
+   * Ubicación / Teléfono / Servicios). Útil cuando el hero es solo
+   * decorativo (tienda). */
+  mostrarInfoRow?: boolean;
 };
 
 const COVER_DEFAULT =
@@ -27,6 +34,8 @@ export function Hero({
   horarioHoyTexto,
   servicios,
   tieneTienda,
+  enTienda = false,
+  mostrarInfoRow = true,
 }: Props) {
   const cover = salon.bannerUrl ?? COVER_DEFAULT;
   const calle = calleFromDireccion(salon.direccion);
@@ -87,7 +96,7 @@ export function Hero({
           {/* Bottom CTA bar — glassmorphism */}
           <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 flex items-center justify-between gap-3">
             <a
-              href="#reservar"
+              href={enTienda ? `/s/${salon.slug}#reservar` : '#reservar'}
               className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
               style={{
                 background:
@@ -101,9 +110,9 @@ export function Hero({
             >
               Reservar cita
             </a>
-            {tieneTienda && (
+            {enTienda ? (
               <a
-                href={`/s/${salon.slug}/tienda`}
+                href={`/s/${salon.slug}`}
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
                 style={{
                   background:
@@ -116,16 +125,39 @@ export function Hero({
                 }}
               >
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M6 7h12l-1 13H7L6 7z" />
-                  <path d="M9 7a3 3 0 016 0" />
+                  <path d="M19 12H5" />
+                  <path d="M11 6l-6 6 6 6" />
                 </svg>
-                Visitar tienda
+                Volver al salón
               </a>
+            ) : (
+              tieneTienda && (
+                <a
+                  href={`/s/${salon.slug}/tienda`}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
+                  style={{
+                    background:
+                      'linear-gradient(180deg, rgba(197,86,44,0.78) 0%, rgba(168,69,31,0.82) 100%)',
+                    backdropFilter: 'saturate(160%) blur(12px)',
+                    WebkitBackdropFilter: 'saturate(160%) blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.25)',
+                    boxShadow:
+                      'inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 25px -10px rgba(168,69,31,0.45)',
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M6 7h12l-1 13H7L6 7z" />
+                    <path d="M9 7a3 3 0 016 0" />
+                  </svg>
+                  Visitar tienda
+                </a>
+              )
             )}
           </div>
         </div>
 
         {/* Quick info row */}
+        {mostrarInfoRow && (
         <div
           className="reveal mt-6 grid grid-cols-2 md:grid-cols-4 gap-3"
           data-delay="100"
@@ -173,6 +205,7 @@ export function Hero({
             </div>
           ))}
         </div>
+        )}
       </div>
     </section>
   );

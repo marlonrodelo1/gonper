@@ -1,11 +1,21 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { and, asc, eq } from 'drizzle-orm';
 import type { Metadata } from 'next';
+import type { CSSProperties } from 'react';
 
+import { db } from '@/lib/db';
+import { horarios, salones, servicios } from '@/lib/db/schema';
+import {
+  ACCENTS,
+  TIPO_NEGOCIO_LABEL,
+  calcularEstadoHorario,
+} from '@/lib/salon-publico/horario';
 import {
   getTiendaSalonBySlug,
   listTiendaProductos,
 } from '@/lib/tienda/query';
+import { TopNav } from '@/components/salon-publico/top-nav';
+import { Hero } from '@/components/salon-publico/hero';
 import { TiendaGrid } from './_components/tienda-grid';
 import { CarritoFab } from './_components/carrito-fab';
 
@@ -33,50 +43,81 @@ export default async function TiendaPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const salon = await getTiendaSalonBySlug(slug);
-  if (!salon) notFound();
-  const productos = await listTiendaProductos(salon.id);
+
+  // Cargamos el salón completo (necesario para el Hero: bannerUrl,
+  // telefono, email, agente, etc.) junto con horarios y servicios top.
+  const [salonRow] = await db
+    .select()
+    .from(salones)
+    .where(eq(salones.slug, slug))
+    .limit(1);
+
+  if (!salonRow || !salonRow.activo) {
+    notFound();
+  }
+
+  const [serviciosActivos, tramosHorario, productos] = await Promise.all([
+    db
+      .select({
+        id: servicios.id,
+        nombre: servicios.nombre,
+        descripcion: servicios.descripcion,
+        duracionMin: servicios.duracionMin,
+        precioEur: servicios.precioEur,
+        activo: servicios.activo,
+      })
+      .from(servicios)
+      .where(and(eq(servicios.salonId, salonRow.id), eq(servicios.activo, true)))
+      .orderBy(asc(servicios.orden), asc(servicios.createdAt)),
+    db
+      .select()
+      .from(horarios)
+      .where(eq(horarios.salonId, salonRow.id))
+      .orderBy(asc(horarios.diaSemana), asc(horarios.inicio)),
+    listTiendaProductos(salonRow.id),
+  ]);
+
+  const estadoHorario = calcularEstadoHorario(
+    tramosHorario,
+    salonRow.timezone || 'Europe/Madrid',
+  );
+
+  const tipoNegocioLabel =
+    TIPO_NEGOCIO_LABEL[salonRow.tipoNegocio] ?? salonRow.tipoNegocio;
+
+  const accent =
+    ACCENTS[salonRow.tipoNegocio as keyof typeof ACCENTS] ?? ACCENTS.otro;
+
+  const styleVars: CSSProperties = {
+    ['--gestori-accent' as string]: accent.accent,
+    ['--gestori-accent-2' as string]: accent.accent2,
+    ['--gestori-accent-soft' as string]: accent.accentSoft,
+    ['--gestori-accent-blush' as string]: accent.accentBlush,
+  } as CSSProperties;
+
+  // `aceptaPagos` (Stripe Connect onboarded) lo usa el carrito para
+  // habilitar/deshabilitar el checkout. Lo reusamos del salón directo.
+  const aceptaPagos = Boolean(salonRow.stripeConnectOnboarded);
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--cream)' }}>
-      {/* Header simple */}
-      <header className="border-b border-line bg-paper">
-        <div className="mx-auto max-w-[1100px] flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
-          <Link
-            href={`/s/${salon.slug}`}
-            className="flex items-center gap-3 text-ink"
-          >
-            {salon.logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={salon.logoUrl}
-                alt={salon.nombre}
-                className="h-10 w-10 rounded-full object-cover border border-line"
-              />
-            ) : (
-              <div className="h-10 w-10 rounded-full bg-cream-2 grid place-items-center text-[14px] font-serif-it text-stone">
-                {salon.nombre.charAt(0)}
-              </div>
-            )}
-            <div className="leading-tight">
-              <div className="tight text-[15px] font-medium">
-                {salon.nombre}
-              </div>
-              <div className="text-[11.5px] text-stone uppercase tracking-[0.2em]">
-                Tienda
-              </div>
-            </div>
-          </Link>
-          <Link
-            href={`/s/${salon.slug}`}
-            className="text-[12.5px] text-stone hover:text-ink tight"
-          >
-            ← Volver al salón
-          </Link>
-        </div>
-      </header>
+    <div
+      style={styleVars}
+      className="bg-cream text-ink min-h-screen"
+    >
+      <TopNav salonNombre={salonRow.nombre} logoUrl={salonRow.logoUrl} />
+      <Hero
+        salon={salonRow}
+        abierto={estadoHorario.abierto}
+        estadoTexto={estadoHorario.estadoTexto}
+        tipoNegocioLabel={tipoNegocioLabel}
+        horarioHoyTexto={estadoHorario.horarioHoyTexto}
+        servicios={serviciosActivos}
+        tieneTienda={true}
+        enTienda
+        mostrarInfoRow={false}
+      />
 
-      <main className="mx-auto max-w-[1100px] px-5 py-8 sm:px-6 sm:py-12">
+      <main className="mx-auto max-w-[1200px] px-5 py-10 sm:px-6 sm:py-14">
         <section className="text-center mb-8 sm:mb-12">
           <h1
             className="font-playfair text-ink"
@@ -85,17 +126,17 @@ export default async function TiendaPage({
               letterSpacing: '-0.01em',
             }}
           >
-            La <span className="font-serif-it">tienda</span> de {salon.nombre}
+            La <span className="font-serif-it">tienda</span> de {salonRow.nombre}
           </h1>
           <p className="mt-3 text-[14px] text-stone max-w-[520px] mx-auto leading-relaxed">
-            Compra y pasa a recoger por el salón. Sin costes de envío, sin
-            esperas.
+            Compra los productos que usamos en el salón. Recogida en el salón
+            o envío a domicilio.
           </p>
         </section>
 
-        {!salon.aceptaPagos && (
+        {!aceptaPagos && (
           <div
-            className="rounded-2xl border px-4 py-3 text-[13px] mb-6 text-center"
+            className="rounded-2xl border px-4 py-3 text-[13px] mb-6 text-center max-w-[600px] mx-auto"
             style={{
               borderColor: 'rgba(197,142,44,0.45)',
               background: 'rgba(197,142,44,0.10)',
@@ -108,12 +149,12 @@ export default async function TiendaPage({
 
         <TiendaGrid
           productos={productos}
-          salonSlug={salon.slug}
-          aceptaPagos={salon.aceptaPagos}
+          salonSlug={salonRow.slug}
+          aceptaPagos={aceptaPagos}
         />
       </main>
 
-      <CarritoFab salonSlug={salon.slug} aceptaPagos={salon.aceptaPagos} />
+      <CarritoFab salonSlug={salonRow.slug} aceptaPagos={aceptaPagos} />
     </div>
   );
 }
