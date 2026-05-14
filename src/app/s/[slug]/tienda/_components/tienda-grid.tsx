@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { TiendaProductoCard } from './tienda-producto-card';
+import { SelectorChips } from '@/components/ui/selector-chips';
 import type { TiendaProducto } from '@/lib/tienda/types';
 
 type Props = {
@@ -33,7 +34,6 @@ function normalize(s: string): string {
 }
 
 export function TiendaGrid({ productos, salonSlug, aceptaPagos }: Props) {
-  // Categorías únicas con contador, para el desplegable.
   const categorias = useMemo(() => {
     const counts = new Map<string, number>();
     for (const p of productos) {
@@ -42,24 +42,29 @@ export function TiendaGrid({ productos, salonSlug, aceptaPagos }: Props) {
     }
     return Array.from(counts.entries())
       .sort((a, b) => b[1] - a[1])
-      .map(([cat, count]) => ({ cat, count }));
+      .map(([cat, count]) => ({
+        value: cat,
+        label: `${labelCategoria(cat)} (${count})`,
+      }));
   }, [productos]);
 
-  const [categoriaActiva, setCategoriaActiva] = useState<string>('');
+  const [categoriasActivas, setCategoriasActivas] = useState<string[]>([]);
   const [busqueda, setBusqueda] = useState<string>('');
 
   const filtrados = useMemo(() => {
     const termino = normalize(busqueda.trim());
     return productos.filter((p) => {
       const cat = p.categoria || 'otros';
-      if (categoriaActiva && cat !== categoriaActiva) return false;
+      if (categoriasActivas.length > 0 && !categoriasActivas.includes(cat)) {
+        return false;
+      }
       if (termino) {
         const haystack = normalize(`${p.nombre} ${p.marca.nombre}`);
         if (!haystack.includes(termino)) return false;
       }
       return true;
     });
-  }, [productos, categoriaActiva, busqueda]);
+  }, [productos, categoriasActivas, busqueda]);
 
   if (productos.length === 0) {
     return (
@@ -73,9 +78,9 @@ export function TiendaGrid({ productos, salonSlug, aceptaPagos }: Props) {
 
   return (
     <>
-      <div className="mb-7 sm:mb-9 flex flex-col sm:flex-row gap-3 sm:items-center">
+      <div className="mb-7 sm:mb-9 space-y-4">
         {/* Buscador por nombre */}
-        <div className="relative flex-1 min-w-0">
+        <div className="relative">
           <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-stone/70">
             <svg
               viewBox="0 0 24 24"
@@ -101,37 +106,13 @@ export function TiendaGrid({ productos, salonSlug, aceptaPagos }: Props) {
           />
         </div>
 
-        {/* Select de categorías */}
+        {/* Chips de categorías (multi-select) */}
         {categorias.length > 0 && (
-          <div className="relative shrink-0 sm:w-[240px]">
-            <select
-              value={categoriaActiva}
-              onChange={(e) => setCategoriaActiva(e.target.value)}
-              className="appearance-none w-full rounded-full bg-paper border border-line pl-4 pr-10 py-2.5 text-[14px] text-ink outline-none transition focus:border-stone/40 cursor-pointer"
-            >
-              <option value="">Todas las categorías</option>
-              {categorias.map(({ cat, count }) => (
-                <option key={cat} value={cat}>
-                  {labelCategoria(cat)} ({count})
-                </option>
-              ))}
-            </select>
-            <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-stone/70">
-              <svg
-                viewBox="0 0 24 24"
-                width="14"
-                height="14"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            </span>
-          </div>
+          <SelectorChips
+            options={categorias}
+            value={categoriasActivas}
+            onChange={setCategoriasActivas}
+          />
         )}
       </div>
 
