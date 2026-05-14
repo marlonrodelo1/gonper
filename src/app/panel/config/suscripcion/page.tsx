@@ -153,7 +153,7 @@ export default async function SuscripcionPage({
           </span>
         ) : enTrial && !trialExpirado ? (
           <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-terracotta text-paper text-[11px] uppercase tracking-[0.18em]">
-            Empezar prueba gratuita 30 días
+            Empezar prueba gratuita 7 días
           </span>
         ) : null}
 

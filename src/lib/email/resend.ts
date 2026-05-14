@@ -164,7 +164,7 @@ export async function enviarEmailBienvenida(params: {
       </h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
         Bienvenido a Gonper Studio, <strong>${escapeHtml(params.salonNombre)}</strong>.
-        Tu cuenta está activa con 30 días gratis. A partir de ahora vas a llevar
+        Tu cuenta está activa con 7 días gratis. A partir de ahora vas a llevar
         tu negocio desde el móvil — sin abrir el ordenador.
       </p>
       <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">
@@ -323,7 +323,7 @@ export async function enviarTrialVencido(params: {
       </h1>
       <p style="margin:0 0 16px;font-size:15px;line-height:1.55;color:${COLOR_INK}">
         Hola, ${escapeHtml(params.salonNombre)}.
-        Tus 30 días gratis han acabado. Hemos pausado el acceso al panel
+        Tus 7 días gratis han acabado. Hemos pausado el acceso al panel
         para que puedas decidir con calma.
       </p>
       <p style="margin:0 0 24px;font-size:14px;line-height:1.55;color:${COLOR_STONE}">

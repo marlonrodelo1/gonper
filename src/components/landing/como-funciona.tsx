@@ -11,7 +11,7 @@ export function ComoFunciona() {
       n: "01",
       icon: <Icon.Telegram width="20" height="20" />,
       title: "Te registras en 1 minuto",
-      body: "Sin tarjeta. 30 días gratis. Eliges nombre del salón, servicios y horarios. Estás listo para vender.",
+      body: "Sin tarjeta. 7 días gratis. Eliges nombre del salón, servicios y horarios. Estás listo para vender.",
     },
     {
       n: "02",

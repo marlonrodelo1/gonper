@@ -7,7 +7,7 @@ export function Strip() {
     "Link y QR para compartir",
     "Asistente IA en español",
     "30€/mes sin comisiones",
-    "30 días gratis sin tarjeta",
+    "7 días gratis sin tarjeta",
   ];
   const row = [...items, ...items];
   return (

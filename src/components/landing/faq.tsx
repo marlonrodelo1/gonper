@@ -26,7 +26,7 @@ const items = [
   },
   {
     q: "¿Tengo que poner tarjeta para probar?",
-    a: "No. 30 días gratis sin tarjeta. Si después te convence, pagas 30€/mes. Si no, cierras y no debes nada.",
+    a: "No. 7 días gratis sin tarjeta. Si después te convence, pagas 30€/mes. Si no, cierras y no debes nada.",
   },
   {
     q: "¿Soporte en español?",

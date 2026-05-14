@@ -32,7 +32,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://gonperstudio.shop"
 
 const META_TITLE = "Gonper Studio — Lleva tu negocio desde tu móvil";
 const META_DESCRIPTION =
-  "El asistente IA que gestiona tu salón desde Telegram. Reservas, recordatorios y números a un mensaje de distancia. 30 días gratis, sin tarjeta.";
+  "El asistente IA que gestiona tu salón desde Telegram. Reservas, recordatorios y números a un mensaje de distancia. 7 días gratis, sin tarjeta.";
 
 const LOGO_URL =
   "https://lyqvgdambamzbrzpwgpg.supabase.co/storage/v1/object/public/salon-assets/logos/gonperstudio.png";

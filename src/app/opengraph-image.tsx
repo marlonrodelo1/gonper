@@ -127,7 +127,7 @@ export default async function Image() {
             textTransform: 'uppercase',
           }}
         >
-          <span>30 días gratis</span>
+          <span>7 días gratis</span>
           <span>·</span>
           <span>sin tarjeta</span>
           <span>·</span>
