@@ -42,6 +42,57 @@ export async function getTiendaSalonBySlug(
   };
 }
 
+export type ProductoDestacado = {
+  productoId: string;
+  productoSlug: string;
+  marcaSlug: string;
+  nombre: string;
+  imagen: string | null;
+  precioEur: number;
+};
+
+export async function listTiendaProductosDestacados(
+  salonId: string,
+  limit = 12,
+): Promise<ProductoDestacado[]> {
+  const rows = await db
+    .select({
+      productoId: productos.id,
+      productoSlug: productos.slug,
+      marcaSlug: marcas.slug,
+      nombre: productos.nombre,
+      imagenes: productos.imagenes,
+      precioEur: productos.precioPublicoRecomendadoEur,
+    })
+    .from(productosSalon)
+    .innerJoin(productos, eq(productos.id, productosSalon.productoId))
+    .innerJoin(marcas, eq(marcas.id, productos.marcaId))
+    .where(
+      and(
+        eq(productosSalon.salonId, salonId),
+        eq(productosSalon.activo, true),
+        eq(productos.activo, true),
+        eq(marcas.activa, true),
+      ),
+    )
+    .orderBy(desc(productos.createdAt))
+    .limit(limit);
+
+  return rows
+    .map((r) => {
+      const imagenes = Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [];
+      return {
+        productoId: r.productoId,
+        productoSlug: r.productoSlug,
+        marcaSlug: r.marcaSlug,
+        nombre: r.nombre,
+        imagen: imagenes[0] ?? null,
+        precioEur: Number(r.precioEur),
+      };
+    })
+    .filter((p) => !!p.imagen);
+}
+
 export async function salonTieneTiendaActiva(
   salonId: string,
 ): Promise<boolean> {

@@ -19,19 +19,20 @@ export function TiendaProductoCard({ producto: p, salonSlug, aceptaPagos }: Prop
   const [adding, setAdding] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  function addOne() {
+  function addOne(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
     if (!aceptaPagos) return;
     addToCart(getCarritoStorageKey(salonSlug), {
       productoId: p.productoId,
       nombre: p.nombre,
       precio: p.precioEur,
       imagen: p.imagenes[0] ?? null,
-      // Modelo dropshipping: sin tope de stock (Wella siempre tiene).
       maxCantidad: 99,
       marcaNombre: p.marca.nombre,
     });
     setAdding(true);
-    setFeedback('Añadido al carrito');
+    setFeedback('Añadido');
     window.setTimeout(() => {
       setAdding(false);
       setFeedback(null);
@@ -39,64 +40,65 @@ export function TiendaProductoCard({ producto: p, salonSlug, aceptaPagos }: Prop
     window.dispatchEvent(new CustomEvent('gestori-cart-updated'));
   }
 
+  const href = `/s/${salonSlug}/tienda/${p.marca.slug}/${p.productoSlug}`;
+
   return (
-    <article className="card flex flex-col overflow-hidden">
+    <article className="group card flex flex-col overflow-hidden">
       <Link
-        href={`/s/${salonSlug}/tienda/${p.marca.slug}/${p.productoSlug}`}
+        href={href}
         className="relative w-full bg-cream-2 block"
-        style={{ aspectRatio: '4/3' }}
+        style={{ aspectRatio: '1/1' }}
       >
         {p.imagenes[0] ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={p.imagenes[0]}
             alt={p.nombre}
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
-          <div className="absolute inset-0 grid place-items-center text-[42px] font-serif-it text-stone/55">
+          <div className="absolute inset-0 grid place-items-center text-[36px] font-serif-it text-stone/55">
             {p.nombre.charAt(0)}
           </div>
         )}
-      </Link>
-
-      <div className="flex flex-1 flex-col gap-2 p-4">
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.16em] text-stone/80">
-          {p.marca.logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
+        {p.marca.logoUrl && (
+          <span className="absolute top-2 left-2 inline-flex items-center gap-1.5 bg-paper/90 backdrop-blur-sm rounded-full px-2 py-1 border border-line">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={p.marca.logoUrl}
               alt=""
               className="h-3 w-3 rounded-full object-cover"
             />
-          )}
-          <span>{p.marca.nombre}</span>
-        </div>
+            <span className="text-[9.5px] uppercase tracking-[0.14em] text-stone">
+              {p.marca.nombre}
+            </span>
+          </span>
+        )}
+      </Link>
 
-        <Link href={`/s/${salonSlug}/tienda/${p.marca.slug}/${p.productoSlug}`}>
+      <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-3.5">
+        <Link href={href} className="block min-h-[36px]">
           <h3
-            className="font-playfair leading-tight text-ink"
-            style={{ fontSize: '17px', letterSpacing: '-0.01em' }}
+            className="font-playfair leading-tight text-ink line-clamp-2"
+            style={{ fontSize: '14px', letterSpacing: '-0.005em' }}
           >
             {p.nombre}
           </h3>
         </Link>
 
-        <div className="mt-auto flex items-baseline justify-between gap-2">
-          <div>
-            <div className="tight text-[22px] font-medium text-ink">
-              {p.precioEur.toFixed(2)} €
-            </div>
-            <div className="text-[10.5px] text-stone">/ {p.unidad}</div>
+        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
+          <div className="tight text-[17px] font-medium text-ink leading-none">
+            {p.precioEur.toFixed(2).replace(/\.00$/, '')} €
           </div>
           <button
             type="button"
             onClick={addOne}
             disabled={!aceptaPagos || adding}
-            className="gloss-btn tight rounded-full px-4 py-2 text-[12px] font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            aria-label={`Añadir ${p.nombre} al carrito`}
+            className="gloss-btn tight rounded-full px-3 py-1.5 text-[11.5px] font-medium disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
           >
-            {feedback ?? 'Añadir'}
+            {feedback ?? '+ Añadir'}
           </button>
         </div>
       </div>

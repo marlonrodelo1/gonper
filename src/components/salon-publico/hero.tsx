@@ -6,10 +6,9 @@ type Props = {
   abierto: boolean;
   estadoTexto: string; // ej "Cierra a las 20:00" o "Abre lunes 10:00"
   tipoNegocioLabel: string;
-  urlTelegram?: string | null;
-  agenteNombre: string;
   horarioHoyTexto: string;
   servicios: Pick<Servicio, 'nombre'>[];
+  tieneTienda: boolean;
 };
 
 const COVER_DEFAULT =
@@ -25,10 +24,9 @@ export function Hero({
   salon,
   abierto,
   estadoTexto,
-  urlTelegram,
-  agenteNombre,
   horarioHoyTexto,
   servicios,
+  tieneTienda,
 }: Props) {
   const cover = salon.bannerUrl ?? COVER_DEFAULT;
   const calle = calleFromDireccion(salon.direccion);
@@ -86,7 +84,7 @@ export function Hero({
             )}
           </div>
 
-          {/* Bottom CTA bar — glassmorphism, un botón a cada lado */}
+          {/* Bottom CTA bar — glassmorphism */}
           <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 flex items-center justify-between gap-3">
             <a
               href="#reservar"
@@ -103,11 +101,9 @@ export function Hero({
             >
               Reservar cita
             </a>
-            {urlTelegram && (
+            {tieneTienda && (
               <a
-                href={urlTelegram}
-                target="_blank"
-                rel="noreferrer"
+                href={`/s/${salon.slug}/tienda`}
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
                 style={{
                   background: 'rgba(255,255,255,0.14)',
@@ -118,8 +114,11 @@ export function Hero({
                     'inset 0 1px 0 rgba(255,255,255,0.20), 0 8px 24px -10px rgba(0,0,0,0.35)',
                 }}
               >
-                <Icon.Telegram width="13" height="13" />
-                Chatear con {agenteNombre}
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 7h12l-1 13H7L6 7z" />
+                  <path d="M9 7a3 3 0 016 0" />
+                </svg>
+                Visitar nuestra tienda
               </a>
             )}
           </div>

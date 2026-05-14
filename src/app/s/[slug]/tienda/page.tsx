@@ -6,7 +6,7 @@ import {
   getTiendaSalonBySlug,
   listTiendaProductos,
 } from '@/lib/tienda/query';
-import { TiendaProductoCard } from './_components/tienda-producto-card';
+import { TiendaGrid } from './_components/tienda-grid';
 import { CarritoFab } from './_components/carrito-fab';
 
 export async function generateMetadata({
@@ -102,30 +102,11 @@ export default async function TiendaPage({
           </div>
         )}
 
-        {productos.length === 0 ? (
-          <div className="card flex flex-col items-center gap-3 p-10 text-center">
-            <p className="text-[14px] text-stone">
-              Aún no hay productos disponibles en esta tienda.
-            </p>
-            <Link
-              href={`/s/${salon.slug}`}
-              className="gloss-btn tight rounded-full px-5 py-2.5 text-[13px] font-medium"
-            >
-              Ver el salón
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {productos.map((p) => (
-              <TiendaProductoCard
-                key={p.productoId}
-                producto={p}
-                salonSlug={salon.slug}
-                aceptaPagos={salon.aceptaPagos}
-              />
-            ))}
-          </div>
-        )}
+        <TiendaGrid
+          productos={productos}
+          salonSlug={salon.slug}
+          aceptaPagos={salon.aceptaPagos}
+        />
       </main>
 
       <CarritoFab salonSlug={salon.slug} aceptaPagos={salon.aceptaPagos} />

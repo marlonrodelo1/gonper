@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useReveal } from '@/lib/hooks/use-reveal';
 import { TopNav } from './top-nav';
 import { Hero } from './hero';
-import { TiendaBanner } from './tienda-banner';
+import { ProductosDestacados } from './productos-destacados';
 import { Promos } from './promos';
 import { Servicios, type ServicioReal } from './servicios';
 import { Galeria } from './galeria';
@@ -21,6 +21,7 @@ import type {
   Resena,
   Salon,
 } from '@/lib/db/schema';
+import type { ProductoDestacado } from '@/lib/tienda/query';
 
 type Props = {
   salon: Salon;
@@ -31,7 +32,6 @@ type Props = {
   abierto: boolean;
   estadoTexto: string;
   tipoNegocioLabel: string;
-  urlTelegram: string | null;
   horarioHoyTexto: string;
   diaActual: number;
   promociones: Promocion[];
@@ -40,6 +40,7 @@ type Props = {
   resenas: Resena[];
   resumenResenas: { rating: number; total: number } | null;
   tieneTienda: boolean;
+  productosDestacados: ProductoDestacado[];
 };
 
 export function SalonPublico({
@@ -51,7 +52,6 @@ export function SalonPublico({
   abierto,
   estadoTexto,
   tipoNegocioLabel,
-  urlTelegram,
   horarioHoyTexto,
   diaActual,
   promociones,
@@ -60,6 +60,7 @@ export function SalonPublico({
   resenas,
   resumenResenas,
   tieneTienda,
+  productosDestacados,
 }: Props) {
   useReveal();
   const [pickedServicio, setPickedServicio] = useState<string | null>(null);
@@ -72,16 +73,16 @@ export function SalonPublico({
         abierto={abierto}
         estadoTexto={estadoTexto}
         tipoNegocioLabel={tipoNegocioLabel}
-        urlTelegram={urlTelegram}
-        agenteNombre={salon.agenteNombre}
         horarioHoyTexto={horarioHoyTexto}
         servicios={servicios}
-      />
-      <TiendaBanner
-        slug={salon.slug}
-        agenteNombre={salon.agenteNombre}
         tieneTienda={tieneTienda}
       />
+      {tieneTienda && (
+        <ProductosDestacados
+          salonSlug={salon.slug}
+          productos={productosDestacados}
+        />
+      )}
       <Promos agenteNombre={salon.agenteNombre} promociones={promociones} />
       <Servicios
         servicios={servicios}

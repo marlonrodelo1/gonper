@@ -16,7 +16,10 @@ import {
 } from '@/lib/db/schema';
 import { SalonPublico } from '@/components/salon-publico/salon-publico';
 import type { HorarioSemana } from '@/components/salon-publico/ubicacion';
-import { salonTieneTiendaActiva } from '@/lib/tienda/query';
+import {
+  listTiendaProductosDestacados,
+  salonTieneTiendaActiva,
+} from '@/lib/tienda/query';
 
 const TIPO_NEGOCIO_LABEL: Record<string, string> = {
   barberia: 'Barbería',
@@ -181,6 +184,7 @@ export default async function SalonPublicPage({
     resenasAprobadas,
     resumenResenasRows,
     tieneTienda,
+    productosDestacados,
   ] = await Promise.all([
     db
       .select({
@@ -265,6 +269,7 @@ export default async function SalonPublicPage({
       .from(resenas)
       .where(and(eq(resenas.salonId, salon.id), eq(resenas.aprobada, true))),
     salonTieneTiendaActiva(salon.id),
+    listTiendaProductosDestacados(salon.id, 12),
   ]);
 
   const resumenRow = resumenResenasRows[0];
@@ -347,10 +352,6 @@ export default async function SalonPublicPage({
   const tipoNegocioLabel =
     TIPO_NEGOCIO_LABEL[salon.tipoNegocio] ?? salon.tipoNegocio;
 
-  const urlTelegram = salon.telegramBotUsername
-    ? `https://t.me/${salon.telegramBotUsername}?start=${salon.slug}`
-    : null;
-
   const accent =
     ACCENTS[salon.tipoNegocio as keyof typeof ACCENTS] ?? ACCENTS.otro;
 
@@ -372,7 +373,6 @@ export default async function SalonPublicPage({
         abierto={abierto}
         estadoTexto={estadoTexto}
         tipoNegocioLabel={tipoNegocioLabel}
-        urlTelegram={urlTelegram}
         horarioHoyTexto={horarioHoyTexto}
         diaActual={diaActual}
         promociones={promocionesActivas}
@@ -381,6 +381,7 @@ export default async function SalonPublicPage({
         resenas={resenasAprobadas}
         resumenResenas={resumenResenas}
         tieneTienda={tieneTienda}
+        productosDestacados={productosDestacados}
       />
     </div>
   );
