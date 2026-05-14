@@ -118,22 +118,6 @@ export default async function TiendaPage({
       />
 
       <main className="mx-auto max-w-[1200px] px-5 py-10 sm:px-6 sm:py-14">
-        <section className="text-center mb-8 sm:mb-12">
-          <h1
-            className="font-playfair text-ink"
-            style={{
-              fontSize: 'clamp(28px, 5vw, 48px)',
-              letterSpacing: '-0.01em',
-            }}
-          >
-            La <span className="font-serif-it">tienda</span> de {salonRow.nombre}
-          </h1>
-          <p className="mt-3 text-[14px] text-stone max-w-[520px] mx-auto leading-relaxed">
-            Compra los productos que usamos en el salón. Recogida en el salón
-            o envío a domicilio.
-          </p>
-        </section>
-
         {!aceptaPagos && (
           <div
             className="rounded-2xl border px-4 py-3 text-[13px] mb-6 text-center max-w-[600px] mx-auto"
