@@ -60,6 +60,7 @@ export async function listTiendaProductosDestacados(
       productoId: productos.id,
       productoSlug: productos.slug,
       marcaSlug: marcas.slug,
+      marcaLogoUrl: marcas.logoUrl,
       nombre: productos.nombre,
       imagenes: productos.imagenes,
       precioEur: productos.precioPublicoRecomendadoEur,
@@ -81,12 +82,13 @@ export async function listTiendaProductosDestacados(
   return rows
     .map((r) => {
       const imagenes = Array.isArray(r.imagenes) ? (r.imagenes as string[]) : [];
+      const imagen = imagenes[0] ?? r.marcaLogoUrl ?? null;
       return {
         productoId: r.productoId,
         productoSlug: r.productoSlug,
         marcaSlug: r.marcaSlug,
         nombre: r.nombre,
-        imagen: imagenes[0] ?? null,
+        imagen,
         precioEur: Number(r.precioEur),
       };
     })

@@ -106,19 +106,20 @@ export function Hero({
                 href={`/s/${salon.slug}/tienda`}
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
                 style={{
-                  background: 'rgba(255,255,255,0.14)',
-                  backdropFilter: 'saturate(160%) blur(14px)',
-                  WebkitBackdropFilter: 'saturate(160%) blur(14px)',
-                  border: '1px solid rgba(255,255,255,0.28)',
+                  background:
+                    'linear-gradient(180deg, rgba(197,86,44,0.78) 0%, rgba(168,69,31,0.82) 100%)',
+                  backdropFilter: 'saturate(160%) blur(12px)',
+                  WebkitBackdropFilter: 'saturate(160%) blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.25)',
                   boxShadow:
-                    'inset 0 1px 0 rgba(255,255,255,0.20), 0 8px 24px -10px rgba(0,0,0,0.35)',
+                    'inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 25px -10px rgba(168,69,31,0.45)',
                 }}
               >
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M6 7h12l-1 13H7L6 7z" />
                   <path d="M9 7a3 3 0 016 0" />
                 </svg>
-                Visitar nuestra tienda
+                Visitar tienda
               </a>
             )}
           </div>
