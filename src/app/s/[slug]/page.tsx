@@ -21,6 +21,11 @@ import {
   salonTieneTiendaActiva,
 } from '@/lib/tienda/query';
 
+// La página depende de queries Drizzle no envueltas en fetch, así que
+// Next 16 la trataría como estática. Forzamos revalidación cada minuto
+// para que cambios de productos/destacados se reflejen sin redeploy.
+export const revalidate = 60;
+
 const TIPO_NEGOCIO_LABEL: Record<string, string> = {
   barberia: 'Barbería',
   peluqueria: 'Peluquería',

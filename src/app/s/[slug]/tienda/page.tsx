@@ -9,6 +9,10 @@ import {
 import { TiendaGrid } from './_components/tienda-grid';
 import { CarritoFab } from './_components/carrito-fab';
 
+// Revalidamos cada minuto para que activar/desactivar productos en BD
+// se vea reflejado sin esperar un redeploy.
+export const revalidate = 60;
+
 export async function generateMetadata({
   params,
 }: {
