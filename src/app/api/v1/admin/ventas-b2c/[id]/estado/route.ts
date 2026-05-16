@@ -21,6 +21,7 @@ const ESTADOS_ADMIN = [
   'tramitada_marca',
   'recogida',
   'cancelada',
+  'reembolsada',
 ] as const;
 
 const Body = z.object({
@@ -56,6 +57,11 @@ export async function PATCH(
   if (estado === 'tramitada_marca') update.listaRecogidaAt = now;
   if (estado === 'recogida') update.recogidaAt = now;
   if (estado === 'cancelada') update.canceladaAt = now;
+  if (estado === 'reembolsada') {
+    // El reembolso es un evento de cierre: si no estaba cancelada, marcamos
+    // también canceladaAt para que las queries de "cuándo se cerró" funcionen.
+    update.canceladaAt = now;
+  }
 
   const [row] = await db
     .update(ventasB2c)
