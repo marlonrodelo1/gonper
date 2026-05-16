@@ -11,7 +11,12 @@ import {
 } from './actions';
 import { EliminarResenaButton } from './eliminar-button';
 
-type CurrentSalon = { id: string; nombre: string; timezone: string | null } | null;
+type CurrentSalon = {
+  id: string;
+  nombre: string;
+  slug: string;
+  timezone: string | null;
+} | null;
 
 function formatearFecha(fecha: string | null, timezone: string): string {
   if (!fecha) return '—';
@@ -89,6 +94,7 @@ export default async function ResenasPage({
     .orderBy(desc(resenas.fecha), desc(resenas.createdAt));
 
   const aprobadas = filas.filter((r) => r.aprobada).length;
+  const pendientes = filas.filter((r) => !r.aprobada).length;
 
   return (
     <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
@@ -124,6 +130,44 @@ export default async function ResenasPage({
           {params.error}
         </div>
       ) : null}
+
+      {pendientes > 0 ? (
+        <div
+          className="flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 text-[13.5px]"
+          style={{
+            background: 'rgba(197,142,44,0.10)',
+            borderColor: 'rgba(197,142,44,0.45)',
+            color: '#7A5A1B',
+          }}
+        >
+          <span className="font-medium">
+            {pendientes}{' '}
+            {pendientes === 1
+              ? 'reseña pendiente de aprobar'
+              : 'reseñas pendientes de aprobar'}
+          </span>
+          <span className="text-stone/80">
+            Hasta que la apruebes no aparece en tu web pública.
+          </span>
+        </div>
+      ) : null}
+
+      <div className="card-tight flex flex-wrap items-center gap-3 px-4 py-3 text-[13px] text-stone">
+        <span className="font-medium text-ink">
+          Link para que tus clientes dejen reseña:
+        </span>
+        <code className="rounded-md bg-cream px-2 py-1 font-mono text-[12.5px] text-ink">
+          gonperstudio.shop/s/{salon.slug}/resena
+        </code>
+        <Link
+          href={`/s/${salon.slug}/resena`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ml-auto inline-flex items-center gap-1.5 text-[12.5px] text-terracotta hover:text-terracotta-2"
+        >
+          Ver formulario <Icon.Arrow width="11" height="11" />
+        </Link>
+      </div>
 
       {filas.length === 0 ? (
         <div className="card flex flex-col items-center justify-center gap-3 p-12 text-center">

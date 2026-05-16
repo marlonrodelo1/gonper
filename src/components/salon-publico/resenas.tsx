@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Icon } from './icons';
 import { tiempoRelativo } from '@/lib/format/tiempo-relativo';
 import type { Resena } from '@/lib/db/schema';
@@ -5,6 +6,7 @@ import type { Resena } from '@/lib/db/schema';
 type Props = {
   resenas: Resena[];
   resumen: { rating: number; total: number } | null;
+  salonSlug: string;
 };
 
 function iniciales(nombre: string): string {
@@ -16,9 +18,8 @@ function iniciales(nombre: string): string {
     .join('');
 }
 
-export function Resenas({ resenas, resumen }: Props) {
-  if (resenas.length === 0) return null;
-
+export function Resenas({ resenas, resumen, salonSlug }: Props) {
+  const hayResenas = resenas.length > 0;
   const rating = resumen?.rating ?? 0;
   const total = resumen?.total ?? resenas.length;
 
@@ -32,10 +33,29 @@ export function Resenas({ resenas, resumen }: Props) {
               className="tight font-medium text-ink"
               style={{ fontSize: 'clamp(36px,5vw,56px)', lineHeight: 1 }}
             >
-              {rating.toFixed(1)} / 5 ·{' '}
-              <span className="font-serif-it">{total} reseñas</span>
+              {hayResenas ? (
+                <>
+                  {rating.toFixed(1)} / 5 ·{' '}
+                  <span className="font-serif-it">{total} reseñas</span>
+                </>
+              ) : (
+                <>
+                  ¿Has venido?{' '}
+                  <span className="font-serif-it">comparte tu experiencia</span>
+                </>
+              )}
             </h2>
           </div>
+          <Link
+            href={`/s/${salonSlug}/resena`}
+            scroll={true}
+            className="accent-btn tight inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-[13.5px] font-medium"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden>
+              <path d="M12 3.5l2.7 5.6 6.2.9-4.5 4.3 1.1 6.1L12 17.6l-5.5 2.9 1.1-6.1L3.1 10l6.2-.9L12 3.5z" />
+            </svg>
+            Deja tu reseña
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -8,11 +8,13 @@ import {
   citas,
   clientes,
   profesionales,
+  resenas,
   salones,
   servicios,
 } from '@/lib/db/schema';
 import { calcularSlots } from '@/lib/agenda/slots';
 import { notificarDuenoNuevaCita } from '@/lib/telegram/notify';
+import { revalidatePath } from 'next/cache';
 
 function fail(slug: string, msg: string): never {
   redirect(`/s/${slug}/reservar?error=${encodeURIComponent(msg)}`);
@@ -251,4 +253,72 @@ export async function crearReservaWeb(formData: FormData) {
   const successQs = new URLSearchParams({ cita: citaId });
   if (emailEnviado && email) successQs.set('email', email);
   redirect(`/s/${slug}/reservar/exito?${successQs.toString()}`);
+}
+
+// ============================================
+// Reseñas públicas — un cliente del salón comparte su experiencia.
+// Las dejamos en estado `aprobada=false` para que el dueño modere desde
+// /panel/resenas antes de que salgan en la web pública.
+// ============================================
+function failResena(slug: string, qs: URLSearchParams, msg: string): never {
+  qs.set('error', msg);
+  redirect(`/s/${slug}/resena?${qs.toString()}`);
+}
+
+export async function crearResenaPublica(formData: FormData) {
+  const slug = String(formData.get('slug') || '').trim();
+  if (!slug) redirect('/');
+
+  // Honeypot — si un bot rellena este campo, lo descartamos en silencio.
+  const honey = String(formData.get('website') || '').trim();
+  if (honey) {
+    redirect(`/s/${slug}/resena/gracias`);
+  }
+
+  const nombre = String(formData.get('nombre') || '').trim();
+  const ratingRaw = Number(formData.get('rating') || 0);
+  const textoRaw = String(formData.get('texto') || '').trim();
+
+  const qsBack = new URLSearchParams();
+  if (nombre) qsBack.set('nombre', nombre);
+  if (ratingRaw) qsBack.set('rating', String(ratingRaw));
+  if (textoRaw) qsBack.set('texto', textoRaw);
+
+  if (!nombre || nombre.length > 120) {
+    failResena(slug, qsBack, 'Tu nombre es obligatorio (máx. 120 caracteres)');
+  }
+  if (
+    !Number.isFinite(ratingRaw) ||
+    !Number.isInteger(ratingRaw) ||
+    ratingRaw < 1 ||
+    ratingRaw > 5
+  ) {
+    failResena(slug, qsBack, 'Elige una valoración de 1 a 5 estrellas');
+  }
+  if (textoRaw.length > 2000) {
+    failResena(slug, qsBack, 'El texto es demasiado largo (máx. 2000 caracteres)');
+  }
+
+  const [salon] = await db
+    .select({ id: salones.id, activo: salones.activo })
+    .from(salones)
+    .where(eq(salones.slug, slug))
+    .limit(1);
+
+  if (!salon || !salon.activo) {
+    redirect('/');
+  }
+
+  await db.insert(resenas).values({
+    salonId: salon.id,
+    autorNombre: nombre,
+    rating: ratingRaw,
+    texto: textoRaw === '' ? null : textoRaw,
+    fuente: 'web',
+    aprobada: false, // El dueño aprueba desde /panel/resenas
+    destacada: false,
+  });
+
+  revalidatePath('/panel/resenas');
+  redirect(`/s/${slug}/resena/gracias`);
 }
