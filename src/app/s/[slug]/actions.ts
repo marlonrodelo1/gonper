@@ -53,8 +53,12 @@ export async function crearReservaWeb(formData: FormData) {
   if (!telefono || telefono.length > 30) {
     fail(slug, 'El teléfono es obligatorio');
   }
-  if (!email || !isValidEmail(email) || email.length > 200) {
-    fail(slug, 'El email es obligatorio y debe ser válido');
+  // Email es OPCIONAL — el form dice "Email (opcional)" y el cliente solo
+  // necesita teléfono para reservar (los recordatorios pueden ir por
+  // WhatsApp/Telegram). Si lo da, validamos que sea bien formado y bajo
+  // el límite; si no, seguimos sin email.
+  if (email && (!isValidEmail(email) || email.length > 200)) {
+    fail(slug, 'El email no es válido');
   }
 
   const slotDate = new Date(slotIso);
@@ -159,7 +163,7 @@ export async function crearReservaWeb(formData: FormData) {
         salonId: salon.id,
         nombre,
         telefono,
-        email,
+        email: email || null,
       })
       .returning({ id: clientes.id });
     clienteId = nuevoCliente.id;
