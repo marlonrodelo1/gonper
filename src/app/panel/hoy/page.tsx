@@ -8,14 +8,6 @@ import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 import { CitaRow, type EstadoCita } from '../_components/cita-row';
 import { PanelTopbar } from '../_components/panel-topbar';
 import { PendingBanner } from '../_components/pending-banner';
-import { StatCard } from '../_components/stat-card';
-
-const SPARK_PATHS = {
-  facturado: 'M 0 40 L 25 38 L 50 30 L 75 32 L 100 22 L 125 20 L 150 14 L 175 18 L 200 8',
-  citas: 'M 0 30 L 30 32 L 60 28 L 90 22 L 120 26 L 150 20 L 180 24 L 200 18',
-  noshows: 'M 0 50 L 30 48 L 60 50 L 90 46 L 120 48 L 150 44 L 180 46 L 200 42',
-  confirmadas: 'M 0 20 L 25 22 L 50 18 L 75 14 L 100 16 L 125 10 L 150 12 L 175 8 L 200 6',
-} as const;
 
 function formatearFechaTopbar(timezone: string): string {
   // ej "Jueves 30 abril"
@@ -111,12 +103,10 @@ export default async function HoyPage() {
     )
     .orderBy(asc(citas.inicio));
 
-  // KPIs
+  // KPIs operativos del día (números crudos, sin spark/delta artificiales).
   let facturado = 0;
   let completadas = 0;
   let noShows = 0;
-  let sinConfirmar = 0;
-  let confirmadas = 0;
 
   for (const f of filas) {
     const estado = f.cita.estado as EstadoCita;
@@ -126,10 +116,6 @@ export default async function HoyPage() {
       facturado += precio;
     } else if (estado === 'no_show') {
       noShows += 1;
-    } else if (estado === 'pendiente') {
-      sinConfirmar += 1;
-    } else if (estado === 'confirmada') {
-      confirmadas += 1;
     }
   }
 
@@ -155,12 +141,6 @@ export default async function HoyPage() {
     };
   }
 
-  // Primer no-show del día (para foot del KPI).
-  const primerNoShow = filas.find((f) => f.cita.estado === 'no_show');
-  const noShowFoot = primerNoShow
-    ? `${primerNoShow.cliente.nombre} · ${formatearHora(primerNoShow.cita.inicio, timezone)}`
-    : 'Sin incidencias hoy';
-
   const fechaTopbar = formatearFechaTopbar(timezone);
   const saludo = `${saludoPorHora(timezone)}, ${ownerName}.`;
 
@@ -181,73 +161,9 @@ export default async function HoyPage() {
           />
         )}
 
-        {/* Stats */}
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <StatCard
-            id="spark-facturado"
-            label="Facturado hoy"
-            value={`${facturado.toFixed(0)} €`}
-            delta="+12% vs media"
-            foot={`${completadas} cita${completadas === 1 ? '' : 's'} completada${completadas === 1 ? '' : 's'}`}
-            sparkPath={SPARK_PATHS.facturado}
-          />
-          <StatCard
-            id="spark-citas"
-            label="Citas hoy"
-            value={total}
-            delta={`${completadas} completada${completadas === 1 ? '' : 's'}`}
-            foot={`${restantes} restante${restantes === 1 ? '' : 's'}`}
-            sparkPath={SPARK_PATHS.citas}
-          />
-          <StatCard
-            id="spark-noshows"
-            label="No-shows"
-            value={noShows}
-            delta="Estable"
-            deltaPositive={false}
-            foot={noShowFoot}
-            sparkPath={SPARK_PATHS.noshows}
-          />
-          {(() => {
-            // Tasa de confirmación real: confirmadas / (confirmadas + sin confirmar).
-            // Si todavía no hay base estadística (muy pocas citas), mostramos "—"
-            // en vez de inventar un porcentaje.
-            const baseEstadistica = confirmadas + sinConfirmar;
-            const ratio =
-              baseEstadistica > 0
-                ? Math.round((confirmadas / baseEstadistica) * 100)
-                : null;
-            const valor = ratio !== null ? String(ratio) : '—';
-            const delta =
-              ratio !== null
-                ? ratio >= 80
-                  ? '↑ excelente'
-                  : ratio >= 60
-                    ? 'estable'
-                    : '↓ baja'
-                : 'sin datos';
-            const foot =
-              baseEstadistica > 0
-                ? `${confirmadas}/${baseEstadistica} hoy`
-                : 'aún sin citas';
-            return (
-              <StatCard
-                id="spark-confirmadas"
-                label="Confirmadas por Juanita"
-                value={valor}
-                suffix={ratio !== null ? '%' : ''}
-                delta={delta}
-                deltaPositive={ratio !== null ? ratio >= 60 : true}
-                foot={foot}
-                sparkPath={SPARK_PATHS.confirmadas}
-              />
-            );
-          })()}
-        </section>
-
         {/* Agenda principal */}
         <div className="card flex flex-col overflow-hidden">
-            <div className="flex items-center gap-3 border-b border-line px-5 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
               <div>
                 <div className="text-[11px] uppercase tracking-[0.22em] text-stone/70">
                   Agenda del día
@@ -256,6 +172,43 @@ export default async function HoyPage() {
                   {total} cita{total === 1 ? '' : 's'} · {fechaTopbar.toLowerCase()}
                 </div>
               </div>
+              {total > 0 && (
+                <div className="tabular flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px] text-stone">
+                  <span>
+                    <span className="font-medium text-ink">{completadas}</span>{' '}
+                    completada{completadas === 1 ? '' : 's'}
+                  </span>
+                  <span className="text-line-2">·</span>
+                  <span>
+                    <span className="font-medium text-ink">{restantes}</span>{' '}
+                    restante{restantes === 1 ? '' : 's'}
+                  </span>
+                  <span className="text-line-2">·</span>
+                  <span>
+                    <span className="font-medium text-ink">
+                      {facturado.toFixed(0)} €
+                    </span>{' '}
+                    facturado
+                  </span>
+                  {noShows > 0 && (
+                    <>
+                      <span className="text-line-2">·</span>
+                      <span style={{ color: '#7C2E2E' }}>
+                        <span className="font-medium">{noShows}</span> no-show
+                        {noShows === 1 ? '' : 's'}
+                      </span>
+                    </>
+                  )}
+                  <span className="text-line-2">·</span>
+                  <Link
+                    href="/panel/stats"
+                    className="text-stone/70 hover:text-ink"
+                    title="Ver métricas históricas (7/30/90 días)"
+                  >
+                    Ver métricas →
+                  </Link>
+                </div>
+              )}
             </div>
 
             {total === 0 ? (
