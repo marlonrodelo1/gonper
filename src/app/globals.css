@@ -131,6 +131,12 @@
     font-size: 18px;
     /* Reservar espacio para el header flotante al hacer scroll a anchors */
     scroll-padding-top: 110px;
+    /* `scroll-behavior: smooth` no va aquí: rompe las transiciones de
+       ruta de Next 16 (causa que la nueva página parezca "bajarse"
+       desde el medio). En su lugar usamos `data-scroll-behavior="smooth"`
+       en <html> dentro de layout.tsx, que Next desactiva durante navegación. */
+  }
+  html[data-scroll-behavior="smooth"] {
     scroll-behavior: smooth;
   }
   /* Cualquier sección con id queda con margen al hacer anchor */
@@ -243,6 +249,12 @@
   color: #FBF8F2;
 }
 .gloss-btn:hover { filter: brightness(1.08); }
+.gloss-btn:active:not(:disabled) {
+  filter: brightness(0.92);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.45),
+    0 2px 6px -4px rgba(26, 24, 21, 0.3);
+}
 
 /* CTA acento (usa tokens gestori-accent → cambia por tipo de negocio) */
 .accent-btn {
@@ -254,6 +266,49 @@
   color: #fff;
 }
 .accent-btn:hover { filter: brightness(1.05); }
+.accent-btn:active:not(:disabled) {
+  filter: brightness(0.92);
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.35),
+    0 2px 6px -4px rgba(0, 0, 0, 0.2);
+}
+
+/* =====================================================================
+   Tap feedback global — sensación de pulsación en cualquier <button>,
+   role=button o CTA con clases del sistema (.gloss-btn / .accent-btn /
+   .terra-btn). Mantiene transiciones suaves en hover y comprime al
+   active para que el usuario sienta el click/tap.
+===================================================================== */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+.gloss-btn,
+.accent-btn,
+.terra-btn,
+.tap {
+  -webkit-tap-highlight-color: transparent;
+  transition-property: transform, filter, background-color, color, border-color, box-shadow, opacity;
+  transition-duration: 0.18s;
+  transition-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active,
+.gloss-btn:active:not(:disabled),
+.accent-btn:active:not(:disabled),
+.terra-btn:active:not(:disabled),
+.tap:active {
+  transform: scale(0.96);
+  transition-duration: 0.06s;
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active,
+  .gloss-btn:active:not(:disabled),
+  .accent-btn:active:not(:disabled),
+  .terra-btn:active:not(:disabled),
+  .tap:active {
+    transform: none;
+  }
+}
 
 /* ==== Royce hook bubble (mensaje gancho landing) ==== */
 @keyframes royce-hook-in {
@@ -388,6 +443,13 @@
     0 0 0 1px rgba(255, 255, 255, 0.4) inset,
     0 10px 30px -12px rgba(26, 24, 21, 0.10),
     0 2px 8px -2px rgba(26, 24, 21, 0.05);
+  /* Forzar GPU layer en Safari iOS: cuando hay navegación con hash y la
+     URL bar se colapsa, el TopNav fixed puede parecer "bajarse" si no
+     tiene su propio compositing layer. Estos tres hints lo evitan. */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 .floating-nav.is-scrolled {
   background: rgba(251, 248, 242, 0.96);

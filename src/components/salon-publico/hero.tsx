@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Icon } from './icons';
 import type { Salon, Servicio } from '@/lib/db/schema';
 
@@ -95,25 +96,45 @@ export function Hero({
 
           {/* Bottom CTA bar — glassmorphism */}
           <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 flex items-center justify-between gap-3">
-            <a
-              href={enTienda ? `/s/${salon.slug}#reservar` : '#reservar'}
-              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
-              style={{
-                background:
-                  'linear-gradient(180deg, rgba(197,86,44,0.78) 0%, rgba(168,69,31,0.82) 100%)',
-                backdropFilter: 'saturate(160%) blur(12px)',
-                WebkitBackdropFilter: 'saturate(160%) blur(12px)',
-                border: '1px solid rgba(255,255,255,0.25)',
-                boxShadow:
-                  'inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 25px -10px rgba(168,69,31,0.45)',
-              }}
-            >
-              Reservar cita
-            </a>
             {enTienda ? (
+              <Link
+                href={`/s/${salon.slug}#reservar`}
+                scroll={true}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02] active:scale-[0.97]"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(197,86,44,0.78) 0%, rgba(168,69,31,0.82) 100%)',
+                  backdropFilter: 'saturate(160%) blur(12px)',
+                  WebkitBackdropFilter: 'saturate(160%) blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  boxShadow:
+                    'inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 25px -10px rgba(168,69,31,0.45)',
+                }}
+              >
+                Reservar cita
+              </Link>
+            ) : (
               <a
+                href="#reservar"
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02] active:scale-[0.97]"
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(197,86,44,0.78) 0%, rgba(168,69,31,0.82) 100%)',
+                  backdropFilter: 'saturate(160%) blur(12px)',
+                  WebkitBackdropFilter: 'saturate(160%) blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  boxShadow:
+                    'inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 25px -10px rgba(168,69,31,0.45)',
+                }}
+              >
+                Reservar cita
+              </a>
+            )}
+            {enTienda ? (
+              <Link
                 href={`/s/${salon.slug}`}
-                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
+                scroll={true}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02] active:scale-[0.97]"
                 style={{
                   background:
                     'linear-gradient(180deg, rgba(197,86,44,0.78) 0%, rgba(168,69,31,0.82) 100%)',
@@ -129,12 +150,13 @@ export function Hero({
                   <path d="M11 6l-6 6 6 6" />
                 </svg>
                 Volver al salón
-              </a>
+              </Link>
             ) : (
               tieneTienda && (
-                <a
+                <Link
                   href={`/s/${salon.slug}/tienda`}
-                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02]"
+                  scroll={true}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02] active:scale-[0.97]"
                   style={{
                     background:
                       'linear-gradient(180deg, rgba(197,86,44,0.78) 0%, rgba(168,69,31,0.82) 100%)',
@@ -150,7 +172,7 @@ export function Hero({
                     <path d="M9 7a3 3 0 016 0" />
                   </svg>
                   Visitar tienda
-                </a>
+                </Link>
               )
             )}
           </div>

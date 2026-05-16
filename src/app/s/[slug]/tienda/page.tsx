@@ -104,7 +104,11 @@ export default async function TiendaPage({
       style={styleVars}
       className="bg-cream text-ink min-h-screen"
     >
-      <TopNav salonNombre={salonRow.nombre} logoUrl={salonRow.logoUrl} />
+      <TopNav
+        salonNombre={salonRow.nombre}
+        logoUrl={salonRow.logoUrl}
+        salonSlug={salonRow.slug}
+      />
       <Hero
         salon={salonRow}
         abierto={estadoHorario.abierto}
