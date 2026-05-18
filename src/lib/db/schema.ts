@@ -423,7 +423,13 @@ export const citas = pgTable(
     estado: text('estado').notNull().default('pendiente'),
     origen: text('origen').notNull().default('telegram'),
 
-    recordatorioEnviadoAt: timestamp('recordatorio_enviado_at', {
+    /** Cuándo se mandó el email de recordatorio al cliente (~2h antes). */
+    recordatorioEmailEnviadoAt: timestamp('recordatorio_email_enviado_at', {
+      withTimezone: true,
+    }),
+    /** Cuándo se notificó al dueño por Telegram con botón "Recordar por
+     *  WhatsApp" (~1h antes). Antes se llamaba `recordatorio_enviado_at`. */
+    recordatorioTelegramEnviadoAt: timestamp('recordatorio_telegram_enviado_at', {
       withTimezone: true,
     }),
     confirmadaAt: timestamp('confirmada_at', { withTimezone: true }),
@@ -451,10 +457,15 @@ export const citas = pgTable(
       t.inicio,
     ),
     idxEstado: index('idx_citas_estado').on(t.salonId, t.estado),
-    idxPendienteRecordatorio: index('idx_citas_pendiente_recordatorio')
+    idxPendienteRecordatorioTelegram: index('idx_citas_recordatorio_telegram')
       .on(t.inicio)
       .where(
-        sql`${t.estado} = 'pendiente' and ${t.recordatorioEnviadoAt} is null`,
+        sql`${t.estado} = 'pendiente' and ${t.recordatorioTelegramEnviadoAt} is null`,
+      ),
+    idxPendienteRecordatorioEmail: index('idx_citas_recordatorio_email')
+      .on(t.inicio)
+      .where(
+        sql`${t.estado} = 'pendiente' and ${t.recordatorioEmailEnviadoAt} is null`,
       ),
     uqNoSolape: uniqueIndex('idx_citas_no_solape')
       .on(t.profesionalId, t.inicio)

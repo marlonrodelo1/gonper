@@ -267,9 +267,14 @@ export default async function DetalleCitaPage({
                 {origenLabel[cita.origen] ?? cita.origen}
               </span>
             </Field>
-            <Field label="Recordatorio enviado">
+            <Field label="Email cliente (~2h antes)">
               <span className="tabular font-mono text-ink/85">
-                {fmtFechaHora(cita.recordatorioEnviadoAt, tz)}
+                {fmtFechaHora(cita.recordatorioEmailEnviadoAt, tz)}
+              </span>
+            </Field>
+            <Field label="Aviso Telegram (~1h antes)">
+              <span className="tabular font-mono text-ink/85">
+                {fmtFechaHora(cita.recordatorioTelegramEnviadoAt, tz)}
               </span>
             </Field>
             <Field label="Confirmada">

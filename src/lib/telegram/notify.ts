@@ -246,7 +246,7 @@ function escapeMd(s: string): string {
   return String(s).replace(/([_*`[\]])/g, '\\$1');
 }
 
-interface NotifRecordatorio2hParams {
+interface NotifRecordatorioCitaParams {
   botToken: string | null | undefined;
   duenoChatId: string | null | undefined;
   salonNombre: string;
@@ -261,7 +261,7 @@ interface NotifRecordatorio2hParams {
 }
 
 /**
- * Avisa al dueño 2h antes de una cita con datos + botón inline
+ * Avisa al dueño ~1h antes de una cita con datos + botón inline
  * "Recordar por WhatsApp" que abre wa.me ya rellenado. El dueño solo
  * pulsa el botón y Telegram abre WhatsApp con destinatario + mensaje
  * listo — 1 toque adicional ("Enviar") en la app de WhatsApp.
@@ -269,8 +269,8 @@ interface NotifRecordatorio2hParams {
  * Best-effort: nunca lanza. Si el salón no tiene bot configurado o
  * Telegram falla, devuelve false y logueamos.
  */
-export async function notificarDuenoRecordatorio2h(
-  p: NotifRecordatorio2hParams,
+export async function notificarDuenoRecordatorioCita(
+  p: NotifRecordatorioCitaParams,
 ): Promise<boolean> {
   if (!p.botToken || !p.duenoChatId) return false;
 
@@ -283,7 +283,7 @@ export async function notificarDuenoRecordatorio2h(
   }).format(new Date(p.inicioIso));
 
   const lineas = [
-    `⏰ *Recordatorio · cita en 2h*`,
+    `⏰ *Recordatorio · cita en 1h*`,
     '',
     `🏠 ${escapeMd(p.salonNombre)}`,
     `👤 *${escapeMd(p.clienteNombre)}*`,
@@ -326,12 +326,12 @@ export async function notificarDuenoRecordatorio2h(
     );
     if (!res.ok) {
       const t = await res.text().catch(() => '');
-      console.warn('[notify:recordatorio2h] Telegram respondió no-OK', res.status, t);
+      console.warn('[notify:recordatorioCita] Telegram respondió no-OK', res.status, t);
       return false;
     }
     return true;
   } catch (err) {
-    console.warn('[notify:recordatorio2h] error', err);
+    console.warn('[notify:recordatorioCita] error', err);
     captureException(err, { module: 'telegram/notify' });
     return false;
   }
