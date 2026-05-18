@@ -36,7 +36,13 @@ export default function ConfigLayout({
         </p>
       </header>
 
-      <nav className="-mx-1 flex flex-wrap items-center gap-1 rounded-full border border-line bg-paper p-1 md:mx-0 md:inline-flex md:w-fit md:max-w-full">
+      {/* Tabs:
+          - Mobile: scroll horizontal con snap + fade derecho (pill redonda
+            con flex-wrap se rompía visualmente en 3 filas).
+          - Desktop (md+): inline-flex centrado como pill única clásica. */}
+      <nav
+        className="-mx-4 flex items-center gap-1 overflow-x-auto rounded-none border-y border-line bg-paper px-4 py-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] [-webkit-mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] md:mx-0 md:inline-flex md:w-fit md:max-w-full md:flex-wrap md:overflow-visible md:rounded-full md:border md:p-1 md:[mask-image:none] md:[-webkit-mask-image:none]"
+      >
         {tabs.map((t) => {
           const active = t.exact
             ? pathname === t.href
@@ -46,7 +52,7 @@ export default function ConfigLayout({
               key={t.href}
               href={t.href}
               className={
-                'tight rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition ' +
+                'tight shrink-0 snap-start rounded-full px-3.5 py-1.5 text-[12.5px] font-medium transition ' +
                 (active
                   ? 'bg-ink text-cream'
                   : 'text-stone hover:text-ink')

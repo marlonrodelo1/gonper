@@ -33,11 +33,17 @@ export function FarmasiIframe({
   const src = `https://www.farmasi.es/${encodeURIComponent(username)}`;
 
   return (
-    <div className="bg-cream text-ink flex h-screen w-screen flex-col overflow-hidden">
+    <div
+      className="bg-cream text-ink flex h-[100dvh] w-full flex-col overflow-hidden"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       {/* Barra superior fija: identifica que sigues en Gonper */}
       <header
         className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-paper/95 px-4 py-2.5 backdrop-blur"
-        style={{ minHeight: 52 }}
+        style={{
+          minHeight: 52,
+          paddingTop: 'calc(0.625rem + env(safe-area-inset-top, 0px))',
+        }}
       >
         <Link
           href={volverHref}
