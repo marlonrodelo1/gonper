@@ -64,7 +64,7 @@ export function TiendaFarmasiMarlonSection({ noBorderTop = false }: Props) {
                 }}
               >
                 <span className="pill-dot" style={{ background: '#C5562C' }} />
-                Beauty Influencer · Marlon
+                Beauty Influencer · Gonper Studio
               </span>
               <h2
                 className="font-playfair text-ink leading-tight"
@@ -74,11 +74,11 @@ export function TiendaFarmasiMarlonSection({ noBorderTop = false }: Props) {
                 }}
               >
                 Cosmética premium en{' '}
-                <span className="font-serif-it text-stone">mi tienda Farmasi</span>
+                <span className="font-serif-it text-stone">nuestra tienda Farmasi</span>
               </h2>
               <p className="text-[14.5px] leading-relaxed text-stone">
                 Maquillaje, skincare Dr.&nbsp;C.&nbsp;Tuna, perfumes y bienestar
-                Nutriplus seleccionados por mí. Pago seguro en Farmasi.es,
+                Nutriplus seleccionados para ti. Pago seguro en Farmasi.es,
                 envío directo a casa.
               </p>
             </div>
@@ -97,7 +97,7 @@ export function TiendaFarmasiMarlonSection({ noBorderTop = false }: Props) {
                     'inset 0 1px 0 rgba(255,255,255,0.25), 0 10px 25px -10px rgba(168,69,31,0.45)',
                 }}
               >
-                Visitar mi tienda
+                Visitar tienda Farmasi
                 <svg
                   viewBox="0 0 24 24"
                   width="14"

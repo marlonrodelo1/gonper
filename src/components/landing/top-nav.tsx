@@ -55,6 +55,27 @@ export function TopNav() {
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
+            <a
+              href="https://www.farmasi.es/gonperstudio"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Visitar tienda Farmasi de Gonper Studio"
+              className="hidden sm:inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3.5 py-2 rounded-full text-paper transition hover:scale-[1.03] active:scale-[0.97]"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(197,86,44,0.92) 0%, rgba(168,69,31,0.95) 100%)',
+                border: '1px solid rgba(255,255,255,0.25)',
+                boxShadow:
+                  'inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 16px -8px rgba(168,69,31,0.45)',
+              }}
+            >
+              <span
+                className="inline-block w-1.5 h-1.5 rounded-full"
+                style={{ background: '#FAEFEA' }}
+                aria-hidden
+              />
+              Tienda Farmasi
+            </a>
             <Link
               href="/login"
               className="hidden sm:inline-block text-[13.5px] text-stone hover:text-ink transition px-2"
@@ -122,6 +143,25 @@ export function TopNav() {
               </a>
             ))}
             <div className="h-px bg-line/70 my-2"></div>
+            <a
+              href="https://www.farmasi.es/gonperstudio"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setOpen(false)}
+              className="mx-1 mb-1 px-4 py-3 rounded-xl text-[14.5px] font-medium text-paper transition flex items-center justify-between"
+              style={{
+                background:
+                  'linear-gradient(180deg, rgba(197,86,44,0.92) 0%, rgba(168,69,31,0.95) 100%)',
+                border: '1px solid rgba(255,255,255,0.25)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.25)',
+              }}
+            >
+              <span>Tienda Farmasi</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M7 17L17 7" />
+                <path d="M8 7h9v9" />
+              </svg>
+            </a>
             <Link
               href="/login"
               onClick={() => setOpen(false)}

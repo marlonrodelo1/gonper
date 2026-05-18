@@ -145,7 +145,7 @@ export function MarketplaceTopNav({
           <Icon.Sliders width="13" height="13" className="text-stone/70 shrink-0" />
         </button>
 
-        {/* Right: filtros mobile + soy un salón */}
+        {/* Right: filtros mobile + tienda Farmasi + soy un salón */}
         <div className="flex items-center gap-2 shrink-0">
           {filtersCount > 0 && (
             <span
@@ -155,9 +155,30 @@ export function MarketplaceTopNav({
               {filtersCount}
             </span>
           )}
+          <a
+            href="https://www.farmasi.es/gonperstudio"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visitar tienda Farmasi de Gonper Studio"
+            className="hidden sm:inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3.5 py-2 rounded-full text-paper shrink-0 transition hover:scale-[1.03] active:scale-[0.97]"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(197,86,44,0.92) 0%, rgba(168,69,31,0.95) 100%)',
+              border: '1px solid rgba(255,255,255,0.25)',
+              boxShadow:
+                'inset 0 1px 0 rgba(255,255,255,0.25), 0 6px 16px -8px rgba(168,69,31,0.45)',
+            }}
+          >
+            <span
+              className="inline-block w-1.5 h-1.5 rounded-full"
+              style={{ background: '#FAEFEA' }}
+              aria-hidden
+            />
+            Tienda Farmasi
+          </a>
           <Link
             href="/"
-            className="hidden sm:inline-flex text-[12.5px] font-medium px-4 py-2 rounded-full gloss-btn shrink-0"
+            className="hidden md:inline-flex text-[12.5px] font-medium px-4 py-2 rounded-full gloss-btn shrink-0"
           >
             Soy un salón
           </Link>
