@@ -9,6 +9,10 @@ import { CitaRow, type EstadoCita } from '../_components/cita-row';
 import { FarmasiBanner } from '../_components/farmasi-banner';
 import { PanelTopbar } from '../_components/panel-topbar';
 import { PendingBanner } from '../_components/pending-banner';
+import {
+  RecordatoriosWhatsApp,
+  type RecordatorioCita,
+} from '../_components/recordatorios-whatsapp';
 
 function formatearFechaTopbar(timezone: string): string {
   // ej "Jueves 30 abril"
@@ -136,6 +140,32 @@ export default async function HoyPage() {
     );
   });
 
+  // Recordatorios WhatsApp: citas en las próximas 2h con cliente que tiene
+  // teléfono. Excluye canceladas, no-show y completadas (no tiene sentido
+  // recordar lo que ya pasó o se anuló).
+  const ventana2h = new Date(ahora.getTime() + 2 * 60 * 60 * 1000);
+  const recordatoriosWhatsApp: RecordatorioCita[] = filas
+    .filter((f) => {
+      const e = f.cita.estado as EstadoCita;
+      if (e === 'cancelada' || e === 'no_show' || e === 'completada') {
+        return false;
+      }
+      return (
+        f.cita.inicio >= ahora &&
+        f.cita.inicio <= ventana2h &&
+        !!f.cliente.telefono
+      );
+    })
+    .map((f) => ({
+      citaId: f.cita.id,
+      clienteNombre: f.cliente.nombre,
+      clienteTelefono: f.cliente.telefono,
+      servicioNombre: f.servicio.nombre,
+      profesionalNombre: f.profesional.nombre,
+      horaTexto: formatearHora(f.cita.inicio, timezone),
+      salonNombre: salon.nombre,
+    }));
+
   let pendientesAlerta: { count: number; next: string } | null = null;
   if (pendientesProximas.length > 0) {
     const siguiente = pendientesProximas[0];
@@ -175,6 +205,8 @@ export default async function HoyPage() {
             hrefVer="#pendientes"
           />
         )}
+
+        <RecordatoriosWhatsApp citas={recordatoriosWhatsApp} />
 
         {/* Agenda principal */}
         <div className="card flex flex-col overflow-hidden">

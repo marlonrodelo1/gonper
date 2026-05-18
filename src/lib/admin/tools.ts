@@ -16,6 +16,7 @@ import {
   servicios,
   salones,
 } from '@/lib/db/schema';
+import { normalizarNumeroE164 } from '@/lib/whatsapp/numero';
 
 // ============================================================
 // Helpers
@@ -725,36 +726,6 @@ export interface CompartirTiendaResult {
     qr_url: string;
     mensaje: string;
   };
-}
-
-/**
- * Normaliza un número a E.164 sin signos para wa.me.
- *
- * Acepta entradas como "+34 611 222 333", "0034611222333", "611222333",
- * "34611222333". Si no detecta prefijo internacional, asume España (+34).
- *
- * Devuelve sólo dígitos, listo para concatenar tras `https://wa.me/`.
- * Si el número resultante es muy corto, devuelve null.
- */
-function normalizarNumeroE164(input: string): string | null {
-  const limpio = input.replace(/[^\d+]/g, '');
-  if (!limpio) return null;
-
-  let digitos: string;
-  if (limpio.startsWith('+')) {
-    digitos = limpio.slice(1);
-  } else if (limpio.startsWith('00')) {
-    digitos = limpio.slice(2);
-  } else if (limpio.length === 9) {
-    // móvil/fijo español sin prefijo → asumir +34
-    digitos = `34${limpio}`;
-  } else {
-    digitos = limpio;
-  }
-
-  // Sanity check: entre 8 y 15 dígitos (E.164 max 15)
-  if (digitos.length < 8 || digitos.length > 15) return null;
-  return digitos;
 }
 
 const PUBLIC_BASE_URL = 'https://gonperstudio.shop';
