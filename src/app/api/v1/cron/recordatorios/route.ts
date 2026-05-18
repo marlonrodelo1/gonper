@@ -10,7 +10,7 @@ import { buildWhatsAppLink } from '@/lib/whatsapp/numero';
 /**
  * POST /api/v1/cron/recordatorios
  *
- * Pensado para que n8n lo invoque cada 5 minutos. Marca como "recordatorio
+ * Disparado por el systemd timer del VPS cada 5 minutos. Marca como "recordatorio
  * enviado" todas las citas pendientes cuyo inicio cae en la ventana
  * [now+110min, now+130min] (2h ± 10min) y devuelve la info necesaria para
  * componer el email (cliente, servicio, salón, hora).

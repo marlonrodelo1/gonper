@@ -7,9 +7,10 @@ import { getTool, TOOLS } from '@/lib/admin/tool-registry';
 /**
  * POST /api/v1/admin/tool
  *
- * Único endpoint dispatcher que ejecuta una tool admin sobre el salón
- * indicado. Pensado para que los workflows n8n (Bot Telegram modo dueño,
- * Juanita Pro panel) lo invoquen con tool/function calling.
+ * Endpoint HTTP dispatcher que ejecuta una tool admin sobre el salón
+ * indicado. Hoy lo invocan integraciones externas y tests; el bot
+ * Telegram del salón ejecuta las tools inline desde
+ * `src/lib/telegram/bot-handler.ts`.
  *
  * Body:
  *   { salon_id, tool, args? }
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
 
 /**
  * GET — devuelve el catálogo de tools (sólo nombres + descripción + categoría).
- * Útil para que el workflow n8n se autoconfigure y para debug.
+ * Útil para debug y para que herramientas externas se autoconfiguren.
  */
 export async function GET(req: Request) {
   const authError = requireApiToken(req);

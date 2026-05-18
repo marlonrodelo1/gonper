@@ -34,4 +34,4 @@ Toda la documentación del proyecto está en `docs/`:
 
 ## Stack
 
-Next.js 15 · TypeScript · Tailwind · shadcn/ui · Supabase · Drizzle · n8n · Gemini Flash · Stripe · Vercel
+Next.js 16 · TypeScript · Tailwind 4 · shadcn/ui · Supabase · Drizzle · DeepSeek V3 · Stripe · Dokploy en VPS · systemd timers

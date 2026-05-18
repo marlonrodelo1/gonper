@@ -1,0 +1,15 @@
+[Unit]
+Description=Dispara gonper-cron-trial todos los días a las 09:00 Europe/Madrid
+Requires=gonper-cron-trial.service
+
+[Timer]
+# Una vez al día a las 09:00 hora del VPS (asegúrate de que el VPS esté en
+# TZ Europe/Madrid: `timedatectl set-timezone Europe/Madrid`).
+OnCalendar=*-*-* 09:00:00
+AccuracySec=1min
+# Si el VPS estaba apagado a las 09:00, lanzar al arrancar.
+Persistent=true
+Unit=gonper-cron-trial.service
+
+[Install]
+WantedBy=timers.target

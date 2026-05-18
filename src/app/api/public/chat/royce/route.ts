@@ -2,24 +2,20 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { checkRateLimit, getClientIp } from '@/lib/api/rate-limit';
+import { runRoyceTurn } from '@/lib/royce/orchestrator';
 
 /**
  * POST /api/public/chat/royce
  *
- * Proxy del widget de la landing/marketplace hacia el workflow n8n
- * "Royce — agente landing". El widget no llama directo a n8n para
- * evitar exponer la URL del webhook al cliente y para meter rate
- * limit + timeout/fallback aquí.
+ * Chat de Royce desde el widget de la landing/marketplace. Hasta 2026-05-19
+ * proxeaba a un workflow n8n; ahora el orquestador (LLM + tools) vive en
+ * `src/lib/royce/orchestrator.ts` y se ejecuta inline.
  *
- * Seguridad v1:
- *   - URL del webhook n8n vive solo en `N8N_ROYCE_WEBHOOK_URL` (env Dokploy).
- *   - Header `X-Source: gestori-landing` que n8n valida en el primer paso.
- *   No usamos HMAC en v1: la URL es secret-by-config y el server-side proxy
- *   garantiza que el cliente no la ve. Si en el futuro queremos endurecer,
- *   añadimos HMAC en ambos lados sin romper nada.
- *
- * Si n8n falla o tarda >15s, devolvemos un fallback amable y log Sentry.
+ * Rate limit: 100 mensajes/día por IP (igual que el chat de tienda).
  */
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 const Body = z.object({
   session_id: z.string().uuid(),
@@ -31,18 +27,8 @@ const Body = z.object({
 
 const FALLBACK_REPLY =
   'Estoy teniendo un problema, vuelve a probar en un momento.';
-const TIMEOUT_MS = 15_000;
 
 export async function POST(req: Request) {
-  const webhookUrl = process.env.N8N_ROYCE_WEBHOOK_URL;
-  if (!webhookUrl) {
-    console.error('[chat/royce] N8N_ROYCE_WEBHOOK_URL no configurado');
-    return NextResponse.json(
-      { reply: FALLBACK_REPLY, error: 'config' },
-      { status: 200 },
-    );
-  }
-
   let raw: unknown;
   try {
     raw = await req.json();
@@ -72,54 +58,31 @@ export async function POST(req: Request) {
     );
   }
 
-  const payload = JSON.stringify(data);
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
   try {
-    const res = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Source': 'gestori-landing',
-      },
-      body: payload,
-      signal: controller.signal,
+    const result = await runRoyceTurn({
+      sessionId: data.session_id,
+      canal: 'landing',
+      // En BD, `agente_sesiones.surface` admite landing/marketplace/admin_test/admin_telegram.
+      // El widget puede mandar landing o marketplace; el canal del prompt es siempre `landing`.
+      surface: data.surface,
+      message: data.message,
+      visitorEmail: data.visitor_email,
+      visitorNombre: data.visitor_nombre,
     });
-    clearTimeout(timer);
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => '');
-      console.error('[chat/royce] n8n respondió', res.status, body);
-      return NextResponse.json(
-        { reply: FALLBACK_REPLY, session_id: data.session_id, error: 'upstream' },
-        { status: 200 },
-      );
-    }
-
-    const json = (await res.json().catch(() => null)) as
-      | { reply?: string; ui?: unknown }
-      | null;
 
     return NextResponse.json({
-      reply: json?.reply ?? FALLBACK_REPLY,
+      reply: result.reply || FALLBACK_REPLY,
       session_id: data.session_id,
-      ui: json?.ui,
     });
-  } catch (e) {
-    clearTimeout(timer);
-    const aborted = e instanceof Error && e.name === 'AbortError';
-    console.error('[chat/royce]', aborted ? 'timeout' : 'error', e);
+  } catch (err) {
+    console.error('[chat/royce]', err);
     return NextResponse.json(
       {
         reply: FALLBACK_REPLY,
         session_id: data.session_id,
-        error: aborted ? 'timeout' : 'network',
+        error: 'internal',
       },
       { status: 200 },
     );
   }
 }
-
-export const dynamic = 'force-dynamic';

@@ -7,8 +7,9 @@ import type { AccionCita } from '@/lib/citas/token';
 /**
  * POST /api/v1/citas/responder
  *
- * Lo invocan los workflows de n8n cuando el cliente pulsa los botones
- * inline del recordatorio (Telegram / WhatsApp). El usuario que llega por
+ * Lo invocan los handlers de WhatsApp (Twilio) cuando el cliente responde
+ * al recordatorio. El bot Telegram del salón ya invoca `responderCita`
+ * inline (ver src/lib/telegram/bot-handler.ts). El usuario que llega por
  * email no usa este endpoint — usa /c/[token] o /x/[token] que validan
  * mediante token firmado y no requieren API token.
  *

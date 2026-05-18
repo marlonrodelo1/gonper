@@ -9,8 +9,9 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/v1/email/recordatorio
  *
- * Lo invoca el workflow n8n de Recordatorios cuando el cliente NO tiene
- * Telegram pero SÍ tiene email. Manda el recordatorio por email vía Resend.
+ * Endpoint HTTP para mandar un recordatorio de cita por email vía
+ * Resend. Lo usan integraciones externas (Twilio WhatsApp escala a
+ * email cuando el envío falla, scripts manuales, etc.).
  *
  * Body esperado:
  * {

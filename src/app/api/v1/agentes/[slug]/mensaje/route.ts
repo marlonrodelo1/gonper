@@ -9,9 +9,9 @@ import { requireApiToken } from '@/lib/api/auth';
 /**
  * POST /api/v1/agentes/[slug]/mensaje
  *
- * Persiste un mensaje de la conversación. Lo invoca n8n al recibir
- * un mensaje del visitante (direccion='in') y al enviar la respuesta
- * del LLM (direccion='out').
+ * Endpoint HTTP para persistir un mensaje de la conversación de un
+ * agente. Lo usan integraciones externas (curl, tests). El orquestador
+ * interno de Royce ya escribe directamente en `agente_mensajes`.
  *
  * Si la sesión no existe la crea on-the-fly.
  *

@@ -7,14 +7,18 @@ import { eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
+import { generarWebhookSecret } from '@/lib/telegram/webhook-secret';
+
 type CurrentSalon = { id: string; slug: string } | null;
 
 const BOT_PATH = '/panel/config/bot';
 const TOKEN_RE = /^\d{8,12}:[A-Za-z0-9_-]{30,}$/;
 
-const N8N_BOT_WEBHOOK_BASE =
-  process.env.N8N_BOT_CLIENTE_WEBHOOK_URL ||
-  'https://n8n.gestori.es/webhook/gonper-bot';
+/**
+ * Base pública de la app donde vive el endpoint webhook de Telegram.
+ * En desarrollo se puede forzar con APP_BASE_URL (p.ej. un ngrok).
+ */
+const APP_BASE_URL = process.env.APP_BASE_URL || 'https://gonperstudio.shop';
 
 async function requireSalon(): Promise<{ id: string; slug: string }> {
   const salon = (await getCurrentSalon()) as CurrentSalon;
@@ -39,16 +43,28 @@ function isRedirectError(e: unknown): boolean {
 }
 
 /**
- * Configura el webhook del bot Telegram para que apunte al workflow n8n
- * multi-tenant. Best effort: lanza si Telegram dice no.
+ * Configura el webhook del bot Telegram para que apunte al endpoint de
+ * Next.js (`/api/telegram/[bot_username]`). Genera un secret nuevo y lo
+ * pasa como `secret_token` — Telegram lo enviará de vuelta en el header
+ * `X-Telegram-Bot-Api-Secret-Token` de cada update, y nosotros validamos
+ * que coincide con `salones.telegram_webhook_secret`.
+ *
+ * Devuelve el secret generado para que el caller lo persista.
+ *
+ * Best effort: lanza si Telegram dice no.
  */
-async function setBotWebhook(token: string, slug: string): Promise<void> {
-  const webhookUrl = `${N8N_BOT_WEBHOOK_BASE}?slug=${encodeURIComponent(slug)}`;
+async function setBotWebhook(
+  token: string,
+  botUsername: string,
+): Promise<{ secret: string }> {
+  const secret = generarWebhookSecret();
+  const webhookUrl = `${APP_BASE_URL}/api/telegram/${encodeURIComponent(botUsername)}`;
   const res = await fetch(`https://api.telegram.org/bot${token}/setWebhook`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       url: webhookUrl,
+      secret_token: secret,
       allowed_updates: ['message', 'callback_query'],
       drop_pending_updates: true,
     }),
@@ -65,6 +81,7 @@ async function setBotWebhook(token: string, slug: string): Promise<void> {
         : 'Telegram no aceptó el webhook',
     );
   }
+  return { secret };
 }
 
 /**
@@ -118,7 +135,8 @@ export async function desvincularTelegramDueno() {
  *  1. Valida formato.
  *  2. Llama a Telegram getMe para validar y obtener username.
  *  3. Si había un token previo distinto, hace deleteWebhook al viejo.
- *  4. Hace setWebhook al nuevo apuntando a n8n con ?slug=<slug>.
+ *  4. Hace setWebhook al nuevo apuntando a `/api/telegram/[bot_username]`
+ *     pasando un secret_token aleatorio (que validaremos en cada update).
  *  5. Persiste token + username en la BD.
  *
  * Esto deja el bot operativo automáticamente — los clientes ya pueden
@@ -181,22 +199,26 @@ export async function guardarTokenBotCliente(formData: FormData) {
     // No bloqueamos por esto.
   }
 
-  // 3. Configurar webhook al nuevo token.
+  // 3. Configurar webhook al nuevo token. Apunta a /api/telegram/[bot_username]
+  //    y pasa un `secret_token` que persistiremos para validar updates entrantes.
+  let webhookSecret: string;
   try {
-    await setBotWebhook(tokenRaw, salon.slug);
+    const r = await setBotWebhook(tokenRaw, username);
+    webhookSecret = r.secret;
   } catch (e) {
     if (isRedirectError(e)) throw e;
     const msg = e instanceof Error ? e.message : 'No pudimos configurar el webhook del bot';
     redirectError(msg);
   }
 
-  // 4. Persistir token + username.
+  // 4. Persistir token + username + webhook secret.
   try {
     const result = await db
       .update(salones)
       .set({
         telegramBotToken: tokenRaw,
         telegramBotUsername: username,
+        telegramWebhookSecret: webhookSecret,
         updatedAt: new Date(),
       })
       .where(eq(salones.id, salon.id))
@@ -241,6 +263,7 @@ export async function desconectarBotSalon() {
         telegramBotToken: null,
         telegramBotUsername: null,
         telegramChatIdDueno: null,
+        telegramWebhookSecret: null,
         updatedAt: new Date(),
       })
       .where(eq(salones.id, salon.id));

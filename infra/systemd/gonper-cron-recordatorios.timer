@@ -1,0 +1,15 @@
+[Unit]
+Description=Dispara gonper-cron-recordatorios cada 5 minutos
+Requires=gonper-cron-recordatorios.service
+
+[Timer]
+# Primer disparo 2 min después del boot, luego cada 5 min.
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=10s
+# Si el VPS estaba apagado, lanzar al arrancar (no acumular varios).
+Persistent=true
+Unit=gonper-cron-recordatorios.service
+
+[Install]
+WantedBy=timers.target

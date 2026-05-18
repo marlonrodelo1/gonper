@@ -136,6 +136,7 @@ export const salones = pgTable(
     telegramBotUsername: text('telegram_bot_username'),
     telegramBotDuenoToken: text('telegram_bot_dueno_token'),
     telegramChatIdDueno: text('telegram_chat_id_dueno'),
+    telegramWebhookSecret: text('telegram_webhook_secret'),
     whatsappPhoneId: text('whatsapp_phone_id'),
 
     // Branding (web pública + Open Graph al compartir)
@@ -936,7 +937,7 @@ export const agenteSesiones = pgTable(
     idxSession: index('idx_agente_sesiones_session').on(t.sessionId),
     chkSurface: check(
       'agente_sesiones_surface_check',
-      sql`${t.surface} in ('landing','marketplace','admin_test')`,
+      sql`${t.surface} in ('landing','marketplace','admin_test','admin_telegram')`,
     ),
   }),
 );

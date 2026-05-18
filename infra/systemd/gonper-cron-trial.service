@@ -1,0 +1,26 @@
+[Unit]
+Description=Gonper - dispara el cron de recordatorios de trial (Next.js)
+Documentation=https://gonperstudio.shop
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/gonper.env
+ExecStart=/usr/bin/curl --silent --show-error --fail --max-time 120 \
+  --request POST \
+  --header "Authorization: Bearer ${INTERNAL_API_TOKEN}" \
+  --header "Content-Type: application/json" \
+  ${CRON_BASE_URL}/api/cron/trial-recordatorios
+
+# Hardening básico — solo necesitamos curl + red.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+RestrictRealtime=true
+SystemCallArchitectures=native

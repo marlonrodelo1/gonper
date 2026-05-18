@@ -7,9 +7,9 @@ import { getRoyceTool, ROYCE_TOOLS } from '@/lib/admin/royce-tool-registry';
 /**
  * POST /api/v1/admin/royce-tool
  *
- * Dispatcher de tools plataforma-wide para Royce admin Telegram.
- * Lo invoca el workflow n8n "Royce admin Telegram" con tool/function
- * calling de DeepSeek.
+ * Dispatcher HTTP de tools plataforma-wide para Royce. Sobrevive como
+ * endpoint para debug e integraciones externas; el bot @Royrogo_bot
+ * ejecuta estas tools inline desde `src/lib/royce/orchestrator.ts`.
  *
  * A diferencia de `/api/v1/admin/tool` (que opera sobre 1 salón vía
  * Juanita Pro), aquí NO se requiere salon_id — las tools son globales.

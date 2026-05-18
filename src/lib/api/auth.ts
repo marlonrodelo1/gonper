@@ -4,7 +4,8 @@ import { NextResponse } from 'next/server';
  * Comprueba el header `Authorization: Bearer <token>` contra la env
  * `INTERNAL_API_TOKEN`. Devuelve `null` si todo OK, o una `NextResponse`
  * con el error si falta/no coincide. Pensado para los endpoints que
- * consume n8n.
+ * consumen los crons systemd y herramientas internas (scripts admin,
+ * tests, integraciones externas).
  */
 export function requireApiToken(req: Request): NextResponse | null {
   const expected = process.env.INTERNAL_API_TOKEN;

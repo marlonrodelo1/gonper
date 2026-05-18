@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
 /**
  * POST /api/cron/trial-recordatorios
  *
- * Cron unificado que invoca n8n cada día. Manda 3 tipos de aviso al dueño
+ * Cron diario disparado por systemd timer. Manda 3 tipos de aviso al dueño
  * cuyo salón está en `plan='trial'` con `trial_until` (trial 7 días):
  *   - 2d:      faltan ~2 días para vencer (día 5 desde signup).
  *   - vispera: trial vence hoy (día 7 desde signup).

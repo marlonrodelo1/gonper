@@ -10,9 +10,10 @@ import { requireApiToken } from '@/lib/api/auth';
  *   o /api/v1/lookup-bot?bot_username=...
  *
  * Devuelve la configuración completa de un salón (datos generales, agente,
- * servicios activos, profesionales activos, telegram_bot_token, etc.) para que
- * un workflow multi-tenant en n8n pueda atender a clientes de cualquier salón
- * usando un único flujo. Es el primer nodo del flujo del bot.
+ * servicios activos, profesionales activos, telegram_bot_token, etc.).
+ * Hoy lo consumen integraciones externas y debug — el webhook
+ * `/api/telegram/[bot_username]` resuelve el salón con la misma query
+ * Drizzle inline.
  *
  * Auth: bearer INTERNAL_API_TOKEN.
  */
@@ -106,7 +107,7 @@ export async function GET(request: Request) {
         agente_bienvenida: salon.agenteBienvenida,
         agente_instrucciones: salon.agenteInstrucciones,
         agente_avatar_url: salon.agenteAvatarUrl,
-        // Tokens necesarios para que n8n responda con el bot del salón
+        // Tokens necesarios para que un cliente externo responda con el bot del salón
         telegram_bot_token: salon.telegramBotToken,
         telegram_bot_username: salon.telegramBotUsername,
         telegram_bot_dueno_token: salon.telegramBotDuenoToken,

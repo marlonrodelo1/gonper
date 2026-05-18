@@ -4,7 +4,7 @@ SaaS de asistentes virtuales personalizables para salones (barberías, peluquer�
 
 ## Stack
 
-Next.js 16 · TypeScript · Tailwind 4 · shadcn/ui · Supabase (Auth + Postgres) · Drizzle ORM · n8n · Gemini Flash · Stripe · Vercel
+Next.js 16 · TypeScript · Tailwind 4 · shadcn/ui · Supabase (Auth + Postgres) · Drizzle ORM · DeepSeek V3 · Stripe · Dokploy en VPS · systemd timers
 
 ## Documentación
 
@@ -34,9 +34,11 @@ Abre [http://localhost:3000](http://localhost:3000).
 Mira [`.env.example`](./.env.example). Necesitas:
 
 - **Supabase**: URL del proyecto, anon key, service role key, `DATABASE_URL` (para Drizzle)
-- **Gemini**: `GOOGLE_GENERATIVE_AI_API_KEY`
+- **DeepSeek**: `DEEPSEEK_API_KEY` (chat de tienda + Juanita Pro Telegram + Royce)
+- **Gemini** (opcional): `GOOGLE_GENERATIVE_AI_API_KEY`
 - **Stripe**: claves publicable + secreta + webhook
-- **Telegram**: tokens de bots (uno por salón en producción)
+- **Telegram bots**: el bot del salón se configura por tenant desde `/panel/config/bot`. El bot interno de Royce (`@Royrogo_bot`) usa `ROYCE_TELEGRAM_BOT_TOKEN` + `ROYCE_TELEGRAM_WEBHOOK_SECRET` + `ROYCE_ALLOWED_CHAT_IDS`
+- **Crons**: `INTERNAL_API_TOKEN` (compartido con los systemd timers — ver [`infra/systemd/README.md`](./infra/systemd/README.md))
 
 ### Aplicar el schema a Supabase
 
@@ -65,7 +67,8 @@ src/
       servicios/          listado + nuevo + detalle [id]
       stats/              métricas
       config/             ajustes (perfil, equipo, agente, layout compartido)
-    api/v1/               API REST interna (consumida por n8n y bots)
+    api/v1/               API REST interna (crons + tools dispatcher, antes consumida por n8n)
+    api/telegram/         webhooks Telegram (bot del salón + bot Royce)
   components/ui/          shadcn/ui (button, card, dialog, table, tabs, ...)
   lib/
     db/                   Drizzle schema + cliente
@@ -77,4 +80,4 @@ docs/                     documentación de producto
 
 ## Roadmap
 
-Ver [`docs/06-roadmap.md`](./docs/06-roadmap.md). Estado actual: **Fase 0, 1, 2, 3 completadas y base de Fase 4 en marcha** (landing + auth + signup + panel con datos reales, agenda, clientes, servicios, config, web pública por slug y API v1). Siguiente: cerrar Fase 4 (Stripe + Telegram en producción + n8n).
+Ver [`docs/06-roadmap.md`](./docs/06-roadmap.md). Estado actual: **producción**. Migración n8n → Next.js completada en 2026-05-19 (crons via systemd, webhooks Telegram directos, Royce y Juanita Pro orquestados in-process).

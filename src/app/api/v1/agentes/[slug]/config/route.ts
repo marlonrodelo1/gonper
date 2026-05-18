@@ -12,15 +12,16 @@ import { requireApiToken } from '@/lib/api/auth';
 /**
  * GET /api/v1/agentes/[slug]/config
  *
- * Devuelve la configuración del agente para que n8n la use al iniciar
- * cada conversación: prompt, modelo, parámetros LLM y catálogo de
- * tools activas con su JSON Schema.
+ * Devuelve la configuración del agente: prompt, modelo, parámetros LLM
+ * y catálogo de tools activas con su JSON Schema. Endpoint HTTP público
+ * (con Bearer) — el orquestador interno de Royce lee la config desde
+ * Drizzle directamente.
  *
  * Auth: bearer INTERNAL_API_TOKEN.
  *
- * Cache HTTP s-maxage=60 → n8n puede cachear y no martillea la BD.
- * Cuando el super-admin actualiza el prompt, el cambio se propaga
- * en <60s sin invalidación explícita.
+ * Cache HTTP s-maxage=60 — los consumidores externos pueden cachear y
+ * no martillear la BD. Cuando el super-admin actualiza el prompt, el
+ * cambio se propaga en <60 s sin invalidación explícita.
  */
 export async function GET(
   req: Request,

@@ -16,8 +16,9 @@ import { requireApiToken } from '@/lib/api/auth';
 /**
  * POST /api/v1/agentes/[slug]/tool
  *
- * Despachador de tools del agente. n8n llama aquí cuando el LLM
- * decide invocar una function/tool.
+ * Despachador HTTP de tools del agente. Sobrevive como endpoint público
+ * para debug y para invocaciones externas; el chat de Royce ejecuta las
+ * tools inline desde `src/lib/royce/orchestrator.ts` sin pasar por aquí.
  *
  * Body:
  *   { session_id, tool, args }
