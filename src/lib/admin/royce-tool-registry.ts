@@ -12,8 +12,6 @@ import { z } from 'zod';
 import {
   cambiarPlanSalon,
   capturarLead,
-  crearMarca,
-  crearProducto,
   crearSalon,
   desmarcarDestacado,
   getMetricasGlobales,
@@ -21,15 +19,11 @@ import {
   leadsRecientes,
   listarSalones,
   marcarDestacado,
-  marcasActivas,
-  productosCatalogo,
-  ventasB2cRecientes,
 } from './royce-tools';
 
 export type RoyceCategoria =
   | 'metricas'
   | 'salones'
-  | 'tienda'
   | 'captacion'
   | 'gestion'
   | 'sistema';
@@ -37,7 +31,6 @@ export type RoyceCategoria =
 export const ROYCE_CATEGORIA_LABEL: Record<RoyceCategoria, string> = {
   metricas: '📊 *Métricas*',
   salones: '🏪 *Salones*',
-  tienda: '🛍️ *Tienda online*',
   captacion: '📥 *Captación*',
   gestion: '⚙️ *Gestión (acciones)*',
   sistema: '⚙️ *Sistema*',
@@ -46,7 +39,6 @@ export const ROYCE_CATEGORIA_LABEL: Record<RoyceCategoria, string> = {
 const ROYCE_CATEGORIA_ORDEN: RoyceCategoria[] = [
   'metricas',
   'salones',
-  'tienda',
   'captacion',
   'gestion',
   'sistema',
@@ -102,41 +94,6 @@ export const ROYCE_TOOLS: AnyRoyceToolDef[] = [
       })
       .strict(),
     handler: (args) => infoSalon({ slug: args.slug }),
-  }),
-
-  // ---------- TIENDA ----------
-  defineTool({
-    name: 'ventas_b2c_recientes',
-    categoria: 'tienda',
-    descripcion: 'Últimas ventas B2C de la plataforma (por defecto 5).',
-    ejemplos: ['"últimas ventas"', '"ventas recientes"'],
-    schema: z
-      .object({
-        limite: z.number().int().positive().max(20).optional(),
-      })
-      .strict(),
-    handler: (args) => ventasB2cRecientes({ limite: args.limite }),
-  }),
-  defineTool({
-    name: 'marcas_activas',
-    categoria: 'tienda',
-    descripcion: 'Lista las marcas activas con su comisión y productos.',
-    ejemplos: ['"qué marcas tenemos"', '"marcas activas"'],
-    schema: z.object({}).strict(),
-    handler: () => marcasActivas(),
-  }),
-  defineTool({
-    name: 'productos_catalogo',
-    categoria: 'tienda',
-    descripcion: 'Lista productos del catálogo, opcionalmente filtrado por marca.',
-    ejemplos: ['"productos"', '"productos de wella-professionals"'],
-    schema: z
-      .object({
-        marca_slug: z.string().min(1).max(120).optional(),
-        limite: z.number().int().positive().max(30).optional(),
-      })
-      .strict(),
-    handler: (args) => productosCatalogo(args),
   }),
 
   // ---------- CAPTACIÓN ----------
@@ -201,42 +158,6 @@ export const ROYCE_TOOLS: AnyRoyceToolDef[] = [
       })
       .strict(),
     handler: (args) => cambiarPlanSalon(args),
-  }),
-  defineTool({
-    name: 'crear_marca',
-    categoria: 'gestion',
-    descripcion: 'Crea una marca nueva en el catálogo de la tienda. Slug se autogenera del nombre si no se pasa.',
-    ejemplos: ['"crea marca Wella con 10% de comisión salón"'],
-    schema: z
-      .object({
-        nombre: z.string().min(2).max(120),
-        slug: z.string().min(2).max(120).optional(),
-        comision_salon_porcentaje: z.number().min(0).max(100).optional(),
-        descripcion: z.string().max(2000).optional(),
-        logo_url: z.string().url().max(500).optional(),
-        contacto_email: z.string().email().max(200).optional(),
-      })
-      .strict(),
-    handler: (args) => crearMarca(args),
-  }),
-  defineTool({
-    name: 'crear_producto',
-    categoria: 'gestion',
-    descripcion: 'Crea un producto nuevo asociado a una marca existente. Si no se pasa precio_mayorista, se calcula como 60% del PVP.',
-    ejemplos: ['"añade Champú X de Wella a 12€"'],
-    schema: z
-      .object({
-        marca_slug: z.string().min(1).max(120),
-        nombre: z.string().min(2).max(200),
-        categoria: z.string().min(1).max(80),
-        precio_publico_recomendado_eur: z.number().nonnegative(),
-        precio_mayorista_eur: z.number().nonnegative().optional(),
-        slug: z.string().min(2).max(160).optional(),
-        sku: z.string().max(80).optional(),
-        tipo_distribucion: z.enum(['stock', 'dropshipping']).optional(),
-      })
-      .strict(),
-    handler: (args) => crearProducto(args),
   }),
   defineTool({
     name: 'marcar_destacado',

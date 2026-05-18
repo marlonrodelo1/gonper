@@ -1,14 +1,14 @@
 /**
- * Tools que el agente del chat público de la tienda puede invocar para
+ * Tools que el agente del chat público del salón puede invocar para
  * reservar dentro del propio chat (sin redirigir).
  *
  * - listar_servicios()
  * - listar_slots_disponibles({servicio_id, fecha})
  * - reservar_cita_publica({servicio_id, inicio_iso, cliente_nombre, cliente_email, cliente_telefono?, profesional_id?})
  *
- * Las definiciones (`TOOLS_TIENDA`) se mandan al LLM. La función
- * `executeChatTienda Tool` ejecuta la tool en el servidor y devuelve un
- * objeto serializable que se le manda al LLM como mensaje `role: 'tool'`.
+ * El módulo se llama "chat-tienda" por legacy. Antes había una tool extra
+ * `listar_productos_tienda` que se eliminó en el pivote 2026-05-18 a
+ * Farmasi MLM. Las tools restantes son exclusivamente de agenda/reservas.
  */
 
 import { and, asc, eq } from 'drizzle-orm';
@@ -17,7 +17,6 @@ import { db } from '@/lib/db';
 import { profesionales, salones, servicios } from '@/lib/db/schema';
 import { calcularSlots } from '@/lib/agenda/slots';
 import { crearReservaPublica } from '@/lib/reservas/publica';
-import { listTiendaProductos } from '@/lib/tienda/query';
 import type { ToolFunction } from '@/lib/llm/deepseek-tools';
 
 export const TOOLS_TIENDA: ToolFunction[] = [
@@ -89,33 +88,11 @@ export const TOOLS_TIENDA: ToolFunction[] = [
       },
     },
   },
-  {
-    type: 'function',
-    function: {
-      name: 'listar_productos_tienda',
-      description:
-        'Devuelve los productos profesionales (cosmética, cuidado) que el salón vende en su tienda online. Úsalo si el cliente pregunta por productos, qué marcas vendéis, o si quiere llevarse algo. El cliente compra desde gonperstudio.shop/s/<slug>/tienda. Devuelve nombre, marca y precio. NO uses esta tool para reservar citas — solo para hablar de productos comprables.',
-      parameters: {
-        type: 'object',
-        properties: {
-          categoria: {
-            type: 'string',
-            description:
-              'Filtro opcional por categoría (cabello, unas, piel, maquillaje, barba, etc.). Omitir para devolver todos.',
-          },
-        },
-        required: [],
-      },
-    },
-  },
 ];
 
 export type ToolEjecutada = {
-  /** Nombre de la tool ejecutada */
   name: string;
-  /** Resultado serializable que se manda al LLM como contexto. */
   result: unknown;
-  /** Datos adicionales para que el widget renderice UI inline (botones, confirmación, etc.) */
   ui?:
     | { kind: 'slots'; servicio_id: string; servicio_nombre: string; fecha: string; timezone: string; slots: { iso: string; hora_local: string }[] }
     | { kind: 'reserva_ok'; cita_id: string; inicio_iso: string; servicio_nombre: string; profesional_nombre: string }
@@ -148,10 +125,7 @@ export async function executeChatTiendaTool(args: {
       .where(eq(salones.slug, slug))
       .limit(1);
     if (!salon || !salon.activo) {
-      return {
-        name: toolName,
-        result: { error: 'Salón no encontrado' },
-      };
+      return { name: toolName, result: { error: 'Salón no encontrado' } };
     }
     const lista = await db
       .select({
@@ -322,56 +296,6 @@ export async function executeChatTiendaTool(args: {
         inicio_iso: result.inicioIso,
         servicio_nombre: result.servicioNombre,
         profesional_nombre: result.profesionalNombre,
-      },
-    };
-  }
-
-  if (toolName === 'listar_productos_tienda') {
-    const categoriaFiltro = String(toolArgs.categoria ?? '').trim().toLowerCase();
-
-    const [salon] = await db
-      .select({ id: salones.id, slug: salones.slug, activo: salones.activo })
-      .from(salones)
-      .where(eq(salones.slug, slug))
-      .limit(1);
-    if (!salon || !salon.activo) {
-      return { name: toolName, result: { error: 'Salón no encontrado' } };
-    }
-
-    const productosTienda = await listTiendaProductos(salon.id);
-    const filtrados = categoriaFiltro
-      ? productosTienda.filter(
-          (p) => (p.categoria || '').toLowerCase() === categoriaFiltro,
-        )
-      : productosTienda;
-
-    if (filtrados.length === 0) {
-      return {
-        name: toolName,
-        result: {
-          productos: [],
-          mensaje: categoriaFiltro
-            ? `No hay productos disponibles en la categoría '${categoriaFiltro}'.`
-            : 'Este salón aún no tiene productos activos en su tienda.',
-        },
-      };
-    }
-
-    // Recorta a 20 productos para no saturar el contexto del LLM.
-    const listado = filtrados.slice(0, 20).map((p) => ({
-      nombre: p.nombre,
-      marca: p.marca.nombre,
-      categoria: p.categoria,
-      precio_eur: p.precioEur,
-      link: `/s/${salon.slug}/tienda/${p.marca.slug}/${p.productoSlug}`,
-    }));
-
-    return {
-      name: toolName,
-      result: {
-        productos: listado,
-        total: filtrados.length,
-        link_tienda: `/s/${salon.slug}/tienda`,
       },
     };
   }

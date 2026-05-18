@@ -117,7 +117,7 @@ export async function GET(req: Request) {
         trialUntil: salones.trialUntil,
         stripeCustomerId: salones.stripeCustomerId,
         stripeSubscriptionId: salones.stripeSubscriptionId,
-        stripeConnectOnboarded: salones.stripeConnectOnboarded,
+        farmasiUsername: salones.farmasiUsername,
         marketplaceVisible: salones.marketplaceVisible,
         marketplaceDestacado: salones.marketplaceDestacado,
         activo: salones.activo,

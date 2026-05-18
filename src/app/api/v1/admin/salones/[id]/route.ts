@@ -7,12 +7,10 @@ import {
   citas,
   clientes,
   mensajes,
-  productosSalon,
   resenas,
   salones,
   servicios,
   usuariosSalon,
-  ventasB2c,
 } from '@/lib/db/schema';
 import { requireApiToken } from '@/lib/api/auth';
 
@@ -64,8 +62,6 @@ export async function GET(
     citas30dRow,
     mensajes30dRow,
     resenasCount,
-    productosActivosCount,
-    ventas30dRow,
   ] = await Promise.all([
     db
       .select({
@@ -98,20 +94,6 @@ export async function GET(
         and(eq(mensajes.salonId, id), gte(mensajes.createdAt, hace30d)),
       ),
     db.select({ value: count() }).from(resenas).where(eq(resenas.salonId, id)),
-    db
-      .select({ value: count() })
-      .from(productosSalon)
-      .where(and(eq(productosSalon.salonId, id), eq(productosSalon.activo, true))),
-    db
-      .select({
-        total: count(),
-        facturado: sum(ventasB2c.totalEur),
-        comisionSalon: sum(ventasB2c.comisionSalonEur),
-      })
-      .from(ventasB2c)
-      .where(
-        and(eq(ventasB2c.salonId, id), gte(ventasB2c.createdAt, hace30d)),
-      ),
   ]);
 
   return NextResponse.json({
@@ -120,15 +102,11 @@ export async function GET(
     stats: {
       servicios: Number(serviciosCount[0]?.value ?? 0),
       clientes: Number(clientesCount[0]?.value ?? 0),
-      productosActivos: Number(productosActivosCount[0]?.value ?? 0),
       resenas: Number(resenasCount[0]?.value ?? 0),
       ultimos30Dias: {
         citas: Number(citas30dRow[0]?.total ?? 0),
         facturadoCitasEur: Number(citas30dRow[0]?.facturado ?? 0),
         mensajes: Number(mensajes30dRow[0]?.value ?? 0),
-        ventasB2c: Number(ventas30dRow[0]?.total ?? 0),
-        facturadoVentasEur: Number(ventas30dRow[0]?.facturado ?? 0),
-        comisionSalonEur: Number(ventas30dRow[0]?.comisionSalon ?? 0),
       },
     },
   });

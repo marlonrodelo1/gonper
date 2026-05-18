@@ -3,7 +3,6 @@ import { eq } from 'drizzle-orm';
 import { Landing } from '@/components/landing/landing';
 import { db } from '@/lib/db';
 import { agentes } from '@/lib/db/schema';
-import { listMarcasPublicas } from '@/lib/marcas/query';
 
 /**
  * La landing es estática salvo por la `bienvenida` de Royce, que el dueño
@@ -42,15 +41,11 @@ async function getRoyceConfig(): Promise<{
 }
 
 export default async function Home() {
-  const [royce, marcas] = await Promise.all([
-    getRoyceConfig(),
-    listMarcasPublicas().catch(() => []),
-  ]);
+  const royce = await getRoyceConfig();
   return (
     <Landing
       royceBienvenida={royce.bienvenida}
       royceAvatarUrl={royce.avatarUrl}
-      marcas={marcas}
     />
   );
 }

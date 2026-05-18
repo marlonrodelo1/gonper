@@ -10,20 +10,14 @@
 import { z } from 'zod';
 
 import {
-  activarProductoTienda,
   cancelarCita,
   compartirTienda,
   crearCita,
-  desactivarProductoTienda,
   getCitasHoy,
   getCitasProximas,
   getIngresos,
   getNoShows,
-  getProductosActivosTienda,
-  getProductosDisponiblesMarca,
   getTopClientes,
-  getTotalVentasB2c,
-  getVentasB2cRecientes,
   marcarCita,
   moverCita,
 } from './tools';
@@ -32,7 +26,6 @@ export type ToolCategoria =
   | 'citas'
   | 'clientes'
   | 'numeros'
-  | 'tienda'
   | 'crecimiento'
   | 'sistema';
 
@@ -40,7 +33,6 @@ export const CATEGORIA_LABEL: Record<ToolCategoria, string> = {
   citas: '📅 *Citas*',
   clientes: '👥 *Clientes*',
   numeros: '💰 *Números*',
-  tienda: '🛍️ *Tienda online*',
   crecimiento: '🚀 *Crecimiento*',
   sistema: '⚙️ *Opciones*',
 };
@@ -49,7 +41,6 @@ const CATEGORIA_ORDEN: ToolCategoria[] = [
   'citas',
   'clientes',
   'numeros',
-  'tienda',
   'crecimiento',
   'sistema',
 ];
@@ -204,91 +195,6 @@ export const TOOLS: AnyToolDef[] = [
       })
       .strict(),
     handler: (salonId, args) => getNoShows(salonId, args.dias ?? 30),
-  }),
-
-  // ---------- TIENDA ONLINE ----------
-  defineTool({
-    name: 'ventas_b2c_recientes',
-    categoria: 'tienda',
-    descripcion: 'Últimas ventas de tu tienda online con cliente, total y comisión.',
-    ejemplos: ['"qué he vendido últimamente"', '"ventas tienda recientes"'],
-    schema: z
-      .object({
-        limite: z.number().int().positive().max(50).optional(),
-      })
-      .strict(),
-    handler: (salonId, args) =>
-      getVentasB2cRecientes(salonId, args.limite ?? 10),
-  }),
-  defineTool({
-    name: 'total_ventas_b2c',
-    categoria: 'tienda',
-    descripcion: 'Total facturado y comisión por tu tienda en hoy/semana/mes.',
-    ejemplos: [
-      '"cuánto he vendido en tienda esta semana"',
-      '"ventas tienda hoy"',
-      '"ingresos tienda del mes"',
-    ],
-    schema: z
-      .object({
-        periodo: z.enum(['hoy', 'semana', 'mes']).optional(),
-      })
-      .strict(),
-    handler: (salonId, args) =>
-      getTotalVentasB2c(salonId, args.periodo ?? 'hoy'),
-  }),
-  defineTool({
-    name: 'productos_activos_tienda',
-    categoria: 'tienda',
-    descripcion: 'Lista qué productos tienes activos hoy en tu tienda.',
-    ejemplos: ['"qué productos tengo activos"', '"mis productos de la tienda"'],
-    schema: z.object({}).strict(),
-    handler: (salonId) => getProductosActivosTienda(salonId),
-  }),
-  defineTool({
-    name: 'productos_disponibles_marca',
-    categoria: 'tienda',
-    descripcion: 'Lista productos del catálogo que aún no tienes activos (filtrar por marca opcional).',
-    ejemplos: [
-      '"qué productos puedo activar"',
-      '"productos de Wella disponibles"',
-    ],
-    schema: z
-      .object({
-        marca_slug: z.string().min(1).max(120).optional(),
-      })
-      .strict(),
-    handler: (salonId, args) =>
-      getProductosDisponiblesMarca(salonId, args.marca_slug),
-  }),
-  defineTool({
-    name: 'activar_producto_tienda',
-    categoria: 'tienda',
-    descripcion: 'Activa un producto en tu tienda (requiere id del producto).',
-    ejemplos: [
-      '"activa el producto X"',
-      '"añade ese producto a mi tienda"',
-    ],
-    schema: z
-      .object({
-        producto_id: z.string().uuid(),
-      })
-      .strict(),
-    handler: (salonId, args) =>
-      activarProductoTienda(salonId, args.producto_id),
-  }),
-  defineTool({
-    name: 'desactivar_producto_tienda',
-    categoria: 'tienda',
-    descripcion: 'Desactiva un producto en tu tienda (deja de estar a la venta).',
-    ejemplos: ['"quita el tinte rubio"', '"desactiva el champú"'],
-    schema: z
-      .object({
-        producto_id: z.string().uuid(),
-      })
-      .strict(),
-    handler: (salonId, args) =>
-      desactivarProductoTienda(salonId, args.producto_id),
   }),
 
   // ---------- CRECIMIENTO ----------

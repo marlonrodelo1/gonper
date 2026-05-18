@@ -14,7 +14,6 @@ import {
   executeChatTiendaTool,
   type ToolEjecutada,
 } from '@/lib/chat-tienda/tools';
-import { salonTieneTiendaActiva } from '@/lib/tienda/query';
 import { checkRateLimit, getClientIp } from '@/lib/api/rate-limit';
 
 const bodySchema = z.object({
@@ -101,7 +100,6 @@ function buildSystemPrompt(args: {
   fechaHoy: string;
   timezone: string;
   instruccionesDueno: string | null;
-  tieneTienda: boolean;
 }): string {
   const tipo = TIPO_NEGOCIO_LEGIBLE[args.tipoNegocio] ?? args.tipoNegocio;
   const lugar = args.direccion ?? 'España';
@@ -109,10 +107,6 @@ function buildSystemPrompt(args: {
     args.instruccionesDueno && args.instruccionesDueno.trim()
       ? `\n## Instrucciones del dueño del salón (prioritarias)\n${args.instruccionesDueno.trim()}\n`
       : '';
-
-  const bloqueTienda = args.tieneTienda
-    ? `\n## Tienda online del salón\nAdemás de las citas, este salón vende productos profesionales (cosmética, cuidado) que el cliente puede llevarse a casa. La tienda online está en gonperstudio.shop/s/${args.salonSlug}/tienda.\n- Si el cliente pregunta por productos, qué marcas vendéis, o quiere comprar algo: llama a la tool \`listar_productos_tienda\` y dale el listado con precios.\n- Para comprar, el cliente entra a la URL de la tienda y paga con tarjeta. No procesas pagos por chat.\n- Si pregunta por un producto que NO aparece en la lista: dile claro que no lo vendéis y, si quiere, ofrécele recomendarte al salón para futuras incorporaciones.\n- NO inventes precios, marcas ni productos. Saca todo de la tool.\n`
-    : '';
 
   return `Eres ${args.agenteNombre}, la asistente virtual de ${args.salonNombre}, un ${tipo} en ${lugar}.
 Tono: ${args.agenteTono}. Habla SIEMPRE en español, con frases cortas, claras y útiles.
@@ -141,7 +135,7 @@ Atender clientes que escriben por la web del salón. Puedes responder sobre prec
 - Email es obligatorio para reservar. Si el cliente se niega, explica que se usa para mandar confirmación + recordatorio.
 - **Si el cliente acaba de elegir un hueco específico** (por ejemplo "16:00", "quiero las 18h", "el de las 16:30"), NO vuelvas a llamar \`listar_slots_disponibles\` para "verificar". Confía en que el slot existía cuando lo listaste. Pasa directamente al paso 5 (pedir nombre, email, teléfono). Si la reserva falla con SLOT_OCUPADO, ahí sí vuelves a listar.
 - Una vez que llamas a \`reservar_cita_publica\` y devuelve \`ok: true\`, **da solo la confirmación final y termina el flujo**. No ofrezcas más servicios, no listes huecos, no preguntes "¿algo más?".
-${bloqueTienda}${bloqueInstrucciones}
+${bloqueInstrucciones}
 ## Datos del salón
 Servicios:
 ${args.serviciosTexto}
@@ -304,8 +298,6 @@ export async function POST(
       year: 'numeric',
     });
 
-    const tieneTienda = await salonTieneTiendaActiva(salon.id);
-
     const systemPrompt = buildSystemPrompt({
       agenteNombre: salon.agenteNombre,
       agenteTono: salon.agenteTono,
@@ -319,7 +311,6 @@ export async function POST(
       horariosTexto: formatHorarios(listaHorarios),
       fechaHoy,
       timezone: salon.timezone || 'Europe/Madrid',
-      tieneTienda,
     });
 
     // Loop de tool calling — hasta MAX_TOOL_LOOPS iteraciones.

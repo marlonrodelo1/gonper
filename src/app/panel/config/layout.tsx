@@ -14,7 +14,7 @@ const tabs = [
   { href: '/panel/config/agente', label: 'Agente' },
   { href: '/panel/config/bot', label: 'Bot' },
   { href: '/panel/config/cierres', label: 'Cierres' },
-  { href: '/panel/config/tienda', label: 'Tienda online' },
+  { href: '/panel/config/farmasi', label: 'Farmasi' },
   { href: '/panel/config/suscripcion', label: 'Suscripción' },
 ];
 

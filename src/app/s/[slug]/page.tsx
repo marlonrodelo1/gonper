@@ -16,14 +16,11 @@ import {
 } from '@/lib/db/schema';
 import { SalonPublico } from '@/components/salon-publico/salon-publico';
 import type { HorarioSemana } from '@/components/salon-publico/ubicacion';
-import {
-  listTiendaProductosDestacados,
-  salonTieneTiendaActiva,
-} from '@/lib/tienda/query';
 
 // La página depende de queries Drizzle no envueltas en fetch, así que
 // Next 16 la trataría como estática. Forzamos revalidación cada minuto
-// para que cambios de productos/destacados se reflejen sin redeploy.
+// para que cambios del salón (servicios, reseñas, farmasi_username) se
+// reflejen sin redeploy.
 export const revalidate = 60;
 
 const TIPO_NEGOCIO_LABEL: Record<string, string> = {
@@ -188,8 +185,6 @@ export default async function SalonPublicPage({
     comparativasActivas,
     resenasAprobadas,
     resumenResenasRows,
-    tieneTienda,
-    productosDestacados,
   ] = await Promise.all([
     db
       .select({
@@ -273,8 +268,6 @@ export default async function SalonPublicPage({
       })
       .from(resenas)
       .where(and(eq(resenas.salonId, salon.id), eq(resenas.aprobada, true))),
-    salonTieneTiendaActiva(salon.id),
-    listTiendaProductosDestacados(salon.id, 12),
   ]);
 
   const resumenRow = resumenResenasRows[0];
@@ -385,8 +378,6 @@ export default async function SalonPublicPage({
         comparativas={comparativasActivas}
         resenas={resenasAprobadas}
         resumenResenas={resumenResenas}
-        tieneTienda={tieneTienda}
-        productosDestacados={productosDestacados}
       />
     </div>
   );

@@ -6,6 +6,7 @@ import { citas, clientes, profesionales, servicios } from '@/lib/db/schema';
 import { getCurrentSalon } from '@/lib/supabase/get-current-salon';
 
 import { CitaRow, type EstadoCita } from '../_components/cita-row';
+import { FarmasiBanner } from '../_components/farmasi-banner';
 import { PanelTopbar } from '../_components/panel-topbar';
 import { PendingBanner } from '../_components/pending-banner';
 
@@ -53,6 +54,10 @@ export default async function HoyPage() {
         agente_nombre?: string | null;
         agenteAvatarUrl?: string | null;
         agente_avatar_url?: string | null;
+        farmasiUsername?: string | null;
+        farmasi_username?: string | null;
+        configJson?: Record<string, unknown> | null;
+        config_json?: Record<string, unknown> | null;
       }
     | null;
 
@@ -144,6 +149,14 @@ export default async function HoyPage() {
   const fechaTopbar = formatearFechaTopbar(timezone);
   const saludo = `${saludoPorHora(timezone)}, ${ownerName}.`;
 
+  // Banner Farmasi: oculto si ya está activado o si el dueño lo descartó.
+  const farmasiUsername =
+    salon.farmasiUsername ?? salon.farmasi_username ?? null;
+  const configJson =
+    (salon.configJson ?? salon.config_json ?? {}) as Record<string, unknown>;
+  const farmasiBannerOculto =
+    !!farmasiUsername || configJson.farmasiBannerDismissed === true;
+
   return (
     <>
       <PanelTopbar
@@ -153,6 +166,8 @@ export default async function HoyPage() {
       />
 
       <div className="flex flex-col gap-6 px-4 py-6 md:px-8">
+        <FarmasiBanner oculto={farmasiBannerOculto} />
+
         {pendientesAlerta && (
           <PendingBanner
             count={pendientesAlerta.count}

@@ -1,17 +1,14 @@
 import 'server-only';
 
-import { and, desc, eq, gte, isNotNull, sql } from 'drizzle-orm';
+import { desc, eq, gte, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import {
   horarios,
   leads,
-  marcas,
-  productos,
   profesionales,
   salones,
   servicios,
-  ventasB2c,
 } from '@/lib/db/schema';
 import {
   HORARIOS_DEFAULT,
@@ -68,21 +65,6 @@ export async function getMetricasGlobales(): Promise<{ mensaje: string }> {
     })
     .from(salones);
 
-  const [ventasMesRow] = await db
-    .select({
-      total: sql<number>`count(*)::int`,
-      ingresos: sql<string>`coalesce(sum(total_eur), 0)::text`,
-      comisionSalones: sql<string>`coalesce(sum(comision_salon_eur), 0)::text`,
-      costeMarcas: sql<string>`coalesce(sum(coste_marca_eur), 0)::text`,
-    })
-    .from(ventasB2c)
-    .where(
-      and(
-        gte(ventasB2c.createdAt, inicioMes),
-        sql`${ventasB2c.estado} in ('pagada','pendiente_tramitar_marca','tramitada_marca','recogida')`,
-      ),
-    );
-
   const [leadsRow] = await db
     .select({
       total: sql<number>`count(*)::int`,
@@ -91,10 +73,6 @@ export async function getMetricasGlobales(): Promise<{ mensaje: string }> {
     .from(leads)
     .where(gte(leads.createdAt, inicioMes));
 
-  const ingresosNum = Number(ventasMesRow?.ingresos ?? 0);
-  const comisionNum = Number(ventasMesRow?.comisionSalones ?? 0);
-  const costeNum = Number(ventasMesRow?.costeMarcas ?? 0);
-  const margenRogotech = ingresosNum - comisionNum - costeNum;
   const mrr = Number(planesRow?.activos ?? 0) * 30;
 
   const lineas = [
@@ -108,13 +86,6 @@ export async function getMetricasGlobales(): Promise<{ mensaje: string }> {
     '',
     '*Recurrente*',
     `• MRR estimado: ${fmtEur(mrr)} (${planesRow?.activos ?? 0} × 30 €)`,
-    '',
-    '*Tienda online (mes actual)*',
-    `• Ventas: ${ventasMesRow?.total ?? 0}`,
-    `• Ingresos brutos: ${fmtEur(ingresosNum)}`,
-    `• Comisión transferida a salones: ${fmtEur(comisionNum)}`,
-    `• Coste a pagar a marcas: ${fmtEur(costeNum)}`,
-    `• Margen Rogotech: ${fmtEur(margenRogotech)}`,
     '',
     '*Captación (mes actual)*',
     `• Leads totales: ${leadsRow?.total ?? 0}`,
@@ -183,97 +154,19 @@ export async function infoSalon(args: {
     return { mensaje: `❌ No encontré ningún salón con slug \`${args.slug}\`.` };
   }
 
-  const [ventasRow] = await db
-    .select({
-      total: sql<number>`count(*)::int`,
-      ingresos: sql<string>`coalesce(sum(total_eur), 0)::text`,
-    })
-    .from(ventasB2c)
-    .where(eq(ventasB2c.salonId, s.id));
-
   const lineas = [
     `*🏪 ${s.nombre}*`,
     `_${s.slug} · ${s.tipoNegocio ?? '—'}_`,
     '',
     `• Plan: *${s.plan}*`,
     `• Trial hasta: ${fmtFecha(s.trialUntil)}`,
-    `• Stripe Connect: ${s.stripeConnectOnboarded ? '✅ listo' : s.stripeConnectAccountId ? '🟡 pendiente' : '⚪ sin conectar'}`,
     `• Telegram dueño: ${s.telegramChatIdDueno ? '✅ vinculado' : '⚪ sin vincular'}`,
+    `• Farmasi BI: ${s.farmasiUsername ? `✅ ${s.farmasiUsername}` : '⚪ sin activar'}`,
     `• Ciudad: ${s.ciudad ?? '—'}`,
     `• Email: ${s.email ?? '—'}`,
     '',
-    `*Tienda online*`,
-    `• Ventas: ${ventasRow?.total ?? 0}`,
-    `• Ingresos: ${fmtEur(ventasRow?.ingresos ?? 0)}`,
-    '',
     `Web: https://gonperstudio.shop/s/${s.slug}`,
   ];
-
-  return { mensaje: lineas.join('\n') };
-}
-
-// ============================================
-// VENTAS B2C RECIENTES
-// ============================================
-export async function ventasB2cRecientes(args: {
-  limite?: number;
-}): Promise<{ mensaje: string }> {
-  const limite = Math.min(20, Math.max(1, args.limite ?? 5));
-
-  const rows = await db
-    .select({
-      numero: ventasB2c.numero,
-      total: ventasB2c.totalEur,
-      estado: ventasB2c.estado,
-      clienteNombre: ventasB2c.clienteNombre,
-      salonNombre: salones.nombre,
-      salonSlug: salones.slug,
-      createdAt: ventasB2c.createdAt,
-    })
-    .from(ventasB2c)
-    .innerJoin(salones, eq(salones.id, ventasB2c.salonId))
-    .orderBy(desc(ventasB2c.createdAt))
-    .limit(limite);
-
-  if (rows.length === 0) {
-    return { mensaje: '_Aún no hay ventas B2C en la plataforma._' };
-  }
-
-  const lineas = [`*🛍️ Últimas ${rows.length} ventas*`, ''];
-  for (const r of rows) {
-    const cliente = r.clienteNombre ?? 'cliente';
-    lineas.push(
-      `• *${r.numero}* · ${fmtEur(r.total)} · ${r.estado}\n   ${cliente} → /${r.salonSlug} · ${fmtFecha(r.createdAt)}`,
-    );
-  }
-
-  return { mensaje: lineas.join('\n') };
-}
-
-// ============================================
-// MARCAS ACTIVAS
-// ============================================
-export async function marcasActivas(): Promise<{ mensaje: string }> {
-  const rows = await db
-    .select({
-      slug: marcas.slug,
-      nombre: marcas.nombre,
-      comision: marcas.comisionSalonPorcentaje,
-      productosCount: sql<number>`(select count(*) from productos where productos.marca_id = ${marcas.id} and productos.activo = true)::int`,
-    })
-    .from(marcas)
-    .where(eq(marcas.activa, true));
-
-  if (rows.length === 0) {
-    return { mensaje: '_No hay marcas activas._' };
-  }
-
-  const lineas = [`*🏷️ Marcas activas (${rows.length})*`, ''];
-  for (const r of rows) {
-    lineas.push(
-      `• *${r.nombre}* · ${Number(r.comision)}% comisión salón · ${r.productosCount} productos`,
-    );
-  }
 
   return { mensaje: lineas.join('\n') };
 }
@@ -318,64 +211,6 @@ export async function leadsRecientes(args: {
     const tipo = r.tipoNegocio ?? '—';
     lineas.push(
       `${estado} *${nombre}* · ${tipo}\n   ${r.email} · ${fmtFecha(r.createdAt)}`,
-    );
-  }
-
-  return { mensaje: lineas.join('\n') };
-}
-
-// ============================================
-// PRODUCTOS DESTACADOS / CATÁLOGO
-// ============================================
-export async function productosCatalogo(args: {
-  marca_slug?: string;
-  limite?: number;
-}): Promise<{ mensaje: string }> {
-  const limite = Math.min(30, Math.max(1, args.limite ?? 10));
-
-  // Tratar "" o whitespace como undefined (el AI Agent puede mandar "" cuando el LLM no provee el placeholder)
-  const marcaSlug = args.marca_slug?.trim() || undefined;
-
-  let marcaId: string | null = null;
-  if (marcaSlug) {
-    const [m] = await db
-      .select({ id: marcas.id, nombre: marcas.nombre })
-      .from(marcas)
-      .where(eq(marcas.slug, marcaSlug))
-      .limit(1);
-    if (!m) {
-      return { mensaje: `❌ No encontré la marca \`${marcaSlug}\`.` };
-    }
-    marcaId = m.id;
-  }
-
-  const whereClause = marcaId
-    ? and(eq(productos.activo, true), eq(productos.marcaId, marcaId))
-    : eq(productos.activo, true);
-
-  const rows = await db
-    .select({
-      sku: productos.sku,
-      nombre: productos.nombre,
-      pvp: productos.precioPublicoRecomendadoEur,
-      tipo: productos.tipoDistribucion,
-      marcaNombre: marcas.nombre,
-    })
-    .from(productos)
-    .innerJoin(marcas, eq(marcas.id, productos.marcaId))
-    .where(whereClause)
-    .orderBy(desc(productos.createdAt))
-    .limit(limite);
-
-  if (rows.length === 0) {
-    return { mensaje: '_No hay productos que cumplan ese criterio._' };
-  }
-
-  const lineas = [`*📦 Productos (${rows.length})*`, ''];
-  for (const r of rows) {
-    const skuStr = r.sku ? ` · \`${r.sku}\`` : '';
-    lineas.push(
-      `• *${r.nombre}* · ${r.marcaNombre}${skuStr}\n   ${fmtEur(r.pvp)} · ${r.tipo}`,
     );
   }
 
@@ -593,129 +428,6 @@ export async function cambiarPlanSalon(args: {
 }
 
 // ============================================
-// CREAR MARCA
-// ============================================
-export async function crearMarca(args: {
-  nombre: string;
-  slug?: string;
-  comision_salon_porcentaje?: number;
-  descripcion?: string;
-  logo_url?: string;
-  contacto_email?: string;
-}): Promise<{ mensaje: string; marca_id?: string }> {
-  const nombre = args.nombre.trim();
-  const slug = slugify(args.slug?.trim() || nombre);
-  if (!nombre || !slug) {
-    return { mensaje: '❌ Necesito al menos el nombre de la marca.' };
-  }
-
-  const existing = await db
-    .select({ id: marcas.id })
-    .from(marcas)
-    .where(eq(marcas.slug, slug))
-    .limit(1);
-  if (existing.length > 0) {
-    return { mensaje: `❌ Ya existe una marca con slug \`${slug}\`.` };
-  }
-
-  const comision = Number(args.comision_salon_porcentaje ?? 0);
-  if (comision < 0 || comision > 100) {
-    return { mensaje: '❌ La comisión del salón debe estar entre 0 y 100.' };
-  }
-
-  const [marca] = await db
-    .insert(marcas)
-    .values({
-      slug,
-      nombre,
-      descripcion: args.descripcion?.trim() || null,
-      logoUrl: args.logo_url?.trim() || null,
-      contactoEmail: args.contacto_email?.trim() || null,
-      comisionSalonPorcentaje: comision.toFixed(2),
-      activa: true,
-    })
-    .returning({ id: marcas.id });
-
-  return {
-    mensaje: `✅ Marca *${nombre}* creada (slug \`${slug}\`, comisión salón ${comision}%).`,
-    marca_id: marca.id,
-  };
-}
-
-// ============================================
-// CREAR PRODUCTO
-// ============================================
-export async function crearProducto(args: {
-  marca_slug: string;
-  nombre: string;
-  categoria: string;
-  precio_publico_recomendado_eur: number;
-  precio_mayorista_eur?: number;
-  slug?: string;
-  sku?: string;
-  tipo_distribucion?: 'stock' | 'dropshipping';
-}): Promise<{ mensaje: string; producto_id?: string }> {
-  const marcaSlug = args.marca_slug.trim();
-  const [marca] = await db
-    .select({ id: marcas.id, nombre: marcas.nombre })
-    .from(marcas)
-    .where(eq(marcas.slug, marcaSlug))
-    .limit(1);
-  if (!marca) {
-    return { mensaje: `❌ No encontré la marca \`${marcaSlug}\`.` };
-  }
-
-  const nombre = args.nombre.trim();
-  const slug = slugify(args.slug?.trim() || nombre);
-  const categoria = args.categoria.trim();
-  if (!nombre || !slug || !categoria) {
-    return { mensaje: '❌ Necesito nombre, slug y categoría.' };
-  }
-
-  const pvp = Number(args.precio_publico_recomendado_eur);
-  if (isNaN(pvp) || pvp < 0) {
-    return { mensaje: '❌ El precio público recomendado debe ser un número >= 0.' };
-  }
-  const pvpMayorista =
-    args.precio_mayorista_eur !== undefined
-      ? Number(args.precio_mayorista_eur)
-      : pvp * 0.6; // default 60% del PVP
-
-  const tipo = args.tipo_distribucion ?? 'stock';
-
-  const existing = await db
-    .select({ id: productos.id })
-    .from(productos)
-    .where(and(eq(productos.marcaId, marca.id), eq(productos.slug, slug)))
-    .limit(1);
-  if (existing.length > 0) {
-    return {
-      mensaje: `❌ Ya existe un producto con slug \`${slug}\` en la marca *${marca.nombre}*.`,
-    };
-  }
-
-  const [producto] = await db
-    .insert(productos)
-    .values({
-      marcaId: marca.id,
-      slug,
-      nombre,
-      categoria,
-      tipoDistribucion: tipo,
-      sku: args.sku?.trim() || null,
-      precioMayoristaEur: pvpMayorista.toFixed(2),
-      precioPublicoRecomendadoEur: pvp.toFixed(2),
-      activo: true,
-    })
-    .returning({ id: productos.id });
-
-  return {
-    mensaje: `✅ Producto *${nombre}* creado en marca *${marca.nombre}* (PVP ${fmtEur(pvp)}, mayorista ${fmtEur(pvpMayorista)}).`,
-    producto_id: producto.id,
-  };
-}
-
-// ============================================
 // MARCAR / DESMARCAR DESTACADO EN MARKETPLACE
 // ============================================
 export async function marcarDestacado(args: {
@@ -762,5 +474,3 @@ export async function desmarcarDestacado(args: {
   return { mensaje: `✅ *${result[0].nombre}* removido de destacados.` };
 }
 
-// Avoid unused import
-void isNotNull;

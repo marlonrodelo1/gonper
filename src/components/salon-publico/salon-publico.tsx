@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useReveal } from '@/lib/hooks/use-reveal';
 import { TopNav } from './top-nav';
 import { Hero } from './hero';
-import { ProductosDestacados } from './productos-destacados';
 import { Promos } from './promos';
 import { Servicios, type ServicioReal } from './servicios';
 import { Galeria } from './galeria';
@@ -21,7 +20,6 @@ import type {
   Resena,
   Salon,
 } from '@/lib/db/schema';
-import type { ProductoDestacado } from '@/lib/tienda/query';
 
 type Props = {
   salon: Salon;
@@ -39,8 +37,6 @@ type Props = {
   comparativas: ComparativaAntesDespues[];
   resenas: Resena[];
   resumenResenas: { rating: number; total: number } | null;
-  tieneTienda: boolean;
-  productosDestacados: ProductoDestacado[];
 };
 
 export function SalonPublico({
@@ -59,8 +55,6 @@ export function SalonPublico({
   comparativas,
   resenas,
   resumenResenas,
-  tieneTienda,
-  productosDestacados,
 }: Props) {
   useReveal();
   const [pickedServicio, setPickedServicio] = useState<string | null>(null);
@@ -107,14 +101,7 @@ export function SalonPublico({
         tipoNegocioLabel={tipoNegocioLabel}
         horarioHoyTexto={horarioHoyTexto}
         servicios={servicios}
-        tieneTienda={tieneTienda}
       />
-      {tieneTienda && (
-        <ProductosDestacados
-          salonSlug={salon.slug}
-          productos={productosDestacados}
-        />
-      )}
       <Promos agenteNombre={salon.agenteNombre} promociones={promociones} />
       <Servicios
         servicios={servicios}
