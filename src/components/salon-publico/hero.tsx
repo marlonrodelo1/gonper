@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Icon } from './icons';
 import type { Salon, Servicio } from '@/lib/db/schema';
 
@@ -34,8 +35,12 @@ export function Hero({
   const cover = salon.bannerUrl ?? COVER_DEFAULT;
   const calle = calleFromDireccion(salon.direccion);
   const top3 = servicios.slice(0, 3).map((s) => s.nombre).join(' · ') || '—';
-  const farmasiUrl = salon.farmasiUsername
-    ? `https://www.farmasi.es/${salon.farmasiUsername}`
+  // Si el salón ha activado su username Farmasi, mostramos el botón
+  // "Visitar tienda" que abre /s/[slug]/tienda — wrapper interno con
+  // iframe a farmasi.es/{username} para que el cliente no salga del
+  // dominio gonperstudio.shop.
+  const tiendaUrl = salon.farmasiUsername
+    ? `/s/${salon.slug}/tienda`
     : null;
 
   return (
@@ -107,11 +112,9 @@ export function Hero({
             >
               Reservar cita
             </a>
-            {farmasiUrl && (
-              <a
-                href={farmasiUrl}
-                target="_blank"
-                rel="noopener noreferrer"
+            {tiendaUrl && (
+              <Link
+                href={tiendaUrl}
                 className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-[13.5px] font-medium tight text-paper transition hover:scale-[1.02] active:scale-[0.97]"
                 style={{
                   background:
@@ -128,7 +131,7 @@ export function Hero({
                   <path d="M9 7a3 3 0 016 0" />
                 </svg>
                 Visitar tienda
-              </a>
+              </Link>
             )}
           </div>
         </div>

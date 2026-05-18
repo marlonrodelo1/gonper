@@ -155,10 +155,8 @@ export function MarketplaceTopNav({
               {filtersCount}
             </span>
           )}
-          <a
-            href="https://www.farmasi.es/gonperstudio"
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/tienda"
             aria-label="Visitar tienda Farmasi de Gonper Studio"
             className="hidden sm:inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3.5 py-2 rounded-full text-paper shrink-0 transition hover:scale-[1.03] active:scale-[0.97]"
             style={{
@@ -175,7 +173,7 @@ export function MarketplaceTopNav({
               aria-hidden
             />
             Tienda Farmasi
-          </a>
+          </Link>
           <Link
             href="/"
             className="hidden md:inline-flex text-[12.5px] font-medium px-4 py-2 rounded-full gloss-btn shrink-0"

@@ -1,10 +1,10 @@
 import { redirect } from 'next/navigation';
 
 /**
- * `/farmasi` redirige al server-side a la tienda BI de Gonper Studio en
- * Farmasi.es. Mantiene la URL corta `gonperstudio.shop/farmasi` para
- * compartir en redes, pero no renderiza landing intermedia.
+ * `/farmasi` (URL corta para redes/papelería) redirige a la tienda
+ * embebida `/tienda`, que carga farmasi.es/gonperstudio en iframe sin
+ * que el cliente salga de gonperstudio.shop.
  */
 export default function FarmasiRedirect(): never {
-  redirect('https://www.farmasi.es/gonperstudio');
+  redirect('/tienda');
 }

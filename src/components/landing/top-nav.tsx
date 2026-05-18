@@ -55,10 +55,8 @@ export function TopNav() {
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
-            <a
-              href="https://www.farmasi.es/gonperstudio"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/tienda"
               aria-label="Visitar tienda Farmasi de Gonper Studio"
               className="hidden sm:inline-flex items-center gap-1.5 text-[12.5px] font-medium px-3.5 py-2 rounded-full text-paper transition hover:scale-[1.03] active:scale-[0.97]"
               style={{
@@ -75,7 +73,7 @@ export function TopNav() {
                 aria-hidden
               />
               Tienda Farmasi
-            </a>
+            </Link>
             <Link
               href="/acceso"
               className="text-[12.5px] font-medium px-4 py-2 rounded-full gloss-btn"
@@ -137,10 +135,8 @@ export function TopNav() {
               </a>
             ))}
             <div className="h-px bg-line/70 my-2"></div>
-            <a
-              href="https://www.farmasi.es/gonperstudio"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/tienda"
               onClick={() => setOpen(false)}
               className="mx-1 mb-1 px-4 py-3 rounded-xl text-[14.5px] font-medium text-paper transition flex items-center justify-between"
               style={{
@@ -152,10 +148,10 @@ export function TopNav() {
             >
               <span>Tienda Farmasi</span>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M7 17L17 7" />
-                <path d="M8 7h9v9" />
+                <path d="M5 12h14" />
+                <path d="M13 6l6 6-6 6" />
               </svg>
-            </a>
+            </Link>
             <Link
               href="/acceso"
               onClick={() => setOpen(false)}

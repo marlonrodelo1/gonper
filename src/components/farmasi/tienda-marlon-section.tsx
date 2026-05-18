@@ -1,16 +1,17 @@
 /**
- * Sección/banner promocional de la tienda Farmasi de Marlon.
+ * Sección/banner promocional de la tienda Farmasi de Gonper Studio.
  *
- * Aparece SIEMPRE en la landing principal y en el marketplace. Es la
- * tienda personal de Marlon (sponsor de toda la red de salones Farmasi
- * en Gonper). Link externo a farmasi.es/gonperstudio en nueva
- * pestaña.
+ * Aparece SIEMPRE en la landing principal y en el marketplace. CTA va
+ * a `/tienda` (interno, iframe a farmasi.es/gonperstudio) para que el
+ * cliente no salga visualmente del dominio.
  *
  * Diferenciado del resto del marketplace: NO es un salón, es un
  * Beauty Influencer. Usa paleta acento + glass para distinguirse.
  */
 
-const TIENDA_URL = 'https://www.farmasi.es/gonperstudio';
+import Link from 'next/link';
+
+const TIENDA_INTERNA = '/tienda';
 
 type Props = {
   /** Si true, omite el borde superior (cuando va justo después de otra sección con su propio borde). */
@@ -84,10 +85,8 @@ export function TiendaFarmasiMarlonSection({ noBorderTop = false }: Props) {
             </div>
 
             <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
-              <a
-                href={TIENDA_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href={TIENDA_INTERNA}
                 className="tight inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[14px] font-medium text-paper transition hover:scale-[1.02] active:scale-[0.97]"
                 style={{
                   background:
@@ -109,10 +108,10 @@ export function TiendaFarmasiMarlonSection({ noBorderTop = false }: Props) {
                   strokeLinejoin="round"
                   aria-hidden="true"
                 >
-                  <path d="M7 17L17 7" />
-                  <path d="M8 7h9v9" />
+                  <path d="M5 12h14" />
+                  <path d="M13 6l6 6-6 6" />
                 </svg>
-              </a>
+              </Link>
               <p className="text-center text-[11.5px] text-stone/70 sm:text-right">
                 farmasi.es/gonperstudio
               </p>
