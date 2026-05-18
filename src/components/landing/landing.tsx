@@ -12,6 +12,7 @@ import { FAQ } from "./faq";
 import { FinalCTA } from "./final-cta";
 import { Footer } from "./footer";
 import { RoyceChatWidget } from "./royce-chat-widget";
+import { TiendaFarmasiMarlonSection } from "@/components/farmasi/tienda-marlon-section";
 
 type Props = {
   /** Mensaje de bienvenida de Royce, server-fetched desde `agentes.bienvenida`. */
@@ -40,6 +41,7 @@ export function Landing({ royceBienvenida, royceAvatarUrl }: Props) {
       <Hero />
       <Strip />
       <Beneficios />
+      <TiendaFarmasiMarlonSection />
       <ComoFunciona />
       <Juanita />
       <Comparativa />

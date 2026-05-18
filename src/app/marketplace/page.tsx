@@ -23,6 +23,7 @@ import { MarketplaceShell } from '@/components/marketplace/shell';
 import { MarketplaceReveal } from '@/components/marketplace/reveal';
 import { MarketplaceFooter } from '@/components/marketplace/footer';
 import { RoyceChatWidget } from '@/components/landing/royce-chat-widget';
+import { TiendaFarmasiMarlonSection } from '@/components/farmasi/tienda-marlon-section';
 
 export const revalidate = 60;
 
@@ -151,6 +152,8 @@ export default async function MarketplacePage({
       />
 
       <MarketplaceDestacados salones={destacados} />
+
+      <TiendaFarmasiMarlonSection noBorderTop />
 
       <section className="px-5 sm:px-6">
         <div className="mx-auto max-w-[1240px] flex gap-8">
