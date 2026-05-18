@@ -155,7 +155,7 @@ export const salones = pgTable(
     direccionFormateada: text('direccion_formateada'),
     osmPlaceId: text('osm_place_id'),
     /**
-     * Farmasi BI bajo el sponsor de Marlon (`farmasi.es/marlonjoserodelo`).
+     * Farmasi BI bajo el sponsor de Marlon (`farmasi.es/gonperstudio`).
      * Si el dueño lo activa, el botón "Visitar tienda" del banner público
      * abre `https://www.farmasi.es/[username]` en nueva pestaña. Validado
      * en BD con check alfanumérico+guiones, 3-50 chars.
@@ -1048,7 +1048,7 @@ export const agenteToolsAsignaciones = pgTable(
 // El botón "Visitar tienda" del banner del salón ahora abre
 // https://www.farmasi.es/[salones.farmasi_username] en nueva pestaña.
 // Cero gestión de pedidos / stock / Stripe Connect en Gonper. Cada salón
-// es BI Farmasi bajo el sponsor de Marlon (farmasi.es/marlonjoserodelo).
+// es BI Farmasi bajo el sponsor de Marlon (farmasi.es/gonperstudio).
 
 // ============================================
 // TIPOS INFERIDOS

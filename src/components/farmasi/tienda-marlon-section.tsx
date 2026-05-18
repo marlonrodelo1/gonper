@@ -3,14 +3,14 @@
  *
  * Aparece SIEMPRE en la landing principal y en el marketplace. Es la
  * tienda personal de Marlon (sponsor de toda la red de salones Farmasi
- * en Gonper). Link externo a farmasi.es/marlonjoserodelo en nueva
+ * en Gonper). Link externo a farmasi.es/gonperstudio en nueva
  * pestaña.
  *
  * Diferenciado del resto del marketplace: NO es un salón, es un
  * Beauty Influencer. Usa paleta acento + glass para distinguirse.
  */
 
-const TIENDA_URL = 'https://www.farmasi.es/marlonjoserodelo';
+const TIENDA_URL = 'https://www.farmasi.es/gonperstudio';
 
 type Props = {
   /** Si true, omite el borde superior (cuando va justo después de otra sección con su propio borde). */
@@ -114,7 +114,7 @@ export function TiendaFarmasiMarlonSection({ noBorderTop = false }: Props) {
                 </svg>
               </a>
               <p className="text-center text-[11.5px] text-stone/70 sm:text-right">
-                farmasi.es/marlonjoserodelo
+                farmasi.es/gonperstudio
               </p>
             </div>
           </div>

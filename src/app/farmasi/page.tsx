@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-const FARMASI_TIENDA_URL = 'https://www.farmasi.es/marlonjoserodelo';
+const FARMASI_TIENDA_URL = 'https://www.farmasi.es/gonperstudio';
 const FARMASI_REGISTRO_URL =
-  'https://www.farmasi.es/marlonjoserodelo/register/beautyinfluencer';
+  'https://www.farmasi.es/gonperstudio/register/beautyinfluencer';
 
 export const metadata: Metadata = {
   title: 'Farmasi · Marlon Rodelo · Beauty Influencer España',

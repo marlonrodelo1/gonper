@@ -16,7 +16,7 @@ type SalonRow = {
 };
 
 const FARMASI_REGISTRO_URL =
-  'https://www.farmasi.es/marlonjoserodelo/register/beautyinfluencer';
+  'https://www.farmasi.es/gonperstudio/register/beautyinfluencer';
 
 const inputClass =
   'w-full bg-paper border border-line rounded-2xl px-5 py-3.5 text-[14.5px] text-ink placeholder:text-stone/50 focus:outline-none focus:border-line-2';
