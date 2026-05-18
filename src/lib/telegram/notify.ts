@@ -245,3 +245,94 @@ export async function notificarDuenoRespuestaCita(
 function escapeMd(s: string): string {
   return String(s).replace(/([_*`[\]])/g, '\\$1');
 }
+
+interface NotifRecordatorio2hParams {
+  botToken: string | null | undefined;
+  duenoChatId: string | null | undefined;
+  salonNombre: string;
+  clienteNombre: string;
+  servicioNombre: string;
+  profesionalNombre: string;
+  inicioIso: string;
+  timezone?: string;
+  /** URL `wa.me/{tel}?text=...` ya construida con buildWhatsAppLink.
+   *  Si null (cliente sin teléfono válido), el mensaje se envía sin botón. */
+  whatsappLink: string | null;
+}
+
+/**
+ * Avisa al dueño 2h antes de una cita con datos + botón inline
+ * "Recordar por WhatsApp" que abre wa.me ya rellenado. El dueño solo
+ * pulsa el botón y Telegram abre WhatsApp con destinatario + mensaje
+ * listo — 1 toque adicional ("Enviar") en la app de WhatsApp.
+ *
+ * Best-effort: nunca lanza. Si el salón no tiene bot configurado o
+ * Telegram falla, devuelve false y logueamos.
+ */
+export async function notificarDuenoRecordatorio2h(
+  p: NotifRecordatorio2hParams,
+): Promise<boolean> {
+  if (!p.botToken || !p.duenoChatId) return false;
+
+  const tz = p.timezone || 'Europe/Madrid';
+  const horaFmt = new Intl.DateTimeFormat('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: tz,
+  }).format(new Date(p.inicioIso));
+
+  const lineas = [
+    `⏰ *Recordatorio · cita en 2h*`,
+    '',
+    `🏠 ${escapeMd(p.salonNombre)}`,
+    `👤 *${escapeMd(p.clienteNombre)}*`,
+    `🕒 Hoy a las *${horaFmt}*`,
+    `✂️ ${escapeMd(p.servicioNombre)} con ${escapeMd(p.profesionalNombre)}`,
+  ];
+  if (!p.whatsappLink) {
+    lineas.push('', '_Sin teléfono guardado — añade uno desde el panel para recordar por WhatsApp._');
+  }
+  const texto = lineas.join('\n');
+
+  const replyMarkup = p.whatsappLink
+    ? {
+        inline_keyboard: [
+          [
+            {
+              text: '📱 Recordar por WhatsApp',
+              url: p.whatsappLink,
+            },
+          ],
+        ],
+      }
+    : undefined;
+
+  try {
+    const res = await fetch(
+      `https://api.telegram.org/bot${p.botToken}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: p.duenoChatId,
+          text: texto,
+          parse_mode: 'Markdown',
+          disable_web_page_preview: true,
+          reply_markup: replyMarkup,
+        }),
+        signal: AbortSignal.timeout(8000),
+      },
+    );
+    if (!res.ok) {
+      const t = await res.text().catch(() => '');
+      console.warn('[notify:recordatorio2h] Telegram respondió no-OK', res.status, t);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('[notify:recordatorio2h] error', err);
+    captureException(err, { module: 'telegram/notify' });
+    return false;
+  }
+}

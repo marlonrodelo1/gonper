@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
-import { sql } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
+import { salones } from '@/lib/db/schema';
 import { requireApiToken } from '@/lib/api/auth';
+import { notificarDuenoRecordatorio2h } from '@/lib/telegram/notify';
+import { buildWhatsAppLink } from '@/lib/whatsapp/numero';
 
 /**
  * POST /api/v1/cron/recordatorios
@@ -131,6 +134,76 @@ export async function POST(request: Request) {
         },
       };
     });
+
+    // ------------------------------------------------------------
+    // Aviso al dueño por Telegram (best-effort, no bloquea respuesta).
+    // Por cada cita marcada como "recordatorio enviado", mandamos al
+    // dueño un mensaje Telegram con un botón inline "Recordar por
+    // WhatsApp" que abre wa.me/<tel>?text=... ya rellenado.
+    //
+    // Resolvemos bot_token + chat_id por salonId en una sola query
+    // (en vez de 1 por cita) para minimizar latencia del cron.
+    // ------------------------------------------------------------
+    if (recordatorios.length > 0) {
+      const salonIds = Array.from(new Set(recordatorios.map((r) => r.salon.id)));
+      const filasSalones = await db
+        .select({
+          id: salones.id,
+          botToken: salones.telegramBotToken,
+          duenoChatId: salones.telegramChatIdDueno,
+        })
+        .from(salones)
+        .where(
+          salonIds.length === 1
+            ? eq(salones.id, salonIds[0])
+            : inArray(salones.id, salonIds),
+        );
+
+      const salonAuth = new Map(
+        filasSalones.map((s) => [
+          s.id,
+          { botToken: s.botToken, duenoChatId: s.duenoChatId },
+        ]),
+      );
+
+      // Lanzamos los envíos en paralelo. Cada uno es best-effort —
+      // notificarDuenoRecordatorio2h ya devuelve false en vez de lanzar.
+      await Promise.allSettled(
+        recordatorios.map(async (r) => {
+          const auth = salonAuth.get(r.salon.id);
+          if (!auth?.botToken || !auth.duenoChatId) return; // sin bot configurado
+
+          const primerNombre =
+            r.cliente.nombre.split(' ')[0] ?? r.cliente.nombre;
+          const hora = new Intl.DateTimeFormat('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+            timeZone: r.salon.timezone,
+          }).format(new Date(r.inicio));
+          const mensajeWa =
+            `Hola ${primerNombre}! 👋 Te recuerdo que tienes tu reserva en ` +
+            `${r.salon.nombre} hoy a las ${hora} para ${r.servicio.nombre} ` +
+            `con ${r.profesional.nombre}. ¡Te esperamos!`;
+          const whatsappLink = buildWhatsAppLink(
+            r.cliente.whatsappPhone ?? r.cliente.telefono,
+            mensajeWa,
+          );
+
+          await notificarDuenoRecordatorio2h({
+            botToken: auth.botToken,
+            duenoChatId: auth.duenoChatId,
+            salonNombre: r.salon.nombre,
+            clienteNombre: r.cliente.nombre,
+            servicioNombre: r.servicio.nombre,
+            profesionalNombre: r.profesional.nombre,
+            inicioIso: r.inicio,
+            timezone: r.salon.timezone,
+            whatsappLink,
+          });
+        }),
+      );
+    }
 
     return NextResponse.json({ recordatorios });
   } catch (e) {
