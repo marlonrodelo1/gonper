@@ -12,13 +12,31 @@ import {
   SERVICIOS_POR_TIPO,
 } from '@/lib/admin/salon-seeds';
 
+/**
+ * Devuelve la URL de error según el origen del formulario. Si el campo
+ * hidden `_return=acceso` está presente, el usuario está en la página
+ * combinada /acceso y queremos que vuelva ahí con su tab seleccionado.
+ */
+function errorUrl(
+  formData: FormData,
+  fallback: '/login' | '/signup',
+  msg: string,
+): string {
+  const returnTo = String(formData.get('_return') || '');
+  const tab = fallback === '/login' ? 'entrar' : 'crear';
+  if (returnTo === 'acceso') {
+    return `/acceso?modo=${tab}&error=${encodeURIComponent(msg)}`;
+  }
+  return `${fallback}?error=${encodeURIComponent(msg)}`;
+}
+
 export async function login(formData: FormData) {
   const email = String(formData.get('email') || '');
   const password = String(formData.get('password') || '');
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
-    redirect(`/login?error=${encodeURIComponent(error.message)}`);
+    redirect(errorUrl(formData, '/login', error.message));
   }
   revalidatePath('/', 'layout');
   redirect('/panel/hoy');
@@ -32,13 +50,13 @@ export async function signup(formData: FormData) {
   const tipoNegocio = String(formData.get('tipo_negocio') || 'otro');
 
   if (!email || !password || password.length < 8) {
-    redirect('/signup?error=' + encodeURIComponent('Email y password (mín 8 chars) requeridos'));
+    redirect(errorUrl(formData, '/signup', 'Email y password (mín 8 chars) requeridos'));
   }
   if (!salonNombre || !salonSlug) {
-    redirect('/signup?error=' + encodeURIComponent('Nombre y slug del salón requeridos'));
+    redirect(errorUrl(formData, '/signup', 'Nombre y slug del salón requeridos'));
   }
   if (!/^[a-z0-9-]+$/.test(salonSlug)) {
-    redirect('/signup?error=' + encodeURIComponent('Slug solo puede contener a-z, 0-9 y guiones'));
+    redirect(errorUrl(formData, '/signup', 'Slug solo puede contener a-z, 0-9 y guiones'));
   }
 
   // Rate limit por IP: máximo 5 signups/día/IP. Bloquea creación masiva
@@ -51,10 +69,11 @@ export async function signup(formData: FormData) {
   const rl = await checkRateLimit('ip', `signup:${ipForRl}`, 5);
   if (!rl.ok) {
     redirect(
-      '/signup?error=' +
-        encodeURIComponent(
-          'Demasiados intentos hoy desde tu conexión. Vuelve mañana.',
-        ),
+      errorUrl(
+        formData,
+        '/signup',
+        'Demasiados intentos hoy desde tu conexión. Vuelve mañana.',
+      ),
     );
   }
 
@@ -69,9 +88,9 @@ export async function signup(formData: FormData) {
   if (createError || !created.user) {
     const msg = createError?.message || 'Error al registrar';
     if (msg.toLowerCase().includes('already')) {
-      redirect('/signup?error=' + encodeURIComponent('Ya existe una cuenta con ese email. Inicia sesión.'));
+      redirect(errorUrl(formData, '/signup', 'Ya existe una cuenta con ese email. Inicia sesión.'));
     }
-    redirect('/signup?error=' + encodeURIComponent(msg));
+    redirect(errorUrl(formData, '/signup', msg));
   }
   const newUser = created.user;
 
@@ -84,7 +103,7 @@ export async function signup(formData: FormData) {
   if (existingSlug) {
     // Limpieza: borrar el user recién creado si el slug colisiona.
     await admin.auth.admin.deleteUser(newUser.id).catch(() => {});
-    redirect('/signup?error=' + encodeURIComponent(`El slug "${salonSlug}" ya está en uso. Prueba con otro.`));
+    redirect(errorUrl(formData, '/signup', `El slug "${salonSlug}" ya está en uso. Prueba con otro.`));
   }
 
   // 3. Crear el salón con trial de 7 días sin tarjeta. Se accede al panel
@@ -105,7 +124,7 @@ export async function signup(formData: FormData) {
 
   if (salonError || !salon) {
     await admin.auth.admin.deleteUser(newUser.id).catch(() => {});
-    redirect('/signup?error=' + encodeURIComponent('Error creando salón: ' + (salonError?.message || 'desconocido')));
+    redirect(errorUrl(formData, '/signup', 'Error creando salón: ' + (salonError?.message || 'desconocido')));
   }
 
   // 4. Vincular user con el salón.
@@ -114,14 +133,14 @@ export async function signup(formData: FormData) {
     .insert({ salon_id: salon.id, auth_user_id: newUser.id, rol: 'dueno' });
 
   if (linkError) {
-    redirect('/signup?error=' + encodeURIComponent('Error vinculando user: ' + linkError.message));
+    redirect(errorUrl(formData, '/signup', 'Error vinculando user: ' + linkError.message));
   }
 
   // 5. Iniciar sesión inmediatamente y redirigir al panel.
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
   if (signInError) {
-    redirect('/login?error=' + encodeURIComponent('Cuenta creada. Inicia sesión.'));
+    redirect(errorUrl(formData, '/login', 'Cuenta creada. Inicia sesión.'));
   }
 
   // ----- Seeds: servicios, horarios, profesional (no abortan si fallan) -----

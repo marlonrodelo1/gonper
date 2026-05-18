@@ -77,16 +77,10 @@ export function TopNav() {
               Tienda Farmasi
             </a>
             <Link
-              href="/login"
-              className="hidden sm:inline-block text-[13.5px] text-stone hover:text-ink transition px-2"
-            >
-              Iniciar sesión
-            </Link>
-            <Link
-              href="/signup"
+              href="/acceso"
               className="text-[12.5px] font-medium px-4 py-2 rounded-full gloss-btn"
             >
-              Empezar gratis
+              Acceder
             </Link>
             <button
               type="button"
@@ -163,11 +157,15 @@ export function TopNav() {
               </svg>
             </a>
             <Link
-              href="/login"
+              href="/acceso"
               onClick={() => setOpen(false)}
-              className="px-4 py-3 rounded-xl text-[15px] text-stone hover:text-ink hover:bg-ink/[0.05] transition-colors"
+              className="px-4 py-3 rounded-xl text-[15px] text-ink hover:bg-ink/[0.05] transition-colors flex items-center justify-between"
             >
-              Iniciar sesión
+              <span>Acceder o crear cuenta</span>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M5 12h14" />
+                <path d="M13 6l6 6-6 6" />
+              </svg>
             </Link>
           </div>
         </div>
